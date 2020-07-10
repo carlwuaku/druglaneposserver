@@ -1,0 +1,172 @@
+<%- include ('partials/header') -%>
+<section class="content">
+        <div class="container">
+                <h3><%= name%> - DruglanePOS Server</h3>
+                <div class="alert alert-info">
+                        <i class="fa fa-info"> </i> The server address is : http://<%= host%>:<%= port%>
+                </div>
+                <div class="alert alert-info">
+                        <i class="fa fa-info"> </i> Automatic backups are done everyday at 7:00PM. If you close
+                        the server or shut down the computer before 7:00PM, a backup will be created automatically
+                        at that time.
+                </div>
+                <%
+          if(message != ""){
+      %>
+                <div class="alert alert-info">
+                        <%= message %>
+                </div>
+                <% } 
+        if(logged_in){ %>
+
+                Logged in as Administrator. <a href="logout"  class="btn btn-danger">Log Out</a> 
+                <%  }
+      else{ %>
+        <a href="login"  class="btn btn-success">Login As Administrator</a> 
+                <% }
+      %>
+
+                <!-- <div class="alert alert-success starthidden" id="backup_alert">
+
+        </div> -->
+                <div class="alert alert-success alert-dismissible fade show starthidden" id="backup_alert" role="alert">
+
+
+                </div>
+                <br>
+                <div class="row ">
+
+
+                        <div class="col-md-4">
+                                <a class="link" id="start_backup">
+                                        <div class="card card-body dashboard-card">
+                                                <div class=" text-center">
+                                                        <!-- <i class="fa fa-list fa-3x"></i> -->
+                                                        <img src="images/002-backup.png" height="75" alt="png">
+                                                        <div class="dashboard-text">
+                                                                Backup Your Database Now
+                                                                <!-- This view gives you the individual subject scores, overall score and
+                                position of each student for the selected term/academic year -->
+                                                        </div>
+
+
+                                                </div>
+                                        </div>
+                                </a>
+                        </div>
+
+                        <div class="col-md-4">
+                                <a href="restoreBackup">
+
+                                        <div class="card card-body dashboard-card">
+                                                <div class=" text-center">
+                                                        <!-- <i class="fa fa-list fa-3x"></i> -->
+                                                        <img src="images/001-sync.png" height="75" alt="png">
+                                                        <div class="dashboard-text">
+                                                                Restore Data From A Backup
+                                                                <% if(!logged_in){ %>
+                                                                <br>
+                                                                <i class="fa fa-lock"></i> Login Required
+                                                                <%  }     %>
+
+
+                                                        </div>
+
+                                                </div>
+                                        </div>
+                                </a>
+                        </div>
+
+                        <div class="col-md-4">
+
+                                <a href="settings">
+
+                                        <div class="card card-body dashboard-card">
+                                                <div class=" text-center">
+                                                        <!-- <i class="fa fa-list fa-3x"></i> -->
+                                                        <img src="images/007-adjust.png" height="75" alt="png">
+                                                        <div class="dashboard-text">
+                                                                Edit/View System Settings
+                                                                <% if(!logged_in){ %>
+                                                                        <br>
+                                                                        <i class="fa fa-lock"></i> Login Required
+                                                                        <%  }     %>
+                                                        </div>
+
+                                                </div>
+                                        </div>
+                                </a>
+                        </div>
+
+                        <div class="col-md-4">
+
+                                <a href="users">
+
+                                        <div class="card card-body dashboard-card">
+                                                <div class=" text-center">
+                                                        <!-- <i class="fa fa-list fa-3x"></i> -->
+                                                        <img src="images/012-connection-1.png" height="75" alt="png">
+                                                        <div class="dashboard-text">
+                                                                Add/Edit/View Users
+                                                                <% if(!logged_in){ %>
+                                                                        <br>
+                                                                        <i class="fa fa-lock"></i> Login Required
+                                                                        <%  }     %>
+                                                        </div>
+
+                                                </div>
+                                        </div>
+                                </a>
+                        </div>
+
+                        <div class="col-md-4">
+
+                                <a href="roles">
+
+                                        <div class="card card-body dashboard-card">
+                                                <div class=" text-center">
+                                                        <!-- <i class="fa fa-list fa-3x"></i> -->
+                                                        <img src="images/011-blueprint.png" height="75" alt="png">
+                                                        <div class="dashboard-text">
+                                                                Add/Edit/View User Permissions
+                                                                <% if(!logged_in){ %>
+                                                                        <br>
+                                                                        <i class="fa fa-lock"></i> Login Required
+                                                                        <%  }     %>
+                                                        </div>
+
+                                                </div>
+                                        </div>
+                                </a>
+                        </div>
+
+                </div>
+        </div>
+</section>
+
+<!-- <script src="/socket.io/socket.io.js"></script>
+<script>
+  var socket = io();
+</script> -->
+<%- include ('partials/footer') -%>
+
+<script>
+        //code for sending archive command to main
+        const { ipcRenderer } = require('electron');
+        ipcRenderer.on('backup_done', (e, data) => {
+                $("#backup_alert").html(`Backup done successfully. Locate the file at ${data.directory}.
+     Please copy it to a safe location 
+     <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                          <span aria-hidden="true">&times;</span>
+                        </button>
+                        `);
+                $("#backup_alert").fadeIn('fast')
+
+        })
+        $(document).ready(function () {
+                $(document).on("click", "#start_backup", function () {
+                        ipcRenderer.send('startBackup')
+                })
+        })
+
+</script>

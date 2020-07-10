@@ -1,0 +1,217 @@
+<%- include ('partials/header') -%>
+<script src="js/angular.min.js"></script>
+<section ng-app="myApp" ng-controller="myCtrl" class="content">
+    
+    <div class="flex-container small-margins">
+        <div><a  class="backBtn link"><i class="fa fa-arrow-left"></i> Back</a></div>
+        <div><a  href="/"><i class="fa fa-home"></i> Home </a></div>
+    </div>
+    <div class="container">
+        
+        <div class="card">
+            <div class="card-header">
+                    <h4>Company Settings</h4>
+            </div>
+            <div class="card-body">
+                    <form action="saveSettings" method="POST">
+                            <div class="row justify-content-center">
+                                <div class="col-md-6">
+                                    <div class="alert alert-info"><%= message %></div>
+                                            
+                                        <form action="saveSettings" method="POST">
+                                            <div class="form-group">
+                                                <label  class="control-label">Company Name</label>
+                                                <input  name="name" value="<%= name %>"
+                                                 required type="text" class="form-control"
+                                                   >
+                                            </div>
+
+                                            <div class="form-group">
+                                                    <label  class="control-label">Company Phone Number</label>
+                                                    <input  name="phone" value="<%= phone %>"
+                                                     required type="text" class="form-control"
+                                                       >
+                                                </div>
+
+                                                <div class="form-group">
+                                                        <label  class="control-label">Company Email</label>
+                                                        <input  name="email" value="<%= email %>"
+                                                         required type="email" class="form-control"
+                                                           >
+                                                    </div>
+
+                                                    <div class="form-group">
+                                                            <label  class="control-label">Company Address</label>
+                                                            <br>
+                                                            <em>This shows on printed invoices</em>
+                                                            <input  name="address" value="<%= address %>"
+                                                             required type="text" class="form-control"
+                                                               >
+                                                        </div>
+
+                                                        <div class="form-group">
+                                                                <label  class="control-label">Company Digital Address</label>
+                                                                <br>
+                                                            <em>This shows on printed invoices</em>
+                                                                <input  name="digital_address" value="<%= digital_address %>"
+                                                                 required type="text" class="form-control"
+                                                                   >
+                                                            </div>
+                                            
+                                           
+                                            <button type="submit" class="btn btn-primary btn-block">Submit</button>
+                                        </form>
+                                            
+                                </div>
+                                
+                                
+                    
+                    
+                            </div>
+                            
+                    
+                        </form>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<div class="modal fade" id="confirm_modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog " role="document">
+        <div class="modal-content">
+            <div class="modal-header text-center text-danger">
+                <h4>WARNING!</h4>
+            </div>
+            <div class="modal-body">
+                Restoring your database from a backup will erase all current data and replace it with
+                the data from the backup. This action cannot be reversed. <br>
+                A backup of the current database will be created automatically before the restore operation
+                begins. <br>
+                Do you want to continue?
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="continue" class="btn btn-success">Yes</button>
+
+                <button type="button" class="btn btn-danger" data-dismiss="modal">No</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="loading_modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog " role="document">
+        <div class="modal-content">
+
+            <div class="modal-body">
+                <span id="backing_up" >
+                        <i class="fa fa-spin fa-spinner"></i> <span >Creating Backup...</span>
+
+                </span>
+
+                <span id="restoring_up" class="starthidden">
+                        <i class="fa fa-spin fa-spinner"></i> <span >Restoring Backup Data</span>
+
+                </span>
+                <span id="done" class="text-success starthidden">
+                        <i class="fa fa-check-circle"></i> <span >Restore done Successfully!</span>
+                    <br>
+                    <button type="button" class="btn btn-success" data-dismiss="modal">OK</button>
+                </span>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- <script src="/socket.io/socket.io.js"></script>
+<script>
+  var socket = io();
+</script> -->
+<%- include ('partials/footer') -%>
+
+<script>
+    //code for sending archive command to main
+    const { ipcRenderer } = require('electron');
+    const constants = require('../constants');
+    const fs = require('fs');
+
+    const path = require('path')
+    let selected_file = "";
+    let current_action = "";
+    ipcRenderer.on('backup_done', (e, data) => {
+        $("#current_action").text("Restoring Backup Data.....")
+       
+        $("#restoring_up").show();
+        $("#backing_up").hide();
+        $("#done").hide();
+        ipcRenderer.send('restore', {filename: selected_file})
+    })
+    ipcRenderer.on('restore_done', (e, data) => {
+        $("#restoring_up").hide();
+        $("#backing_up").hide();
+        $("#done").show();
+     
+    })
+
+    var app = angular.module('myApp', []);
+    app.controller('myCtrl', function ($scope) {
+
+        $scope.items = fs.readdirSync(constants.backup_folder);
+
+        $scope.getFiles = function () {
+            $scope.items = fs.readdirSync(constants.backup_folder);
+            //get the files
+            // fs.readdir(constants.backup_folder, (err, files) => {
+            //     $scope.name = files;
+            //     console.log(files)
+            //     console.log($scope.items)
+            //     files.forEach(file => {
+            //         console.log(file)
+            //         $scope.items.push(file)
+            //     });
+            // });
+        }
+        $scope.getFiles();
+
+        $scope.restore = function (filename) {
+            if (window.confirm(`Sure you want to restore your system to the selected version? You cannot reverse 
+            this action. Click OK to continue, CANCEL to cancel`)) {
+                ipcRenderer.send('restore', { filename })
+            }
+
+        }
+    });
+
+
+
+    $(document).ready(function () {
+        $(document).on("click", ".restore_btn", function () {
+            $("#confirm_modal").modal("show");
+            let filename = $(this).closest("tr").find(".filename").text();
+            selected_file = path.join(constants.backup_folder, filename)
+        })
+        //when a file is selected from the list
+        $(document).on('click', "#continue", function () {
+            $("#confirm_modal").modal("hide");
+            $("#loading_modal").modal({
+                backdrop: 'static',
+                keyboard: false
+            });
+            $("#restoring_up").hide();
+        $("#backing_up").show();
+        $("#done").hide();
+            //create backup first
+            ipcRenderer.send('startBackup')
+        });
+
+        $(document).on('change','#pickzip', function(){
+            $("#confirm_modal").modal("show");
+            selected_file = document.getElementById("pickzip").files[0].path;
+            //get the actual file name
+            console.log(selected_file)
+        })
+    })
+
+</script>

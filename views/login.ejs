@@ -1,0 +1,49 @@
+<%- include ('partials/header') -%>
+<section class="content">
+    <div class="flex-container small-margins">
+        <div><a  class="backBtn link"><i class="fa fa-arrow-left"></i> Back</a></div>
+        <div><a  href="/"><i class="fa fa-home"></i> Home </a></div>
+    </div>
+    <div class="container">
+        <h3>Login - DruglanePOS Server</h3>
+      
+     <div class="row justify-content-center">
+        
+
+        <div class="col-md-6">
+            <div class="card card-body dashboard-card">
+                <div class=" text-center">
+                    <h5>Enter the Administrator Password</h5>
+                    <%
+                        if(error != ""){
+                    %>
+                    <div class="alert alert-danger">
+                        Wrong combination. Try again or click <a href="#" class="">here if
+                             you forgot your password password</a>
+                    </div>
+                    <% } %>
+                        <form action="dologin" method="POST">
+                            <input required type="password" name="password" class="form-control">
+                            <button type="submit" class="btn btn-block btn-success">Submit</button>
+                           
+                        </form>
+                               
+                </div>
+        </div>
+        </div>
+
+        
+
+      
+
+
+</div>
+	</div>
+</section>
+		
+        <!-- <script src="/socket.io/socket.io.js"></script>
+<script>
+  var socket = io();
+</script> -->
+<%- include ('partials/footer') -%> 
+

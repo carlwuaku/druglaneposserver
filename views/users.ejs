@@ -1,0 +1,115 @@
+<%- include ('partials/header') -%>
+<section  class="content">
+    
+    <div class="flex-container small-margins">
+        <div><a  class="backBtn link"><i class="fa fa-arrow-left"></i> Back</a></div>
+        <div><a  href="/"><i class="fa fa-home"></i> Home </a></div>
+        <div><a  class="reloadBtn link"><i class="fa fa-refresh"></i> Refresh List</a></div>
+        
+        <!-- <div><a  href="#"><i class="fa fa-download"></i> Backup Now</a></div> -->
+    </div>
+    <div class="container">
+        <h4>Staff/Users</h4>
+        <div class="card">
+            <div class="card-header">
+             <a href="/userForm" class="btn btn-sm btn-success">Click here</a>  to add a new user.
+              You use the menu buttons to  edit or delete a user. 
+            
+             <% if(message != undefined && message != ''){ %>
+                <div class="alert alert-info"><%= message %></div>
+            <% } %>
+            </div>
+            <div class="card-body table-responsive">
+                <table id="backup_list" class="table table-bordered table-hover">
+                    <thead>
+                        <tr>
+                            <td></td>
+                            <td>Name</td>
+                            <td>Role</td>
+                            <td>Phone</td>
+                            <td>Email</td>
+                            <td>Username</td>
+                            <td>Status</td>
+                        </tr>
+                    <tbody>
+                        
+                            <% objects.forEach(function(item){ 
+                                    %>
+                                    <tr>
+                                        <td>
+                                            <div class="dropdown">
+                                                <button class="btn btn-secondary dropdown-toggle" type="button"
+                                                  data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                  Menu
+                                                </button>
+                                                <div class="dropdown-menu" >
+                                                  <a class="dropdown-item" href="userForm?user=<%= item.id%>">Edit</a>
+                                                  <a class="dropdown-item delete" href="#">Delete</a>
+                                                  <a class="dropdown-item" href="#">View Activities</a>
+                                                </div>
+                                              </div>
+                                        </td>
+                                        <td><%= item.display_name %> <span class="itemid starthidden" ><%= item.id%></span> </td>
+                                        <td><%= item.role_name %> </td>
+                                        <td><%= item.phone %></td>
+                                        <td><%= item.email %></td>
+                                        <td><%= item.username %></td>
+                                        <td><%= item.active == 1 ? 'Active' : 'Inactive' %></td>
+                                    </tr>
+                            
+                            <% 
+                        }) %>
+
+
+                          
+
+                    
+                        
+                    </tbody>
+
+                    </thead>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<div class="modal fade" id="delete_modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog " role="document">
+        <div class="modal-content">
+            <div class="modal-header text-center text-danger">
+                <h4>Delete User</h4>
+            </div>
+            <div class="modal-body">
+                Deleting this user will prevent the person from being able to log in to the system. <br>
+                Do you want to continue?
+                <form action="deleteUser" method="POST">
+                    <input type="text" hidden  name="id" id="delete_id">
+                    <button type="submit" id="continue" class="btn btn-success">Yes</button>
+                    <button type="button" class="btn btn-danger" data-dismiss="modal">No</button>
+                </form>
+
+            </div>
+           
+        </div>
+    </div>
+</div>
+
+
+<!-- <script src="/socket.io/socket.io.js"></script>
+<script>
+  var socket = io();
+</script> -->
+<%- include ('partials/footer') -%>
+<script>
+
+    $(document).ready(function(){
+        $(document).on("click", ".delete", function(){
+            var id = $(this).closest('tr').find(".itemid").text();
+            $("#delete_id").val(id);
+            $("#delete_modal").modal("show");
+        })
+    })
+</script>
+

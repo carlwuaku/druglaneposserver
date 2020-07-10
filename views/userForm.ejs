@@ -1,0 +1,160 @@
+<%- include ('partials/header') -%>
+<script src="js/angular.min.js"></script>
+<section ng-app="myApp" ng-controller="myCtrl" class="content">
+    
+    <div class="flex-container small-margins">
+        <div><a  class="backBtn link"><i class="fa fa-arrow-left"></i> Back</a></div>
+        <div><a  href="/"><i class="fa fa-home"></i> Home </a></div>
+    </div>
+    <div class="container">
+        
+        <div class="card">
+            <div class="card-header">
+                    <h4>User</h4>
+            </div>
+            <div class="card-body">
+                    <form action="saveUser" method="POST">
+                            <div class="row justify-content-center">
+                                <div class="col-md-6">
+                                    <% if(message != undefined && message != ''){ %>
+                                        <div class="alert alert-info"><%= message %></div>
+                                    <% } %>
+                                    
+                                            
+                                        <form action="saveSettings" method="POST">
+                                            <div class="form-group">
+                                                <label  class="control-label">Username</label>
+                                                <input  name="username" value="<%= username %>"
+                                                 required type="text" class="form-control"
+                                                   >
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label  class="control-label">Full Name</label>
+                                                <input  name="display_name" value="<%= display_name %>"
+                                                 required type="text" class="form-control"
+                                                   >
+                                            </div>
+
+                                            <div class="form-group">
+                                                    <label  class="control-label">Phone Number</label>
+                                                    <input  name="phone" value="<%= phone %>"
+                                                     required type="text" class="form-control"
+                                                       >
+                                                </div>
+
+                                                <div class="form-group">
+                                                        <label  class="control-label">Email</label>
+                                                        <input  name="email" value="<%= email %>"
+                                                         required type="email" class="form-control"
+                                                           >
+                                                    </div>
+
+                                                    <div class="form-group">
+                                                        <label >Role</label> <br>
+                                                        <select name="role_id" required >
+                                                            <% roles.forEach(function(item){ 
+                                                                    if(role_id == item.role_id){ %>
+                                                            <option selected value="<%= item.role_id %>">
+                                                                <%= item.role_name %>
+                                                            </option>
+                                                            <% }
+                                                                    else{ %>
+                                                            <option value="<%= item.role_id %>">
+                                                                <%= item.role_name %>
+                                                            </option>
+                                                            <% }
+                                                                    %>
+                        
+                        
+                                                            <% }) %>
+                        
+                                                        </select>
+                                                    </div>
+
+                                                    <div class="form-group">
+                                                            <label  class="control-label">Active</label>
+                                                            <br>
+                                                            <select required name="active">
+                                                                <option value="1">Active</option>
+                                                                <option value="0">Inactive</option>
+                                                            </select>
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label  class="control-label">Password</label>
+                                                            <br>
+                                                            <%
+                                                                if(id !== undefined && id !== null){
+                                                                    %>
+                                                                    <em class="text-muted">
+                                                                        Please leave this empty if you do not intend 
+                                                                        to change this user's password
+                                                                    </em>
+                                                                    <br>
+                                                                    <%
+
+                                                                }
+                                                            %>
+                                                            
+                                                            <input  name="password" value=""
+                                                          type="password" class="form-control"
+                                                           >
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label  class="control-label">Confirm Password</label>
+                                                            <br>
+                                                            <%
+                                                                if(id !== undefined && id !== null){
+                                                                    %>
+                                                                    <em class="text-muted">
+                                                                        Please leave this empty if you do not intend 
+                                                                        to change this user's password
+                                                                    </em>
+                                                                    <br>
+                                                                    <%
+
+                                                                }
+                                                            %>
+                                                            
+                                                            <input  name="confirm_password" value=""
+                                                          type="password" class="form-control"
+                                                           >
+
+                                                           <%
+                                                           if(id !== undefined && id !== null){
+                                                               %>
+                                                               <input hidden name="id" type="text" value="<%= id %>">
+                                                               <%
+
+                                                           }
+                                                       %>
+                                                        </div>
+
+                                                        
+                                            
+                                           
+                                            <button type="submit" class="btn btn-primary btn-block">Submit</button>
+                                        </form>
+                                            
+                                </div>
+                                
+                                
+                    
+                    
+                            </div>
+                            
+                    
+                        </form>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+
+
+<!-- <script src="/socket.io/socket.io.js"></script>
+<script>
+  var socket = io();
+</script> -->
+<%- include ('partials/footer') -%>

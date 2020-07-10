@@ -1,0 +1,154 @@
+<%- include ('partials/header') -%>
+
+<section class="content">
+
+    <div class="flex-container small-margins">
+        <div><a class="backBtn link"><i class="fa fa-arrow-left"></i> Back</a></div>
+        <div><a href="/"><i class="fa fa-home"></i> Home </a></div>
+    </div>
+    <div class="container">
+
+        <div class="card">
+            <div class="card-header">
+                <h4>User Role</h4>
+            </div>
+            <div class="card-body">
+                
+                    <div class="row justify-content-center">
+                        <div class="col-md-10">
+                            <% if(message != undefined && message != ''){ %>
+                            <div class="alert alert-info"><%= message %></div>
+                            <% } %>
+
+
+                            <form action="saveRole" method="POST">
+                                <div class="form-group">
+                                    <label class="control-label">Title</label>
+                                    <input name="role_name" value="<%= role_name %>" required type="text"
+                                        class="form-control">
+                                        <% if(role_id != undefined && role_id != ''){ %>
+                                            <input name="id" hidden value="<%= role_id %>" required type="text"
+                                            class="form-control">
+                                            <% } %>
+                                       
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="control-label">Description of Role</label>
+                                    <textarea name="description" required type="text"
+                                     class="form-control"><%= description %></textarea>
+
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h4>Permissions</h4>
+                                <ol>
+                                    <% all_permissions.forEach(function(item){ 
+                                        if(rp_ids.indexOf(item.permission_id) !== -1){
+                                        %>
+                                        <li> 
+                                            <label >
+                                                <input checked type="checkbox" name="role_permissions" value="<%= item.permission_id %>">
+                                                <%= item.name %>
+                                            </label>
+                                            
+                                        </li>
+                                        <% } 
+                                        
+                                        else { %>
+                                            <li> 
+                                                <label >
+                                                    <input  type="checkbox" name="role_permissions" value="<%= item.permission_id %>">
+                                                    <%= item.name %>
+                                                </label>
+                                                
+                                            </li>
+                                <% }
+                            }) %>
+                                </ol>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h4>Users</h4>
+                                        <ol>
+                                            <% users.forEach(function(item){ 
+                                                %>
+                                                <li> 
+                                                    
+                                                        <%= item.display_name %> 
+                                                        <a  href="userForm?user=<%= item.id%>"><i class="fa fa-edit"></i> Edit</a>
+                                                    
+                                                    
+                                                </li>
+                                                
+                                        <% 
+                                    }) %>
+                                        </ol>
+                                    </div>
+                                </div>
+
+                                
+
+
+
+
+
+                                <button type="submit" class="btn btn-primary ">Save</button>
+                                <% if(role_id != undefined && role_id != ''){ %>
+                                    <button type="button" id="delete" class="btn btn-danger">Delete this Role</button>
+                                    <% } %>
+                            </form>
+
+                        </div>
+
+
+
+
+                    </div>
+
+
+               
+            </div>
+        </div>
+
+    </div>
+</section>
+<div class="modal fade" id="delete_modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog " role="document">
+        <div class="modal-content">
+            <div class="modal-header text-center text-danger">
+                <h4>Delete Role</h4>
+            </div>
+            <div class="modal-body">
+                Deleting this role will also delete all users associated with it. 
+                <br>
+                You could instead change the permissions given to this role or change its name. <br>
+                Do you really want to delete?
+                <form action="deleteRole" method="POST">
+                    <input type="text" hidden  name="id"  value="<%= role_id %>">
+
+                    <input type="text"   name="name"  value="<%= role_name %>">
+                    <button type="submit" id="continue" class="btn btn-success">Yes</button>
+                    <button type="button" class="btn btn-danger" data-dismiss="modal">No</button>
+                </form>
+
+            </div>
+           
+        </div>
+    </div>
+</div>
+
+
+<!-- <script src="/socket.io/socket.io.js"></script>
+<script>
+  var socket = io();
+</script> -->
+<%- include ('partials/footer') -%>
+<script>
+
+    $(document).ready(function(){
+        $(document).on("click", "#delete", function(){
+           
+            $("#delete_modal").modal("show");
+        })
+    })
+</script>

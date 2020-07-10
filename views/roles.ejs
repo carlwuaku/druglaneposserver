@@ -1,0 +1,68 @@
+<%- include ('partials/header') -%>
+<section  class="content">
+    
+    <div class="flex-container small-margins">
+        <div><a  class="backBtn link"><i class="fa fa-arrow-left"></i> Back</a></div>
+        <div><a  href="/"><i class="fa fa-home"></i> Home </a></div>
+        <div><a  class="reloadBtn link"><i class="fa fa-refresh"></i> Refresh List</a></div>
+        
+        <!-- <div><a  href="#"><i class="fa fa-download"></i> Backup Now</a></div> -->
+    </div>
+    <div class="container">
+        <h4>User roles</h4>
+        <div class="card">
+            <div class="card-header">
+             <a href="/userRole" class="btn btn-sm btn-success">Click here</a>  to add a new user role. You use the menu buttons to edit or delete a role. 
+            
+             <% if(message != undefined && message != ''){ %>
+                <div class="alert alert-info"><%= message %></div>
+            <% } %>
+            </div>
+            <div class="card-body table-responsive">
+                <table id="backup_list" class="table table-bordered table-hover">
+                    <thead>
+                        <tr>
+                            <td></td>
+                            <td>Name</td>
+                            <td>Description</td>
+                        </tr>
+                    <tbody>
+                        
+                            <% objects.forEach(function(item){ 
+                                    %>
+                                    <tr>
+                                        <td>
+                                            <a  href="userRole?role=<%= item.role_id%>">Edit/Delete Or View users</a>
+                                        </td>
+                                        <td><%= item.role_name %> <span class="itemid starthidden" ><%= item.role_id%></span> </td>
+                                        <td><%= item.description %> </td>
+                                    </tr>
+                            
+                            <% 
+                        }) %>
+
+
+                          
+
+                    
+                        
+                    </tbody>
+
+                    </thead>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+
+
+
+<!-- <script src="/socket.io/socket.io.js"></script>
+<script>
+  var socket = io();
+</script> -->
+<%- include ('partials/footer') -%>
+
+
