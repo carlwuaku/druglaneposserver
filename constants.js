@@ -220,7 +220,7 @@ const migrations = [
     query: `
       CREATE  INDEX purchase_details_index_1 ON purchase_details(created_on, 
         date);
-         CREATE UNIQUE INDEX purchase_details_index_2 ON purchase_details(code);
+         CREATE  INDEX purchase_details_index_2 ON purchase_details(code);
       `,
     version: 16
   },
@@ -267,7 +267,7 @@ const migrations = [
     query: `
       CREATE  INDEX received_transfer_details_index_1 ON received_transfer_details(created_on, 
         date);
-         CREATE UNIQUE INDEX received_transfer_details_index_2 ON received_transfer_details(code);
+         CREATE  INDEX received_transfer_details_index_2 ON received_transfer_details(code);
       `,
     version: 20
   },
@@ -454,7 +454,7 @@ const migrations = [
     query: `
       
       CREATE  INDEX transferdetails_index_1 ON transfer_details(date, created_on, product, quantity, expiry);
-      CREATE UNIQUE INDEX transferDETAILS_index_2 ON transfer_details(code);
+      CREATE  INDEX transferDETAILS_index_2 ON transfer_details(code);
 
       `,
     version: 36
@@ -551,7 +551,29 @@ const migrations = [
   {
     query: `DROP INDEX IF EXISTS purchase_details_index_2;`,
     version: 44
-  }
+  },
+  {
+    query: `DROP INDEX IF EXISTS received_transfer_details_index_2;`,
+    version: 45
+  },
+  {
+    query: `DROP INDEX IF EXISTS transferDETAILS_index_2;`,
+    version: 46
+  },
+  {
+    query: `DROP INDEX IF EXISTS received_transfer_details_index_2;`,
+    version: 47
+  },
+  {
+    query: `
+      
+      CREATE  INDEX transferDetails_index_code ON transfer_details(code);
+      CREATE  INDEX purchaseDetails_index_code ON purchase_details(code);
+      CREATE  INDEX receivedtransferDetails_index_code ON received_transfer_details(code);
+
+      `,
+    version: 48
+  } 
 
  
 ];

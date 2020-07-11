@@ -660,7 +660,7 @@ router.get('/getStockChanges', async (req, res) => {
             obj.previous_stock = "";
             obj.new_stock = "";
             obj.invoice = a.code;
-            obj.display_name = adminHelper.getUserName(a.created_by);
+            obj.display_name = await adminHelper.getUserName(a.created_by);
 
             results.push(obj)
         }
@@ -675,7 +675,7 @@ router.get('/getStockChanges', async (req, res) => {
             obj.previous_stock = "";
             obj.new_stock = "";
             obj.invoice = t.code;
-            obj.display_name = adminHelper.getUserName(t.created_by);
+            obj.display_name = await adminHelper.getUserName(t.created_by);
 
             results.push(obj)
         }
@@ -690,7 +690,7 @@ router.get('/getStockChanges', async (req, res) => {
             obj.previous_stock = "";
             obj.new_stock = "";
             obj.invoice = r.code;
-            obj.display_name = adminHelper.getUserName(r.created_by);
+            obj.display_name = await adminHelper.getUserName(r.created_by);
 
             results.push(obj)
         }
@@ -708,7 +708,7 @@ router.get('/getStockChanges', async (req, res) => {
             obj.previous_stock = "";
             obj.new_stock = "";
             obj.invoice = s.code;
-            obj.display_name = adminHelper.getUserName(sale.created_by);
+            obj.display_name = await adminHelper.getUserName(sale.created_by);
 
             results.push(obj)
         }
@@ -716,8 +716,9 @@ router.get('/getStockChanges', async (req, res) => {
         for (m = 0; m < purchases.length; m++) {
             var obj = {};
             var p = purchases[m];
+            console.log(p)
             var purchase = await mainPurchaseHelper.getItem(` code = '${p.code}'`, mainPurchaseHelper.table_name)
-
+            console.log('purchaess: '+purchase)
             obj.date = p.created_on;
             obj.timestamp = Date.parse(p.created_on);
             obj.quantity = p.quantity;
@@ -725,7 +726,7 @@ router.get('/getStockChanges', async (req, res) => {
             obj.previous_stock = "";
             obj.new_stock = "";
             obj.invoice = p.code;
-            obj.display_name = adminHelper.getUserName(purchase.created_by);
+            obj.display_name = await adminHelper.getUserName(purchase.created_by);
 
             results.push(obj)
         }

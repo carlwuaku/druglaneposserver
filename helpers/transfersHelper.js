@@ -29,7 +29,7 @@ class TransfersHelper extends dbClass {
      * @returns {Array}
      */
     async search(param, limit = null, offset= 0){
-        return await super.search(param, ['code','invoice'], limit, offset);
+        return await super.search(param,['code'],this.table_name,  limit, offset);
     }
 
 

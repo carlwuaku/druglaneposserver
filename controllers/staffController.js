@@ -116,6 +116,21 @@ router.get('/getBranches', async (req, res) => {
 	}
 })
 
+
+router.post('/saveBranch', async (req, res) => {
+	try {
+		let data = {
+			name: `'${req.body.name}'`,
+			phone: `'${req.body.phone}'`
+		}
+		let id = await helper.insert(data, helper.branches_table_name)
+		res.json({ status: id })
+	} catch (error) {
+		console.log(error);
+		res.json({ status: '-1', data: null })
+	}
+})
+
 router.get('/getInsurers', async (req, res) => {
 	try {
 		let query = await helper.getAll(helper.insurers_table_name);

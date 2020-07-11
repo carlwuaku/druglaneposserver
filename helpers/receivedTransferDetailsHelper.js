@@ -12,7 +12,7 @@ class ReceivedTransferDetailsHelper extends dbClass {
         super();
     }
     fields = ["date", "code", "product", "quantity",
-    "price","expiry","cost_price"]
+    "price","expiry","cost_price","created_by"]
     table_name = "received_transfer_details";
    
     not_string_fields = ["id","quantity","product", "price", "price", "cost_price"];
@@ -121,7 +121,7 @@ class ReceivedTransferDetailsHelper extends dbClass {
      * @param {String} end_date optional
      * @returns {Number} 
      */
-    async getTotalAmount(id, start_date='', end_date=''){
+    async getTotalAmountDateTime(id, start_date='', end_date=''){
         let sql = `select sum(quantity * price) as total from ${this.table_name} where product = ${id} `;
         if(start_date != ''){
             sql += ` and created_on >= '${start_date}' `
@@ -142,6 +142,43 @@ class ReceivedTransferDetailsHelper extends dbClass {
     }
 
 
+    /**
+     * get the total difference in stockadjustment
+     * @param {String} code 
+     * @returns {Number} 
+     */
+    async getTotal(code){
+        let sql = `select sum(quantity * price) as total from ${this.table_name} where code = '${code}' `;
+        
+
+        try {
+            await this.getConnection();
+            let q = await this.connection.get(sql);
+            return q.total == null ? 0 : q.total;
+        } catch (error) {
+            log.error(error);
+            throw new Error(error)
+        }
+    }
+
+    /**
+     * get the total number of items in receipt
+     * @param {String} code 
+     * @returns {Number} 
+     */
+    async getNumItems(code){
+        let sql = `select count(id) as total from ${this.table_name} where code = '${code}' `;
+        
+
+        try {
+            await this.getConnection();
+            let q = await this.connection.get(sql);
+            return q.total == null ? 0 : q.total;
+        } catch (error) {
+            log.error(error);
+            throw new Error(error)
+        }
+    }
  }
 
 module.exports = ReceivedTransferDetailsHelper

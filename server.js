@@ -134,6 +134,7 @@ const orderController = require('./controllers/orderController')
 const purchaseController = require('./controllers/purchaseController')
 const stockAdjustmentController = require('./controllers/stockAdjustmentController')
 const saleController = require('./controllers/saleController')
+const transferController = require('./controllers/transfersController')
 
 //any request starting with admin shd be forwarded to admin route
 app.use('/admin', adminController);
@@ -163,6 +164,7 @@ app.use('/api_order', orderController);
 app.use('/api_purchase', purchaseController);
 app.use('/api_stock', stockAdjustmentController);
 app.use('/api_sale', saleController);
+app.use('/api_transfer', transferController);
 
 app.get('/', async (req, res) => {
 
