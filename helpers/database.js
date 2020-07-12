@@ -406,6 +406,7 @@ class Db {
         try {
             if(this.connection == null){
                 this.connection = await sqlite3.open(dbpath);
+                this.connection.exec("PRAGMA foreign_keys=ON");
                 log.error('connected to db')
             }
             
@@ -839,7 +840,7 @@ class Db {
         //run the migrations
 
         let dbversion = filestore.get('dbversion');
-
+        console.log("dbversion: "+dbversion)
         for (var i = 0; i < constants.migrations.length; i++) {
             let curr = constants.migrations[i];
             let query = curr.query;
@@ -858,6 +859,7 @@ class Db {
                     } catch (error) {
                         log.error(`error at # ${version}`)
                         log.error(error)
+                        console.log(`error at # ${version}`+ error)
                         break;
                     }
                 }

@@ -11,8 +11,8 @@ class AdminHelper extends dbClass {
     constructor() {
         super();
     }
-    fields = ["id", "role_id", "email", "type", "picture", "phone",
-        "position", "qualification", "display_name", "username",
+    fields = ["id", "role_id", "email",  "phone",
+          "display_name", "username",
         "active",  "password_hash", "created_on"]
     table_name = "users";
     roles_table = "roles";

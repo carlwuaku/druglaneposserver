@@ -133,7 +133,6 @@ router.get('/getDetails', async (req, res) => {
     try {
         let code = req.query.code
 
-
         let objects = await detailsHelper.getMany(` code = '${code}'  `, detailsHelper.table_name);
         for (var i = 0; i < objects.length; i++) {
             var obj = objects[i];
@@ -142,14 +141,26 @@ router.get('/getDetails', async (req, res) => {
             // obj.product = product;
             obj.product_id = product.id;
             obj.product_name = product.name;
+            obj.product = product;
 
         }
-       
+        let item = await helper.getItem(` code = '${code}'`, helper.table_name)
+        let receiver = await adminHelper.getItem(` id = ${item.receiver}`, adminHelper.branches_table_name)
+        let display_name = await adminHelper.getUserName(item.created_by)
+        let total = await detailsHelper.getTotal(code)
         res.json({
             status: '1',
+            receiver_id: receiver.id,
+            receiver_name: receiver.name,
+            receiver_phone: receiver.phone,
+            invoice: item.invoice,
+            cashier: display_name,
+            created_on : item.created_on,
+            total: total.toFixed(2),
             data: objects
         })
     } catch (error) {
+        console.log(error)
         res.json({ status: '-1', data: null })
     }
 
@@ -169,11 +180,23 @@ router.get('/getReceivedDetails', async (req, res) => {
             // obj.product = product;
             obj.product_id = product.id;
             obj.product_name = product.name;
-
+            obj.product = product;
         }
        
+        let item = await receivedHelper.getItem(` code = '${code}'`, receivedHelper.table_name)
+        let sender = await adminHelper.getItem(` id = ${item.sender}`, adminHelper.branches_table_name)
+        let display_name = await adminHelper.getUserName(item.created_by)
+        let total = await receivedDetailsHelper.getTotal(code)
+
         res.json({
             status: '1',
+            sender_id: sender.id,
+            sender_name: sender.name,
+            sender_phone: sender.phone,
+            invoice: item.invoice,
+            cashier: display_name,
+            created_on : item.created_on,
+            total: total.toFixed(2),
             data: objects
         })
     } catch (error) {

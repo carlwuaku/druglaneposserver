@@ -506,31 +506,6 @@ const migrations = [
   },
   {
 
-    /**
-     *    INSERT INTO permissions (permission_id, name, description) VALUES
-(59, 'View Sales History', 'view sales history of a branch'),
-(60, 'Return Sold Items', 'received items returned. This will alter stock levels'),
-(61, 'Delete Sales Records', 'delete sales receipts. this erases the receipt from the database. it will affect stock levels and sales'),
-(62, 'View Sales Reports', 'View the monthly/daily sales reports page for a branch'),
-(63, 'View End Of Day Report', 'view the end of day sales summary'),
-(64, 'Transfer Items', 'transfer products to another branch. this will affect stock levels'),
-(65, 'Receive Transfers', 'receive items transferred from another branch. this will affect stock levels'),
-(66, 'View Transfer Conflicts', 'view outgoing transfers that had incorrect quantities'),
-(67, 'View Inventory', 'view the products list, expiries, and stock-out'),
-(68, 'Manage Inventory ', 'add a new product to the inventory/edit the prices, expiry dates, minimum and maximum stock'),
-(69, 'Edit Branch Products', 'edit the price, maximum and minimum stock of the products the user belongs to'),
-(70, 'Delete Products', 'make a product unavailable for sale'),
-(71, 'Add damages/expiries', 'remove items from stock to account for damages/expiries'),
-(72, 'Adjust Stock', 'adjust the stock of products or initiate stock-taking'),
-(73, 'Receive Purchases', 'receive new purchases'),
-(74, 'View Purchase History', 'view purchase invoices/details'),
-(75, 'Create Sales', 'make sales'),
-(76, 'Delete Purchases', 'delete purchases'),
-(77, 'Manage Vendors', 'add/delete vendors'),
-(78, 'View Transfer History', 'view outgoing/incoming transfer history'),
-(79, 'Delete Transfers', 'delete transfer records. this will affect stock levels'),
-(80, 'View User Activities', 'view all activities by user and time');`
-     */
     query: `INSERT INTO roles (role_id, role_name, description) values 
     (1, 'Branch Manager', 'manages day-to-day activities. Receives purchases, manages stock. May also make sales'),
     (2, 'Sales Person', 'serves customers and makes sales. Limited permissions by default');`,
@@ -573,7 +548,18 @@ const migrations = [
 
       `,
     version: 48
-  } 
+  } ,
+  {
+
+    query: `INSERT INTO permissions (permission_id, name, description) values 
+    (81, 'Manage Staff', 'add/edit/delete users. Also can change a user role or permissions');`,
+    version: 49
+  },
+  {
+    query: `INSERT INTO role_permissions (role_id, permission_id) values 
+    (1, 81);`,
+    version: 50
+  }
 
  
 ];

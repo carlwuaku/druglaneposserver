@@ -3,55 +3,14 @@ const router = express.Router();
 const mongoose = require('mongoose');
 
 
-//schema
-const Staff = require('../models/staffModel');
-const RolesModel = require('../models/RolesModel');
+
 const ActivitiesHelper = require('../helpers/activitiesHelper');
 
 const AdminHelper = require('../helpers/adminHelper');
 const helper = new AdminHelper();
-
-router.get('/getList', function (req, res) {
-	Staff.find().populate("role")
-		.exec()
-		.then(docs => {
-			res.status(200).json({ status: 1, data: docs });
-		})
-		.catch(err => {
-			res.status(500).json({
-				error: err
-			})
-		})
-})
-
-router.post('/add', async (req, res) => {
-	var username = req.body.username;
-
-	var password = req.body.password;
-	var hash = bcrypt.hashSync(password, 10);
-	//add new Staff
-	const ad = new Staff({
-		_id: mongoose.Types.ObjectId(),
-		username: req.body.username,
-		display_name: req.body.display_name,
-		password: hash,
-		contact: req.body.contact,
-		email: req.body.email,
-		role: req.body.role
-	});
+const activitiesHelper = new ActivitiesHelper()
 
 
-	ad.save()
-		.then(result => {
-			res.json(result);
-			//console.log(result)
-		})
-		.catch(err => {
-			console.log(err);
-		});
-
-
-});
 
 router.post('/login', async (req, res) => {
 
@@ -91,7 +50,7 @@ router.post('/login', async (req, res) => {
 
 
 			login.type = "staff";
-
+			await activitiesHelper.log(login.id, "'logged in'")
 
 			res.json({ status: 1, user_data: login })
 		}
@@ -139,101 +98,438 @@ router.get('/getInsurers', async (req, res) => {
 		console.log(error);
 		res.json({ status: '-1', data: null })
 	}
-})
+});
 
-router.post('/upload', function (req, res) {
-	if (!req.files)
-		return res.status(500).send('No files were uploaded.');
+router.get('/getAllActivities', async (req, res) => {
+	let offset = req.query.offset == undefined ? 0 : req.query.offset;
+	let limit = req.query.limit == undefined ? null : req.query.limit;
+	let start = req.query.start_date == undefined ? null : req.query.start_date;
+	let end = req.query.end_date == undefined ? null : req.query.end_date;
 
-	// The name of the input field (i.e. "uploadFile") is used to retrieve the uploaded file
-	let file = req.files.uploadFile;
-	let name_of_file = file.name;
-	//break down the name to get the extension
-	let split_name = name_of_file.split(".");
-	let extension = split_name.pop();
-	let new_name = Date.now() + "." + extension;
-	let location = "public/assets/customer_images/" + new_name;
-	let thumb_location = "public/assets/customer_images/thumbnails/";
-	// Use the mv() method to place the file somewhere on your server
-	let base_location = Constants.base_url + Constants.customer_image_url + new_name;
-	file.mv(location, function (err) {
-		if (err)
-			return res.status(500).send(err);
-		//create a thumbnail customer_image_thumbnail_url
-		var thumb = require('node-thumbnail').thumb;
-		thumb({
-			source: location,
-			destination: thumb_location
-		}).then(function (file) {
-			/** the file object is an array of objects
-			 * [{ srcPath: 'public\\assets\\customer_images\\1526546458704.jpg',
-	width: 800,
-	basename: undefined,
-	dstPath: 'public\\assets\\customer_images\\thumbnails\\1526546458704_thumb.jpg' }]
-	to get the filename of the thumbnail, split the dstpath prop and pop that array
-			 */
-			var thumbarray = file[0].dstPath.split("\\");
-			var thumbnail_name = thumbarray.pop()
-			res.json({ status: "1", data: { filename: new_name, location: base_location, thumbnail: thumbnail_name } });
-		}).catch(function (e) {
-			console.log('Error', e.toString());
-		});
+	try {
+		let objects;
+		if(start == null){
+			 objects = await activitiesHelper.getAll(activitiesHelper.table_name, limit, offset);
+		}
+		else{
+			objects = await activitiesHelper.getMany( `  created_on >= '${start} 00:00:00' and created_on <= '${end} 23:59:59'`,activitiesHelper.table_name, limit, offset);
 
-	});
+		}
+
+		for (var i = 0; i < objects.length; i++) {
+			var obj = objects[i];
+			obj.user = await helper.getItem(` id = ${obj.user_id} `, helper.table_name)
+
+		}
+		console.log(objects)
+		res.json({ status: '1', data: objects })
+	} catch (error) {
+		res.json({ status: '-1', data: null })
+	}
+
 });
 
 
-// router.get('/getBySchool', function (req, res) {
-// 	Staff.find({school_id: req.query.id})
-// 	.populate("role")
-// 		.exec()
+router.get('/getActivities', async (req, res) => {
+	let reg = req.query.r;
+	let offset = req.query.offset == undefined ? 0 : req.query.offset;
+	let limit = req.query.limit == undefined ? null : req.query.limit;
+	try {
+		let objects = await activitiesHelper.getMany(` activity like '%${reg}%'`, activitiesHelper.table_name, limit, offset);
+		for (var i = 0; i < objects.length; i++) {
+			var obj = objects[i];
+			obj.user = await helper.getItem(` id = ${obj.user_id} `, helper.table_name)
 
-//         .then(docs => {
-//             res.status(200).json({status: 1, data:docs});
-//         })
-//         .catch(err => {
-//             res.status(500).json({
-//                 error: err
-//             })
-//         })
-// })
-router.post('/addRole', function (req, res) {
+		}
 
-	//add new role
-	const ad = new RolesModel;
-	ad.role_name = req.body.role_name;
-	ad.description = req.body.description;
-	//ad.permissions.push(req.body.permission)
+		res.json({ status: '1', data: objects })
+	} catch (error) {
+		res.json({ status: '-1', data: null })
+	}
 
-	ad.save()
-		.then(result => {
-			ActivitiesHelper.save(req.body.display_name + " added new role  " + req.body.role_name);
+});
 
-			res.json({ status: "1", data: result });
-			//console.log(result)
-		})
-		.catch(err => {
-			console.error(err)
-			res.json({ status: "-1" });
+router.get('/getUserActivities/:id', async (req, res) => {
+	let reg = req.params.id;
+	let offset = req.query.offset == undefined ? 0 : req.query.offset;
+	let limit = req.query.limit == undefined ? null : req.query.limit;
+	let user = await helper.getItem(` id  = ${reg} `, helper.table_name);
+	let start = req.query.start_date == undefined ? null : req.query.start_date;
+	let end = req.query.end_date == undefined ? null : req.query.end_date;
 
-		});
+	try {
+		let where = start == null ? `user_id = ${reg}`: ` user_id = ${reg} and created_on >= '${start} 00:00:00' and created_on <= '${end} 23:59:59'`;
+		let objects = await activitiesHelper.getMany(where, activitiesHelper.table_name, limit, offset);
+		let total = await activitiesHelper.countBy(where, activitiesHelper.table_name)
+		for (var i = 0; i < objects.length; i++) {
+			var obj = objects[i];
+			obj.user = await helper.getItem(` id = ${obj.user_id} `, helper.table_name)
+
+		}
+
+		res.json({ status: '1', data: objects, total: total, limit: limit, user: user })
+	} catch (error) {
+		console.log(error)
+		res.json({ status: '-1', data: null })
+	}
+
+});
+
+router.get('/getUsers', async (req, res) => {
+	try {
+		
+
+		let objects = await helper.getAll(helper.table_name);
+		for (var i = 0; i < objects.length; i++) {
+			var obj = objects[i];
+			obj.role = await helper.getItem(` role_id = ${obj.role_id} `, helper.roles_table)
+
+		}
+		res.json({ status: '1', data: objects })
+	} catch (error) {
+		console.log(error)
+		res.json({ status: '-1', data: null })
+	}
+});
+
+router.get('/userForm', async (req, res) => {
+	let Helper = require('./helpers/adminHelper');
+	let h = new Helper();
+	let data = {};
+	if (req.query.m != undefined) {
+		data.message = req.query.m;
+	}
+	else {
+		data.message = "";
+	}
+	if (req.query.user != undefined) {
+		var user = await h.getUser(req.query.user);
+		data.username = user.username,
+			data.phone = user.phone,
+			data.email = user.email,
+			data.display_name = user.display_name,
+			data.active = user.active,
+			data.id = user.id
+		data.role_id = user.role_id
+	}
+	else {
+		data.username = undefined
+		data.phone = undefined
+		data.email = undefined
+		data.display_name = undefined
+		data.active = undefined
+		data.id = undefined
+		data.role_id = ''
+	}
+
+	data.roles = await h.getRoles();
+
+	res.render('userForm', data);
+	// res.sendFile(__dirname + '/app/index.html');
+});
+
+
+router.post('/saveUser', async (req, res) => {
+	try {
+		let h = helper;
+		let id = req.body.id;
+
+		if (id !== undefined) {
+			let data = h.prep_data(req.body);
+			//update. else insert
+			var password = req.body.password;
+			if (password !== undefined && password !== null) {
+				var bcrypt = require('bcryptjs');
+				var hash = bcrypt.hashSync(password, 10);
+				data.password_hash = `'${hash}'`;
+			}
+			let where = ` id = ${id} `;
+			await h.update(data, where, h.table_name);
+		}
+		else {
+			var bcrypt = require('bcryptjs');
+			var password = req.body.password;
+			var hash = bcrypt.hashSync(password, 10);
+			var data = h.prep_data(req.body);
+			data.password_hash = `'${hash}'`
+			await h.insert(data, h.table_name);
+
+		}
+		res.json({ status: '1', data: null })
+	} catch (error) {
+		console.log(error)
+		res.json({ status: '-1', data: null })
+	}
+
+
+
 
 
 });
 
-router.get('/findById', function (req, res) {
-	Staff.findById(req.query.id).populate("role")
-		.exec()
-		.then(docs => {
-			docs['id'] = docs._id;
+router.post('/deleteUser', async (req, res) => {
 
-			res.status(200).json({ status: 1, data: docs });
-		})
-		.catch(err => {
-			res.status(500).json({
-				error: err
-			})
-		})
+	let id = req.body.id;
+	let user = await helper.getUserName(id)
+	console.log(id)
+	try {
+
+		await h.delete(id, h.table_name);
+		await activitiesHelper.log(req.userid, `'deleted user ${user}'`)
+		res.json({ status: '1' })
+	} catch (error) {
+		log.error(error)
+		res.json({ status: '-1' })
+	}
+
 });
+
+router.get('/getUser/:id', async (req, res) => {
+	try {
+		let user = req.params.id;
+
+		let object = await helper.getItem(`id = ${user}`, helper.table_name);
+		object.role = await helper.getItem(`role_id = ${object.role_id}`, helper.roles_table)
+		res.json({ status: '1', data: object })
+	} catch (error) {
+		log.error(error)
+		res.json({ status: '-1', data: null })
+	}
+
+});
+
+router.get('/getRoles', async (req, res) => {
+	try {
+		let objects = await helper.getRoles();
+		res.json({ status: '1', data: objects })
+	} catch (error) {
+		log.error(error)
+		res.json({ status: '-1', data: null })
+	}
+
+});
+
+router.get('/getRolesLimit', async (req, res) => {
+	try {
+		let objects = await helper.getRoles();
+		res.json({ status: '1', data: objects })
+	} catch (error) {
+		log.error(error)
+		res.json({ status: '-1', data: null })
+	}
+
+});
+
+
+
+router.get('/getRolePermissions/:id', async (req, res) => {
+	try {
+		let h = helper;
+		let id = req.params.id;
+		var rp = await h.getRolePermissions(id);
+
+		res.json({ status: '1', data: rp })
+	} catch (error) {
+		log.error(error)
+		res.json({ status: '-1', data: null })
+	}
+
+});
+
+router.get('/getRoleExcludedPermissions/:id', async (req, res) => {
+	try {
+		let h = helper;
+		let id = req.params.id;
+		var rp = await h.getRolePermissions(id);
+		var allpermissions = await h.getPermissions();
+
+		var permission_ids = [];
+		for (var i = 0; i < allpermissions.length; i++) {
+			permission_ids.push(allpermissions[i].permission_id);
+		}
+
+		let objects = [];
+		for (var j = 0; j < rp.length; j++) {
+			if (permission_ids.indexOf(rp[j].permission_id) == -1) {
+				objects.push(rp[i])
+			}
+		}
+		res.json({ status: '1', data: objects })
+	} catch (error) {
+		console.log(error)
+		res.json({ status: '-1', data: null })
+	}
+
+});
+
+
+
+router.post('/activateUser', async (req, res) => {
+	let h = helper
+	let id = req.body.id;
+	let active = req.body.active;
+
+	console.log(id)
+	try {
+		let user = await helper.getUserName(id)
+		let data = { active: active }
+		await h.update(data, `id = ${id}`, h.table_name);
+
+		await activitiesHelper.log(req.userid, `'updated user status ${user} to ${active}'`)
+		res.json({ status: '1' })
+	} catch (error) {
+		console.log(error)
+		res.json({ status: '-1' })
+	}
+
+});
+
+router.get('/userRole', async (req, res) => {
+	let Helper = require('./helpers/adminHelper');
+	let h = new Helper();
+	let data = {};
+	if (req.query.m != undefined) {
+		data.message = req.query.m;
+	}
+	else {
+		data.message = "";
+	}
+
+
+	var rp_ids = [];
+
+	var allpermissions = await h.getPermissions();
+
+
+	if (req.query.role != undefined) {
+
+		//get the permissions for the role
+		var rp = await h.getRolePermissions(req.query.role);
+		for (var i = 0; i < rp.length; i++) {
+			rp_ids.push(rp[i].permission_id)
+		}
+
+
+		var role = await h.getRole(req.query.role);
+		data.role_id = req.query.role
+		data.role_name = role.role_name
+		data.description = role.description
+		data.role_permissions = rp
+		data.all_permissions = allpermissions;
+		data.users = await h.getUsers(`${h.table_name}.role_id = ${req.query.role}`)
+	}
+	else {
+		data.role_name = undefined
+		data.description = undefined
+		data.role_permissions = []
+		data.all_permissions = allpermissions;
+		data.role_id = undefined
+		data.users = []
+	}
+	data.rp_ids = rp_ids
+
+	res.render('userRole', data);
+	// res.sendFile(__dirname + '/app/index.html');
+});
+
+
+router.post('/addRole', async (req, res) => {
+	let h = helper;
+	let id = req.body.id;
+	let permissions = req.body.role_permissions
+	console.log(req.body)
+	try {
+		let data = {};
+		data.role_name = `'${req.body.role_name}'`;
+		data.description = `'${req.body.description}'`;
+
+		id = await h.insert(data, h.roles_table);
+		
+		res.json({ status: `'${id}'` })
+		// await h.insertMany(['role_id, permission_id', perms, h.role_permissions_table])
+	} catch (error) {
+		console.log(error)
+		res.json({ status: '-1' })
+	}
+
+
+
+
+});
+
+
+router.post('/deleteRole', async (req, res) => {
+	let h = helper;
+	const ah = activitiesHelper;
+
+	let id = req.body.id;
+	let name = req.body.name;
+	try {
+		//delete the role permissions, users
+		await h.delete(`role_id = ${id}`, h.role_permissions_table);
+		await h.delete(`role_id = ${id}`, h.table_name);
+		await h.delete(`role_id = ${id}`, h.roles_table);
+		await ah.log(req.userid, `'deleted a role ${name}'`);
+
+		res.json({ status: '1' })
+	} catch (error) {
+		log.error(error)
+		res.json({ status: '-1' })
+
+	}
+
+
+
+
+
+});
+
+router.get('/getRole/:id', async (req, res) => {
+	let h = helper
+	let id = req.params.id;
+
+	try {
+		let object = await helper.getItem(`role_id = ${id}`, helper.roles_table)
+		res.json({ status: '1', data: object })
+	} catch (error) {
+		log.error(error)
+		res.json({ status: '-1' })
+	}
+
+});
+
+router.post('/addRolePermission', async (req, res) => {
+	let role_id = req.body.role_id;
+	let permission_id = req.body.permission_id;
+	let data = {
+		role_id: role_id,
+		permission_id: permission_id
+	}
+	try {
+		 await helper.insert(data, helper.role_permissions_table)
+		await activitiesHelper.log(req.userid, `' added a permission to role: ${role_id}'`)
+		res.json({ status: '1' })
+	} catch (error) {
+		log.error(error)
+		res.json({ status: '-1' })
+	}
+
+});
+
+router.post('/deleteRolePermission', async (req, res) => {
+	let role_id = req.body.role_id;
+	let permission_id = req.body.permission_id;
+	
+	try {
+		 await helper.delete(`role_id = ${role_id} and permission_id = ${permission_id} `, helper.role_permissions_table)
+		await activitiesHelper.log(req.userid, `' deleted a permission from role: ${role_id}'`)
+		res.json({ status: '1' })
+	} catch (error) {
+		console.log(error)
+		res.json({ status: '-1' })
+	}
+
+});
+
 //export the whole thingy
 module.exports = router;
