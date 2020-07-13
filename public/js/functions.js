@@ -87,13 +87,14 @@ $(document).ready(function () {
 
     $(document).on("click", "#activatebtn", function(){
         $("#details").fadeOut("fast");
-        $("#activation_key_div").fadeOut("fast")
-        var key = $("#key").val()
+        
+        var key = $("#key").val()    
         $.get(server_url + "api_admin/findBranchByKey", {
             k: key
         }).done(function (data) {
             var js = JSON.parse(data);
             if(js.status == '1'){
+              $("#activation_key_div").fadeOut("fast")
                 $("#details").fadeIn("fast");
                 $("#name").html(js.data.name);
                 $("#address").html(js.data.address);
@@ -108,6 +109,7 @@ $(document).ready(function () {
                 $("#act_email_input").val(js.data.email);
             }
             else{
+              
                 alert('Invalid key entered. Please try again')
             }
             

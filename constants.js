@@ -519,7 +519,7 @@ const migrations = [
   },
   {
     query: `INSERT INTO role_permissions (role_id, permission_id) values 
-    (2, 59),  (2, 62), (2, 63), (2,67),  (2, 69), 
+    (2, 59),  (2, 62), (2, 63), (2,67),   
      (2, 74),  (2, 80);`,
     version: 43
   },
@@ -559,8 +559,20 @@ const migrations = [
     query: `INSERT INTO role_permissions (role_id, permission_id) values 
     (1, 81);`,
     version: 50
-  }
+  }, 
+  {
+    query: `DROP INDEX IF EXISTS product_name_unique;`,
+    version: 51
+  },
+  {
+    query: `
+      
+      CREATE  INDEX product_index_name ON products(name);
+     
+      `,
+    version: 52
+  } 
 
- 
+ //
 ];
 exports.migrations = migrations;

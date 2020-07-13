@@ -90,6 +90,12 @@ app.on('ready', function(){
         // mainWindow = null;
     })
 
+    //when external link is clicked, open in browser
+    mainWindow.webContents.on('new-window', function(e, url) {
+      e.preventDefault();
+      require('electron').shell.openExternal(url);
+    });
+
     var schedule = require('node-schedule');
     /**
      * 

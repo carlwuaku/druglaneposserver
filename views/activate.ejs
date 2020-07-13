@@ -1,44 +1,65 @@
 <%- include ('partials/header') -%>
-<section class="content">
+<style>
+  .content{
+    height: calc(100vh);
+    padding-top: 40px;
+  }
+</style>
+<section class="content bg">
   <div class="container-fluid">
     <div class="row justify-content-center">
       <div class="col-sm-6">
-        <h4>Activation Required</h4>
-        <div id="activation_key_div">
-            <label>Please enter your license key & click the Submit button</label><br>
-            <input id="key" type="text" class="form-control">
-            <button id="activatebtn" class="btn btn-block btn-primary">Submit</button>
+        <div class="card" id="activation_key_div">
+          <div class="card-header">
+            <h4>Activation Required</h4>
+          </div>
+          <div class="card-body">
+            <div >
+              <label>Please enter your license key & click the Submit button</label><br>
+              <input id="key" type="text" class="form-control">
+              <button id="activatebtn" class="btn btn-block btn-primary">Submit</button>
+          </div>
+          </div>
         </div>
-       
+        
+        
+       <div class="card starthidden" id="details">
+         <div class="card-header">
+          <h4>Company Data Found For License: </h4>
+         </div>
+         <div class="card-body">
+          <div  class="list-group ">
+            <form action="saveActivation" method="POST">
+                
+                <input hidden type="text" name="name" id="act_name_input" >
+                <input hidden type="text" name="phone" id="act_phone_input" >
+                <input hidden type="text" name="email" id="act_email_input" >
+                <input hidden type="text" name="address" id="act_address_input" >
+                <input hidden type="text" name="digital_address" id="act_digital_address_input" >
+                <div class="list-group-item">
+                  Name: <span id="name"></span>
+                </div>
+                <div class="list-group-item">
+                  Phone: <span id="phone"></span>
+                </div>
+                <div class="list-group-item">
+                  Email: <span id="email"></span>
+                </div>
+                <div class="list-group-item">
+                  Location: <span id="address"></span>
+                </div>
+                <div class="list-group-item">
+                  Digital Address: <span id="digital_address"></span>
+                </div>
+                <button type="submit" class="btn btn-block btn-primary">Continue</button>
+            </form>
+           
+  
+          </div>
+         </div>
+       </div>
 
-        <div id="details" class="list-group starthidden">
-          <form action="saveActivation" method="POST">
-              <h4>Company Data Found For License: </h4>
-              <input hidden type="text" name="name" id="act_name_input" >
-              <input hidden type="text" name="phone" id="act_phone_input" >
-              <input hidden type="text" name="email" id="act_email_input" >
-              <input hidden type="text" name="address" id="act_address_input" >
-              <input hidden type="text" name="digital_address" id="act_digital_address_input" >
-              <div class="list-group-item">
-                Name: <span id="name"></span>
-              </div>
-              <div class="list-group-item">
-                Phone: <span id="phone"></span>
-              </div>
-              <div class="list-group-item">
-                Email: <span id="email"></span>
-              </div>
-              <div class="list-group-item">
-                Location: <span id="address"></span>
-              </div>
-              <div class="list-group-item">
-                Digital Address: <span id="digital_address"></span>
-              </div>
-              <button type="submit" class="btn btn-block btn-primary">Continue</button>
-          </form>
-         
-
-        </div>
+        
       </div>
 
     </div>
@@ -48,9 +69,6 @@
   </div>
 </section>
 
-<script src="/socket.io/socket.io.js"></script>
-<script>
+<!-- <script src="/socket.io/socket.io.js"></script> -->
 
-  var socket = io();
-</script>
 <%- include ('partials/footer') -%>

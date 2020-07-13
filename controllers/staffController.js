@@ -75,7 +75,7 @@ router.get('/getBranches', async (req, res) => {
 	}
 })
 
-
+ 
 router.post('/saveBranch', async (req, res) => {
 	try {
 		let data = {
@@ -89,7 +89,7 @@ router.post('/saveBranch', async (req, res) => {
 		res.json({ status: '-1', data: null })
 	}
 })
-
+ 
 router.get('/getInsurers', async (req, res) => {
 	try {
 		let query = await helper.getAll(helper.insurers_table_name);
@@ -106,7 +106,7 @@ router.get('/getAllActivities', async (req, res) => {
 	let start = req.query.start_date == undefined ? null : req.query.start_date;
 	let end = req.query.end_date == undefined ? null : req.query.end_date;
 
-	try {
+	try {   
 		let objects;
 		if(start == null){
 			 objects = await activitiesHelper.getAll(activitiesHelper.table_name, limit, offset);
@@ -342,16 +342,17 @@ router.get('/getRoleExcludedPermissions/:id', async (req, res) => {
 		let id = req.params.id;
 		var rp = await h.getRolePermissions(id);
 		var allpermissions = await h.getPermissions();
-
+		
 		var permission_ids = [];
-		for (var i = 0; i < allpermissions.length; i++) {
-			permission_ids.push(allpermissions[i].permission_id);
+		for (var i = 0; i < rp.length; i++) {
+			permission_ids.push(rp[i].permission_id);
 		}
-
+		console.log(permission_ids)
 		let objects = [];
-		for (var j = 0; j < rp.length; j++) {
-			if (permission_ids.indexOf(rp[j].permission_id) == -1) {
-				objects.push(rp[i])
+		for (var j = 0; j < allpermissions.length; j++) {
+			console.log(allpermissions[j].permission_id)
+			if (permission_ids.indexOf(allpermissions[j].permission_id) == -1) {
+				objects.push(allpermissions[j])
 			}
 		}
 		res.json({ status: '1', data: objects })

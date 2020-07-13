@@ -6,9 +6,13 @@
                         <i class="fa fa-info"> </i> The server address is : http://<%= host%>:<%= port%>
                 </div>
                 <div class="alert alert-info">
-                        <i class="fa fa-info"> </i> Automatic backups are done everyday at 7:00PM. If you close
-                        the server or shut down the computer before 7:00PM, a backup will be created automatically
-                        at that time.
+                        <i class="fa fa-info"> </i> Automatic backups are done everyday at 7:00PM. You can also manually 
+                        create a backup any time you want by using the tabs below. 
+                </div>
+                <div class="alert alert-info">
+                        <i class="fa fa-info"> </i> To open the client (main POS) on another device, open a 
+                        browser on that device, and in the address bar, type  http://<%= host%>:<%= port%>/client and press 'Enter'.
+                        You would need a username and password created on this server to be able to login on that device
                 </div>
                 <%
           if(message != ""){
@@ -22,9 +26,13 @@
                 Logged in as Administrator. <a href="logout"  class="btn btn-danger">Log Out</a> 
                 <%  }
       else{ %>
+
         <a href="login"  class="btn btn-success">Login As Administrator</a> 
                 <% }
       %>
+      <a href="http://<%= host%>:<%= port%>/client" target="_blank"  class="btn btn-success">Go To Main System</a> 
+<hr>
+
 
                 <!-- <div class="alert alert-success starthidden" id="backup_alert">
 
