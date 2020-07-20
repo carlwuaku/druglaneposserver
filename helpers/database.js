@@ -16,7 +16,7 @@ const moment = require('moment')
 class Db {
     connection;
 
-   
+
 
     prep_data(data, fields, not_string_fields) {
         var returner = {};
@@ -132,7 +132,7 @@ class Db {
         var currentDate = moment(startDate);
         var stopDate = moment(stopDate);
         while (currentDate <= stopDate) {
-            dateArray.push( moment(currentDate).format('YYYY-MM-DD') )
+            dateArray.push(moment(currentDate).format('YYYY-MM-DD'))
             currentDate = moment(currentDate).add(1, 'days');
         }
         return dateArray;
@@ -267,46 +267,46 @@ class Db {
         });
     }
 
-    formatDate(today, type='') {
+    formatDate(today, type = '') {
 
         var dd = today.getDate();
         var mm = today.getMonth() + 1; //January is 0!
-    
+
         var yyyy = today.getFullYear();
         var dd_string
         if (dd < 10) {
-          dd_string = '0' + dd;
+            dd_string = '0' + dd;
         }
         else {
-          dd_string = dd.toString()
+            dd_string = dd.toString()
         }
-    
-    
-    
+
+
+
         var mm_string
         if (mm < 10) {
-          mm_string = '0' + mm;
+            mm_string = '0' + mm;
         }
         else {
-          mm_string = mm.toString()
+            mm_string = mm.toString()
         }
-    
+
         if (type == "timestamp") {
-          var hrs = today.getHours();
-          var mins = today.getMinutes();
-          var secs = today.getSeconds();
-          return yyyy + '-' + mm_string + '-' + dd_string + ' ' + hrs + ':' + mins + ':' + secs;
+            var hrs = today.getHours();
+            var mins = today.getMinutes();
+            var secs = today.getSeconds();
+            return yyyy + '-' + mm_string + '-' + dd_string + ' ' + hrs + ':' + mins + ':' + secs;
         }
-    
+
         //put it all together like a code
         if (type == "timestamp_string") {
-          var hrs = today.getHours();
-          var mins = today.getMinutes();
-          var secs = today.getSeconds();
-          return yyyy + '' + mm_string + '' + dd_string + '' + hrs + '' + mins + '' + secs;
+            var hrs = today.getHours();
+            var mins = today.getMinutes();
+            var secs = today.getSeconds();
+            return yyyy + '' + mm_string + '' + dd_string + '' + hrs + '' + mins + '' + secs;
         }
         return yyyy + '-' + mm_string + '-' + dd_string;
-      }
+    }
 
     /**
      *   get the start and end dates
@@ -404,17 +404,18 @@ class Db {
         const dbpath = constants.db_path;
         // log.error(dbpath)
         try {
-            if(this.connection == null){
+            if (this.connection == null) {
                 this.connection = await sqlite3.open(dbpath);
                 this.connection.exec("PRAGMA foreign_keys=ON");
-                log.error('connected to db')
+                // log.error('connected to db')
             }
-            
-            else{
-                console.log('already connected')
+
+            else {
+                // console.log('already connected')
             }
 
         } catch (error) {
+            log.error(error)
             console.error(error)
         }
     }
@@ -471,7 +472,10 @@ class Db {
 
     }
 
+    async closeConnection() {
+        await this.connection.close().then(succ => { this.connection = null; }, err => { })
 
+    }
 
     async delete(condition, table) {
 
@@ -606,7 +610,7 @@ class Db {
 
         let query = `update  ${table} set ${field} = ${value} where ${conditions}  `;
         // log.error(query)
-        console.log(query)
+        // console.log(query)
         try {
             await this.getConnection();
             let res = await this.connection.run(query);
@@ -615,7 +619,8 @@ class Db {
 
         } catch (err) {
             console.log(query)
-            // log.error(err);
+            log.error(query);
+            log.error(err);
             //this.connection.close().then(succ => { }, err => { })
             throw new Error(err)
         }
@@ -840,7 +845,7 @@ class Db {
         //run the migrations
 
         let dbversion = filestore.get('dbversion');
-        console.log("dbversion: "+dbversion)
+        console.log("dbversion: " + dbversion)
         for (var i = 0; i < constants.migrations.length; i++) {
             let curr = constants.migrations[i];
             let query = curr.query;
@@ -859,7 +864,7 @@ class Db {
                     } catch (error) {
                         log.error(`error at # ${version}`)
                         log.error(error)
-                        console.log(`error at # ${version}`+ error)
+                        console.log(`error at # ${version}` + error)
                         break;
                     }
                 }
@@ -877,11 +882,11 @@ class Db {
      * @param {int} limit 
      * @param {int} offset 
      */
-    async search(param, fields,table, limit = null, offset = 0) {
+    async search(param, fields, table, limit = null, offset = 0) {
         let words_array = param.split(",");
         let combined_where = [];
         words_array.forEach(word => {
-           let trim_word = word.trim();
+            let trim_word = word.trim();
             if (trim_word !== null && trim_word.length > 0) {
                 let processed_word = "(";
                 processed_word += this.processSearch(word, fields);
@@ -893,13 +898,14 @@ class Db {
         let final_where = combined_where.join(" or ");
 
         let sql = `select * from ${table} where ${final_where} `;
-        console.log(sql)
+        // console.log(sql)
         if (limit != null) {
             sql += ` limit ${limit} offset ${offset}`
         }
         try {
+        await this.getConnection();
             let query = await this.connection.all(sql);
-            
+
             return query;//an array of objects
         } catch (err) {
             log.error(err);

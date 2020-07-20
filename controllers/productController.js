@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-
+const log = require('electron-log');
 
 
 
@@ -13,12 +13,32 @@ router.get('/getList', async (req, res) => {
     let offset = req.query.offset == undefined ? 0 : req.query.offset;
     let limit = req.query.limit == undefined ? null : req.query.limit;
     try {
-        let objects = await helper.getAll(helper.table_name, limit, offset);
+        // let objects = await helper.getAll(helper.table_name, limit, offset);
+
+        let conditions = helper.prep_data(req.query);
+        let objects = null;
+        let total = null;
+        if(Object.keys(conditions).length === 0 && conditions.constructor === Object){
+             objects = await helper.getAll(helper.table_name, limit, offset);
+             total = await helper.count('id', helper.table_name);
+        }
+        else{
+            let where = [];
+            for (let key in conditions) {
+                where.push(` ${key} = '${conditions[key]}' `)
+                
+            }
+            objects = await helper.getMany(where.join(" and "), helper.table_name, limit, offset);
+            total = await helper.countBy(where.join(" and "), helper.table_name);
+        }
+
+
         objects.map(obj => {
             obj.stock = obj.current_stock
         })
-        res.json({ status: '1', data: objects })
+        res.json({ status: '1', data: objects, total: total })
     } catch (error) {
+        await helper.closeConnection();
         res.json({ status: '-1', data: null })
     }
 
@@ -27,9 +47,25 @@ router.get('/getList', async (req, res) => {
 router.get('/getProductsWithStock', async (req, res) => {
     let offset = req.query.offset == undefined ? 0 : req.query.offset;
     let limit = req.query.limit == undefined ? null : req.query.limit;
+    //get any conditions set in query
     try {
-        let objects = await helper.getAll(helper.table_name, limit, offset);
-        let total = await helper.count('id', helper.table_name);
+        let conditions = helper.prep_data(req.query);
+        let objects = null;
+        let total = null;
+        if(Object.keys(conditions).length === 0 && conditions.constructor === Object){
+             objects = await helper.getAll(helper.table_name, limit, offset);
+             total = await helper.count('id', helper.table_name);
+        }
+        else{
+            let where = [];
+            for (let key in conditions) {
+                where.push(` ${key} = '${conditions[key]}' `)
+                
+            }
+            objects = await helper.getMany(where.join(" and "), helper.table_name, limit, offset);
+            total = await helper.countBy(where.join(" and "), helper.table_name);
+        }
+        
         let last_update_time = await helper.getField('max(last_modified) as time', helper.table_name);
         for (var i = 0; i < objects.length; i++) {
             var obj = objects[i];
@@ -44,9 +80,10 @@ router.get('/getProductsWithStock', async (req, res) => {
             obj.stock = obj.current_stock
         }
 
-        
-        res.json({ status: '1', data: objects, last_update_time: last_update_time.time, total })
+
+        res.json({ status: '1', data: objects, last_update_time: last_update_time.time, total: total })
     } catch (error) {
+        await helper.closeConnection();
         res.json({ status: '-1', data: null })
     }
 
@@ -76,6 +113,7 @@ router.get('/getUpdatedProducts', async (req, res) => {
 
         res.json({ status: '1', data: objects, last_update_time: last_update_time.time, total })
     } catch (error) {
+        await helper.closeConnection();
         res.json({ status: '-1', data: null })
     }
 
@@ -96,15 +134,17 @@ router.post('/saveBranchDetails', async (req, res) => {
     try {
         if (id == undefined) {
             await helper.insert(data, helper.table_name);
-            // await activities.log(req.headers['userid'], 'added a new product to database', 'Products');
+            await activities.log(req.query.userid, `"created a product: ${name}"`, `'Products'`)
         }
         else {
 
             await helper.update(data, ` id = ${id}`, helper.table_name);
+            await activities.log(req.query.userid, `"updated a product: ${name}"`, `'Products'`)
 
         }
         res.json({ status: '1' })
     } catch (error) {
+        await helper.closeConnection();
         console.log(error)
         res.json({ status: '-1', data: null })
     }
@@ -126,8 +166,11 @@ router.post('/massEdit', async (req, res) => {
     try {
         let where = ` id in (${id}) `
         await helper.updateField(field, value, where, helper.table_name);
+        await activities.log(req.query.userid, `"massed edited ${field} to ${value} "`, `'Products'`)
+
         res.json({ status: '1' })
     } catch (error) {
+        await helper.closeConnection();
         console.log(error)
         res.json({ status: '-1' })
     }
@@ -142,8 +185,11 @@ router.post('/delete', async (req, res) => {
     try {
         let where = ` id in (${id}) `
         await helper.delete(where, helper.table_name);
+        await activities.log(req.query.userid, `"deleted a product edited  "`, `'Products'`)
+
         res.json({ status: '1' })
     } catch (error) {
+        await helper.closeConnection();
         console.log(error)
         res.json({ status: '-1' })
     }
@@ -158,8 +204,11 @@ router.post('/softDelete', async (req, res) => {
         let where = ` id in (${id}) `;
         //set the status to 0
         await helper.updateField('status', 0, where, helper.table_name);
+        await activities.log(req.query.userid, `"deleted a product  "`, `'Products'`)
+
         res.json({ status: '1' })
     } catch (error) {
+        await helper.closeConnection();
         console.log(error)
         res.json({ status: '-1' })
     }
@@ -174,8 +223,11 @@ router.post('/restore', async (req, res) => {
         let where = ` id in (${id}) `;
         //set the status to 0
         await helper.updateField('status', 1, where, helper.table_name);
+        await activities.log(req.query.userid, `"restored a product   "`, `'Products'`)
+
         res.json({ status: '1' })
     } catch (error) {
+        await helper.closeConnection();
         console.log(error)
         res.json({ status: '-1' })
     }
@@ -192,6 +244,7 @@ router.get('/findById', async (req, res) => {
         item.out_of_stock = item.stock < 1;
         res.json({ status: '1', data: item })
     } catch (error) {
+        await helper.closeConnection();
         console.log(error)
         res.json({ status: '-1' })
     }
@@ -204,6 +257,7 @@ router.get('/getStock', async (req, res) => {
         console.log(count)
         res.json({ status: '1', data: count })
     } catch (error) {
+        await helper.closeConnection();
         console.log(error)
         res.json({ status: '-1' })
     }
@@ -216,6 +270,7 @@ router.get('/getCategoryCounts', async (req, res) => {
 
         res.json({ status: '1', data: data })
     } catch (error) {
+        await helper.closeConnection();
         console.log(error)
         res.json({ status: '-1' })
     }
@@ -234,6 +289,7 @@ router.get('/createStockAdjustmentSession', async (req, res) => {
         await stockHelper.updateField('code', `'${code}'`, ` id = ${id} `, stockHelper.sessions_table_name)
         res.json({ status: '1', data: code })
     } catch (error) {
+        await helper.closeConnection();
         console.log(error)
         res.json({ status: '-1' })
     }
@@ -300,10 +356,11 @@ router.post('/saveStockAdjustment', async (req, res) => {
         // stockHelper.connection.close().then(succ => { }, err => { })
         res.json({ status: '1' })
     } catch (error) {
+        await helper.closeConnection();
         //   try {
         //     await stockHelper.connection.run("ROLL BACK;");
         //     stockHelper.connection.close().then(succ => {}, err => {})
-        //   } catch (error) {
+        //   } catch (error) { await helper.closeConnection();
         //       console.log(error)
         //   }
 
@@ -340,6 +397,7 @@ router.post('/saveSingleStockAdjustment', async (req, res) => {
 
         res.json({ status: '1' })
     } catch (error) {
+        await helper.closeConnection();
         // stockHelper.connection.run("ROLL BACK");
         console.log(error)
         res.json({ status: '-1' })
@@ -366,6 +424,7 @@ router.get('/getStockAdjustmentSessions', async (req, res) => {
 
         res.json({ status: '1', data: objects })
     } catch (error) {
+        await helper.closeConnection();
         res.json({ status: '-1', data: null })
     }
 
@@ -414,6 +473,7 @@ router.get('/getStockAdjustmentsBetweenDates', async (req, res) => {
             data: objects
         })
     } catch (error) {
+        await helper.closeConnection();
         res.json({ status: '-1', data: null })
     }
 
@@ -459,6 +519,7 @@ router.get('/getStockAdjustmentsByCode', async (req, res) => {
             data: objects
         })
     } catch (error) {
+        await helper.closeConnection();
         res.json({ status: '-1', data: null })
     }
 
@@ -479,6 +540,7 @@ router.get('/getStockOutCount', async (req, res) => {
 
         res.json({ status: '1', data: data })
     } catch (error) {
+        await helper.closeConnection();
         console.log(error)
         res.json({ status: '-1', data: null })
     }
@@ -491,6 +553,7 @@ router.get('/hasStockOut', async (req, res) => {
         let data = q > 0;
         res.json({ status: '1', data: data })
     } catch (error) {
+        await helper.closeConnection();
         console.log(error)
         res.json({ status: '-1', data: null })
     }
@@ -514,6 +577,7 @@ router.get('/getStockOutList', async (req, res) => {
         }
         res.json({ status: '1', data: objects })
     } catch (error) {
+        await helper.closeConnection();
         console.log(error)
         res.json({ status: '-1', data: null })
     }
@@ -526,6 +590,7 @@ router.get('/getStockNearMinCount', async (req, res) => {
 
         res.json({ status: '1', data: data })
     } catch (error) {
+        await helper.closeConnection();
         console.log(error)
         res.json({ status: '-1', data: null })
     }
@@ -539,6 +604,7 @@ router.get('/hasStockNearMin', async (req, res) => {
         let data = q > 0;
         res.json({ status: '1', data: data })
     } catch (error) {
+        await helper.closeConnection();
         console.log(error)
         res.json({ status: '-1', data: null })
     }
@@ -562,6 +628,7 @@ router.get('/getStockNearMinList', async (req, res) => {
         }
         res.json({ status: '1', data: objects })
     } catch (error) {
+        await helper.closeConnection();
         console.log(error)
         res.json({ status: '-1', data: null })
     }
@@ -574,6 +641,7 @@ router.get('/getStockNearMaxCount', async (req, res) => {
 
         res.json({ status: '1', data: data })
     } catch (error) {
+        await helper.closeConnection();
         console.log(error)
         res.json({ status: '-1', data: null })
     }
@@ -587,6 +655,7 @@ router.get('/hasStockNearMax', async (req, res) => {
         let data = q > 0;
         res.json({ status: '1', data: data })
     } catch (error) {
+        await helper.closeConnection();
         console.log(error)
         res.json({ status: '-1', data: null })
     }
@@ -610,6 +679,7 @@ router.get('/getStockNearMaxList', async (req, res) => {
         }
         res.json({ status: '1', data: objects })
     } catch (error) {
+        await helper.closeConnection();
         console.log(error)
         res.json({ status: '-1', data: null })
     }
@@ -718,7 +788,7 @@ router.get('/getStockChanges', async (req, res) => {
             var p = purchases[m];
             console.log(p)
             var purchase = await mainPurchaseHelper.getItem(` code = '${p.code}'`, mainPurchaseHelper.table_name)
-            console.log('purchaess: '+purchase)
+            console.log('purchaess: ' + purchase)
             obj.date = p.created_on;
             obj.timestamp = Date.parse(p.created_on);
             obj.quantity = p.quantity;
@@ -731,9 +801,10 @@ router.get('/getStockChanges', async (req, res) => {
             results.push(obj)
         }
 
-        helper.sortObjects(results,'timestamp', 1)
+        helper.sortObjects(results, 'timestamp', 1)
         res.json({ status: '1', data: results })
     } catch (error) {
+        await helper.closeConnection();
         console.log(error)
         res.json({ status: '-1', data: null })
     }
@@ -746,14 +817,15 @@ router.get('/getStockChanges', async (req, res) => {
 router.get('/getExpiryCount', async (req, res) => {
     try {
         let defs = helper.setDates('this_month')
-        let start = req.query.start_date  == undefined ? defs.start_date : req.query.start_date;
-        let end = req.query.end_date == undefined ? defs.end_date: req.query.end_date;
+        let start = req.query.start_date == undefined ? defs.start_date : req.query.start_date;
+        let end = req.query.end_date == undefined ? defs.end_date : req.query.end_date;
 
 
         let data = await helper.count('id', helper.table_name, ` expiry >= '${start}' and expiry <= '${end}' and current_stock > 0`)
 
         res.json({ status: '1', data: data })
-    } catch (error) { 
+    } catch (error) {
+        await helper.closeConnection();
         console.log(error)
         res.json({ status: '-1', data: null })
     }
@@ -764,14 +836,15 @@ router.get('/getExpiryCount', async (req, res) => {
 router.get('/hasExpiry', async (req, res) => {
     try {
         let defs = helper.setDates('this_month')
-        let start = req.query.start_date  == undefined ? defs.start_date : req.query.start_date;
-        let end = req.query.end_date == undefined ? defs.end_date: req.query.end_date;
+        let start = req.query.start_date == undefined ? defs.start_date : req.query.start_date;
+        let end = req.query.end_date == undefined ? defs.end_date : req.query.end_date;
 
 
         let q = await helper.count('id', helper.table_name, ` expiry >= '${start}' and expiry <= '${end}'  and current_stock > 0 `)
         let data = q > 0;
         res.json({ status: '1', data: data })
     } catch (error) {
+        await helper.closeConnection();
         console.log(error)
         res.json({ status: '-1', data: null })
     }
@@ -781,8 +854,8 @@ router.get('/hasExpiry', async (req, res) => {
 router.get('/getExpiryList', async (req, res) => {
     try {
         let defs = helper.setDates('this_month')
-        let start = req.query.start_date  == undefined ? defs.start_date : req.query.start_date;
-        let end = req.query.end_date == undefined ? defs.end_date: req.query.end_date;
+        let start = req.query.start_date == undefined ? defs.start_date : req.query.start_date;
+        let end = req.query.end_date == undefined ? defs.end_date : req.query.end_date;
 
 
         let objects = await helper.getMany(`  expiry >= '${start}' and expiry <= '${end}'  and current_stock > 0  `, helper.table_name)
@@ -800,6 +873,7 @@ router.get('/getExpiryList', async (req, res) => {
         }
         res.json({ status: '1', data: objects })
     } catch (error) {
+        await helper.closeConnection();
         console.log(error)
         res.json({ status: '-1', data: null })
     }
@@ -815,6 +889,7 @@ router.get('/getExpiredCount', async (req, res) => {
 
         res.json({ status: '1', data: data })
     } catch (error) {
+        await helper.closeConnection();
         console.log(error)
         res.json({ status: '-1', data: null })
     }
@@ -830,6 +905,7 @@ router.get('/hasExpired', async (req, res) => {
         let data = q > 0;
         res.json({ status: '1', data: data })
     } catch (error) {
+        await helper.closeConnection();
         console.log(error)
         res.json({ status: '-1', data: null })
     }
@@ -839,7 +915,7 @@ router.get('/hasExpired', async (req, res) => {
 router.get('/getExpiredList', async (req, res) => {
     try {
         let start = helper.getToday();
-       
+
 
         let objects = await helper.getMany(`  expiry <= '${start}'   and current_stock > 0  `, helper.table_name)
         for (var i = 0; i < objects.length; i++) {
@@ -856,6 +932,7 @@ router.get('/getExpiredList', async (req, res) => {
         }
         res.json({ status: '1', data: objects })
     } catch (error) {
+        await helper.closeConnection();
         console.log(error)
         res.json({ status: '-1', data: null })
     }
@@ -873,6 +950,29 @@ router.get('/getCategories', async (req, res) => {
         })
         res.json({ status: '1', data: arr })
     } catch (error) {
+        await helper.closeConnection();
+        res.json({ status: '-1', data: null })
+    }
+
+
+});
+
+router.get('/refreshAllProducts', async (req, res) => {
+    var msg = "";
+    try {
+        let objects = await helper.getAll(helper.table_name);
+        for (var i = 0; i < objects.length; i++) {
+            let stock = await helper.calculateCurrentStock(objects[i].id);
+            await helper.updateField('current_stock', stock, ` id = ${objects[i].id}`, helper.table_name);
+            msg += `<p>${objects[i].name} updated to ${stock}</p>`
+        }
+        // res.json({ status: '1', data: arr })
+        // res.redirect('/?message=Products Refreshed Successfully')
+        res.send(msg)
+    } catch (error) {
+        await helper.closeConnection();
+        console.log(error)
+        log.error(error)
         res.json({ status: '-1', data: null })
     }
 

@@ -3,6 +3,7 @@
     <div class="flex-container small-margins">
         <div><a  class="backBtn link"><i class="fa fa-arrow-left"></i> Back</a></div>
         <div><a  href="/"><i class="fa fa-home"></i> Home </a></div>
+        <div><a  href="/setup"><i class="fa fa-home"></i> Setup </a></div>
     </div>
     <div class="container">
         <h3>Login - DruglanePOS Server</h3>
@@ -18,8 +19,7 @@
                         if(error != ""){
                     %>
                     <div class="alert alert-danger">
-                        Wrong combination. Try again or click <a href="#" class="">here if
-                             you forgot your password password</a>
+                        Wrong combination. Try again.
                     </div>
                     <% } %>
                         <form action="dologin" method="POST">

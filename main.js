@@ -4,10 +4,10 @@ const {app, BrowserWindow, Menu, ipcMain } = require('electron');
 const server = require('./server');
 const fs = require('fs');
 const log = require('electron-log');
-
+ 
 // const MainWindow = require('./MainWindow')
 const AppTray = require('./AppTray')
-process.env.NODE_ENV = 'development';
+process.env.NODE_ENV = 'production';
 let constants = require('./constants')
 const isDev = process.env.NODE_ENV !== 'production' ? true : false;
 const isMac = process.platform === 'darwin' ? true : false;
@@ -78,10 +78,12 @@ app.on('ready', function(){
     // globalShortcut.register('CmdOrCtrl+R', () => mainWindow.reload());
     // globalShortcut.register('CmdOrCtrl+Alt+i', () => {mainWindow.toggleDevTools()});
 
-    mainWindow.on('close', (e)=>{
+    mainWindow.on('close', (e)=>{ 
         if(!app.isQuitting){
             e.preventDefault();
             mainWindow.hide();
+            tray.displayBalloon({title: 'Running In Background', 
+            content: 'Server is running. To quit, right-click and choose Quit option ', iconType: 'info'})
         }
         else{
           tray = null
@@ -120,13 +122,21 @@ const menu = [
     ...(isMac ? [{label: app.name,
     submenu: [{label: 'About', click: createAboutWindow}]}] : []),
     {
-        label: 'File',
+        label: 'System',
         submenu: [
             {
                 label: 'Quit', 
                 click: () => app.quit(),
                 accelerator: 'CmdOrCtrl+w'
-            }
+            },
+            {
+              label: 'Restart Sever', 
+              click: () => {
+                 app.relaunch()
+                app.exit()
+              },
+              accelerator: 'CmdOrCtrl+r'
+          }
         ]
     },
     ...(isDev? [

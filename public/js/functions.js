@@ -1,6 +1,6 @@
 
 //JQUERY
-const server_url = "http://localhost/stock/";
+const server_url = "https://druglanepms.calgadsoftwares.com/";
 
 function showNotification(msg, type, delay) {
     if (type === "fail") {

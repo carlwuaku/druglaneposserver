@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-
+const log = require('electron-log');
 
 const Helper = require('../helpers/purchaseHelper.js');
 const helper = new Helper();
@@ -41,6 +41,8 @@ router.get('/getList', async (req, res) => {
 
         res.json({ status: '1', data: objects })
     } catch (error) {
+        await helper.closeConnection();
+        log.error(error)
         res.json({ status: '-1', data: null })
     }
 
@@ -76,7 +78,7 @@ router.post('/saveBulk', async (req, res) => {
         //last id
         let last_id = await helper.getField('max(id) as max_id', helper.table_name);
         console.log(last_id)
-        let code = last_id.max_id == null ? `'00001'`: `'${(last_id.max_id + 1).toString().padStart(5,'0')}'`;
+        let code = last_id.max_id == null ? `'00001'` : `'${(last_id.max_id + 1).toString().padStart(5, '0')}'`;
 
         let objects = [];
         let product_updates = [];
@@ -86,7 +88,7 @@ router.post('/saveBulk', async (req, res) => {
             data.date = `'${date}'`;
             data.unit = `'${units[i]}'`;
             data.product = products[i];
-            data.selling_price = selling_prices[i] ;
+            data.selling_price = selling_prices[i];
             data.quantity = quantities[i];
             data.price = prices[i];
             data.markup = markups[i];
@@ -95,12 +97,13 @@ router.post('/saveBulk', async (req, res) => {
             objects.push(data);
             //generate the update for the product
             let product_data = {
-                price:selling_prices[i], 
+                price: selling_prices[i],
                 cost_price: prices[i],
-            unit: `'${units[i]}'`,
-        expiry: `'${expiries[i]}'` }
-        let p = productHelper.generateUpdateQuery(product_data, ` id = ${products[i]} `, productHelper.table_name)
-                product_updates.push(p);
+                unit: `'${units[i]}'`,
+                expiry: `'${expiries[i]}'`
+            }
+            let p = productHelper.generateUpdateQuery(product_data, ` id = ${products[i]} `, productHelper.table_name)
+            product_updates.push(p);
         }
         console.log(objects)
 
@@ -131,7 +134,8 @@ router.post('/saveBulk', async (req, res) => {
 
         res.json({ status: '1' })
     } catch (error) {
-
+        await helper.closeConnection();
+        log.error(error)
         console.log(error)
         res.json({ status: '-1' })
     }
@@ -161,11 +165,13 @@ router.get('/getDetails', async (req, res) => {
             vendor_id: vendor.id,
             vendor_name: vendor.name,
             invoice: item.invoice,
-            created_on : item.created_on,
+            created_on: item.created_on,
             total: total.toFixed(2),
             data: objects
         })
     } catch (error) {
+        await helper.closeConnection();
+        log.error(error)
         res.json({ status: '-1', data: null })
     }
 
@@ -187,12 +193,14 @@ router.get('/getDetailsByVendor', async (req, res) => {
             obj.product_name = product.name;
 
         }
-         res.json({
+        res.json({
             status: '1',
-           
+
             data: objects
         })
     } catch (error) {
+        await helper.closeConnection();
+        log.error(error)
         res.json({ status: '-1', data: null })
     }
 
@@ -201,89 +209,95 @@ router.get('/getDetailsByVendor', async (req, res) => {
 
 router.post('/delete', async (req, res) => {
     try {
-        
-         let id = req.body.id ;//comma-separated
-         let code = req.body.code;
 
-         let products = []
+        let id = req.body.id;//comma-separated
+        let code = req.body.code;
+
+        let products = []
         let product_query = await detailsHelper.getDistinct('product', detailsHelper.table_name, ` code = '${code}'`);
         product_query.map(p => {
             products.push(p.product);
         })
 
-         await helper.delete(` id in (${id})`, helper.table_name);
-         await activities.log(req.userid,`"deleted purchase: ${code}"`,"'Vendors'")
+        await helper.delete(` id in (${id})`, helper.table_name);
+        await activities.log(req.userid, `"deleted purchase: ${code}"`, "'Vendors'")
 
-         for (var x = 0; x < products.length; x++) {
-    
+        for (var x = 0; x < products.length; x++) {
+
             let pid = products[x];
             await productHelper.refreshCurrentStock(pid)
         }
- 
-         res.json({ status: '1', data: null })
-     } catch (error) {
-        console.log(error)
-         res.json({ status: '-1', data: null })
-     }
- 
- });
 
- router.post('/deleteItem', async (req, res) => {
-    try {
-        
-         let id = req.body.id ;//comma-separated
-         let codes = req.body.codes;
-         let invoices = req.body.invoices;
-
-         let products = []
-        let product_query = await detailsHelper.getDistinct('product', detailsHelper.table_name, ` code in (${codes})`);
-        product_query.map(p => {
-            products.push(p.product);
-        })
-
-         await helper.delete(` id in (${id})`, helper.table_name);
-         await activities.log(req.userid,`"deleted purchases with invoices: ${invoices}"`,"'Vendors'")
-
-
-
-         for (var x = 0; x < products.length; x++) {
-    
-            let pid = products[x];
-            await productHelper.refreshCurrentStock(pid)
-        }
- 
-         res.json({ status: '1', data: null })
-     } catch (error) {
-        console.log(error)
-         res.json({ status: '-1', data: null })
-     }
- 
- });
-
-
- 
-router.get('/findById', async (req, res) => {
-    try {
-        let id = req.query.id;
-        
-        let object = await helper.getItem(`id = ${id} `, helper.table_name);
-        
-        
-        
-        res.json({
-            status: '1',
-            data: object
-        })
+        res.json({ status: '1', data: null })
     } catch (error) {
+        await helper.closeConnection();
+        console.log(error)
+        log.error(error)
         res.json({ status: '-1', data: null })
     }
 
 });
 
- 
+router.post('/deleteItem', async (req, res) => {
+    try {
+
+        let id = req.body.id;//comma-separated
+        let codes = req.body.codes;
+        let invoices = req.body.invoices;
+
+        let products = []
+        let product_query = await detailsHelper.getDistinct('product', detailsHelper.table_name, ` code in (${codes})`);
+        product_query.map(p => {
+            products.push(p.product);
+        })
+
+        await helper.delete(` id in (${id})`, helper.table_name);
+        await activities.log(req.userid, `"deleted purchases with invoices: ${invoices}"`, "'Vendors'")
+
+
+
+        for (var x = 0; x < products.length; x++) {
+
+            let pid = products[x];
+            await productHelper.refreshCurrentStock(pid)
+        }
+
+        res.json({ status: '1', data: null })
+    } catch (error) {
+        await helper.closeConnection();
+        console.log(error)
+        log.error(error)
+        res.json({ status: '-1', data: null })
+    }
+
+});
+
+
+
+router.get('/findById', async (req, res) => {
+    try {
+        let id = req.query.id;
+
+        let object = await helper.getItem(`id = ${id} `, helper.table_name);
+
+
+
+        res.json({
+            status: '1',
+            data: object
+        })
+    } catch (error) {
+        await helper.closeConnection();
+        log.error(error)
+        res.json({ status: '-1', data: null })
+    }
+
+});
+
+
 router.get('/findBetweenDates', async (req, res) => {
     try {
-        
+
         let start = req.query.start_date == undefined ? helper.getToday : req.query.start_date;
         let end = req.query.end_date == undefined ? helper.getToday : req.query.end_date;
 
@@ -291,18 +305,20 @@ router.get('/findBetweenDates', async (req, res) => {
         let objects = await detailsHelper.getMany(` date >= '${start}' and date <= '${end}' `, detailsHelper.table_name);
         for (var i = 0; i < objects.length; i++) {
             var obj = objects[i];
-            
+
             let product = await productHelper.getItem(` id = ${obj.product} `, productHelper.table_name);
             obj.product = product;
 
         }
-        
-        
+
+
         res.json({
             status: '1',
             data: objects
         })
     } catch (error) {
+        await helper.closeConnection();
+        log.error(error)
         res.json({ status: '-1', data: null })
     }
 
@@ -310,20 +326,20 @@ router.get('/findBetweenDates', async (req, res) => {
 
 router.get('/findReceiptsBetweenDates', async (req, res) => {
     try {
-        
+
         let start = req.query.start_date == undefined ? helper.getToday() : req.query.start_date;
         let end = req.query.end_date == undefined ? helper.getToday() : req.query.end_date;
         let code = req.query.code;
 
-        let objects  = null;
-        if(code != undefined){
+        let objects = null;
+        if (code != undefined) {
             objects = await helper.search(code)
         }
-        else{
-          objects=  await helper.getMany(` date >= '${start}' and date <= '${end}' `, helper.table_name);
-        
+        else {
+            objects = await helper.getMany(` date >= '${start}' and date <= '${end}' `, helper.table_name);
+
         }
-       
+
         for (var i = 0; i < objects.length; i++) {
             var obj = objects[i];
             obj.total_amount = await detailsHelper.getTotal(obj.code);
@@ -332,16 +348,18 @@ router.get('/findReceiptsBetweenDates', async (req, res) => {
             let vendor = await vendorHelper.getItem(` id = ${obj.vendor} `, vendorHelper.table_name);
             obj.vendor_name = vendor.name;
             obj.vendor_id = vendor.id;
-        
+
         }
-        
-        
+
+
         res.json({
             status: '1',
             data: objects
         })
     } catch (error) {
+        await helper.closeConnection();
         console.log(error)
+        log.error(error)
         res.json({ status: '-1', data: null })
     }
 
@@ -351,11 +369,11 @@ router.get('/findReceiptsBetweenDates', async (req, res) => {
 router.get('/findReceiptsByVendor', async (req, res) => {
     try {
         let vendor = req.query.vendor;
-        
 
-        let objects  = await helper.getMany(` vendor = ${vendor} `, helper.table_name);
 
-       
+        let objects = await helper.getMany(` vendor = ${vendor} `, helper.table_name);
+
+
         for (var i = 0; i < objects.length; i++) {
             var obj = objects[i];
             obj.total_amount = await detailsHelper.getTotal(obj.code);
@@ -364,16 +382,18 @@ router.get('/findReceiptsByVendor', async (req, res) => {
             let vendor = await vendorHelper.getItem(` id = ${obj.vendor} `, vendorHelper.table_name);
             obj.vendor_name = vendor.name;
             obj.vendor_id = vendor.id;
-        
+
         }
-        
-        
+
+
         res.json({
             status: '1',
             data: objects
         })
     } catch (error) {
+        await helper.closeConnection();
         console.log(error)
+        log.error(error)
         res.json({ status: '-1', data: null })
     }
 

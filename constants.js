@@ -571,8 +571,230 @@ const migrations = [
      
       `,
     version: 52
-  } 
+  },
+  {
+    query: `
+      
+    PRAGMA foreign_keys=off;
+
+    BEGIN TRANSACTION;
+    
+    ALTER TABLE customers RENAME TO _customers_old;
+
+    
+    
+    CREATE TABLE customers (
+    
+      id integer primary key autoincrement,
+      name text NOT NULL,
+      sex text DEFAULT NULL,
+      phone text DEFAULT NULL,
+      email text DEFAULT NULL,
+      location text DEFAULT NULL,
+      created_on text  DEFAULT CURRENT_TIMESTAMP
+    );
+    
+    INSERT INTO customers (id,name, sex,phone, email, location)
+      SELECT id, first_name || ' ' || last_name,sex,phone, email, place_of_work
+      FROM _customers_old;
+    
+    COMMIT;
+    
+    PRAGMA foreign_keys=on;
+     
+      `,
+    version: 53
+  } ,
+  {
+
+    query: `INSERT INTO permissions (permission_id, name, description) values 
+    (82, 'Manage Customers', 'add/edit/delete customers data.');`,
+    version: 54
+  },
+  {
+    query: `INSERT INTO role_permissions (role_id, permission_id) values 
+    (1, 82);`,
+    version: 55
+  },
+  {
+    query: `
+      
+    PRAGMA foreign_keys=off;
+
+    BEGIN TRANSACTION;
+    
+    ALTER TABLE sales RENAME TO _sales_old;
+
+    
+    
+    CREATE TABLE sales (
+    
+      id integer primary key autoincrement,
+            customer text DEFAULT NULL,
+            code text NOT NULL,
+            created_by integer NOT NULL,
+            created_on text default CURRENT_TIMESTAMP,
+            date text NOT NULL,
+            amount_paid real NOT NULL DEFAULT 0,
+            payment_method text NOT NULL DEFAULT 'Cash',
+            momo_reference text DEFAULT NULL,
+            insurance_provider text DEFAULT NULL,
+            insurance_member_name text DEFAULT NULL,
+            insurance_member_id text DEFAULT NULL,
+            creditor_name text DEFAULT NULL,
+            credit_paid integer NOT NULL DEFAULT 0,
+            discount real NOT NULL DEFAULT 0,
+            foreign key (insurance_provider) references insurance_providers (name) ON DELETE RESTRICT ON UPDATE CASCADE
+          
+    );
+    
+    INSERT INTO sales 
+      SELECT *
+      FROM _sales_old;
+
+      DROP TABLE IF EXISTS _sales_old;
+    
+    COMMIT;
+    
+    PRAGMA foreign_keys=on;
+     
+      `,
+    version: 56
+  },
+  {
+    query: `
+    PRAGMA foreign_keys=off;
+
+    BEGIN TRANSACTION;
+
+    CREATE TABLE sales_details_new (
+            id integer primary key autoincrement,
+            date text NOT NULL,
+            product integer NOT NULL,
+            price real NOT NULL,
+            quantity real NOT NULL,
+            created_on text default CURRENT_TIMESTAMP,
+            code text NOT NULL,
+            cost_price real DEFAULT NULL,
+            foreign key (code) references sales (code) ON DELETE CASCADE ON UPDATE CASCADE
+            foreign key (product) references products (id) ON DELETE RESTRICT ON UPDATE CASCADE
+
+          );
+
+          INSERT INTO sales_details_new 
+      SELECT *
+      FROM sales_details;
+
+      DROP TABLE IF EXISTS sales_details;
+      ALTER TABLE sales_details_new RENAME TO sales_details;
+          
+          COMMIT;
+    
+          PRAGMA foreign_keys=on;
+          `,
+    version: 57
+  },
+  {
+    query: `
+      CREATE  INDEX sales_details_index_1 ON sales_details(created_on, 
+        date, cost_price);
+      `,
+    version: 58
+  },
+  {
+    query: `
+      CREATE  INDEX sales_index_1 ON sales(created_on, 
+        date, payment_method, insurance_member_id, insurance_member_name);
+         CREATE UNIQUE INDEX sales_index_2 ON sales(code);
+      `,
+    version: 59
+  },
+  {
+    query: `
+
+    BEGIN TRANSACTION;
+
+    CREATE TABLE customer_diagnostics (
+            id integer primary key autoincrement,
+            customer integer NOT NULL,
+            test text NOT NULL,
+            data text NOT NULL,
+            comments text default NULL,
+            created_on text default CURRENT_TIMESTAMP,
+            
+            foreign key (customer) references customers (id) ON DELETE CASCADE ON UPDATE CASCADE
+
+          );
+
+          
+          COMMIT;
+    
+          `,
+    version: 60
+  },
+  {
+    query: `
+      CREATE  INDEX customer_diagnostics_test ON customer_diagnostics(test);
+      `,
+    version: 61
+  }
 
  //
 ];
 exports.migrations = migrations;
+
+/*
+DROP COLUMN
+PRAGMA foreign_keys=off;
+PRAGMA legacy_alter_table=ON
+BEGIN TRANSACTION;
+
+ALTER TABLE table1 RENAME TO _table1_old;
+
+CREATE TABLE table1 (
+( column1 datatype [ NULL | NOT NULL ],
+  column2 datatype [ NULL | NOT NULL ],
+  ...
+);
+
+INSERT INTO table1 (column1, column2, ... column_n)
+  SELECT column1, column2, ... column_n
+  FROM _table1_old;
+
+COMMIT;
+
+PRAGMA foreign_keys=on;
+
+ALTER COLUMN
+
+PRAGMA foreign_keys=off;
+PRAGMA legacy_alter_table=ON
+BEGIN TRANSACTION;
+
+ALTER TABLE table1 RENAME TO _table1_old;
+
+CREATE TABLE table1 (
+( column1 datatype [ NULL | NOT NULL ],
+  column2 datatype [ NULL | NOT NULL ],
+  ...
+);
+
+INSERT INTO table1 (column1, column2, ... column_n)
+  SELECT column1, column2, ... column_n
+  FROM _table1_old;
+
+COMMIT;
+
+PRAGMA foreign_keys=on;
+
+
+Create a new (e.g. MY_TABLE_NEW) with all the new properties you need.
+
+Migrate the existing data from MY_TABLE to MY_TABLE_NEW (adding default/missing values as appropriate).
+
+Delete the original table MY_TABLE. At this point, any FK constraints and triggers that refer to MY_TABLE would fail, but that doesn't matter.
+
+Use ALTER TABLE MY_TABLE_NEW RENAME TO MY_TABLE to change the name of the new, correctly formatted table back to that of the original table. Any FK constraints/triggers references will now be satisfied again (assuming they are not to columns that were removed!)
+
+The above will work both before and after the change. Before the change, no heed is paid to FK constraints/triggers; after the change, there will be no references to MY_TABLE_NEW so nothing will be propagated.
+*/

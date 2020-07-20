@@ -1,15 +1,16 @@
 const express = require('express');
 const router = express.Router();
-const mongoose = require('mongoose');
 
 
 
 const ActivitiesHelper = require('../helpers/activitiesHelper');
 
 const AdminHelper = require('../helpers/adminHelper');
+// const { default: rebuild } = require('electron-rebuild');
 const helper = new AdminHelper();
 const activitiesHelper = new ActivitiesHelper()
 
+const log = require('electron-log');
 
 
 router.post('/login', async (req, res) => {
@@ -56,6 +57,7 @@ router.post('/login', async (req, res) => {
 		}
 
 	} catch (error) {
+		await helper.closeConnection();
 		console.log(error)
 		res.json({ status: -1, user_data: null })
 	}
@@ -70,12 +72,13 @@ router.get('/getBranches', async (req, res) => {
 		let query = await helper.getAll(helper.branches_table_name);
 		res.json({ status: '1', data: query })
 	} catch (error) {
+		await helper.closeConnection();
 		console.log(error);
 		res.json({ status: '-1', data: null })
 	}
 })
 
- 
+
 router.post('/saveBranch', async (req, res) => {
 	try {
 		let data = {
@@ -85,17 +88,44 @@ router.post('/saveBranch', async (req, res) => {
 		let id = await helper.insert(data, helper.branches_table_name)
 		res.json({ status: id })
 	} catch (error) {
+		await helper.closeConnection();
 		console.log(error);
 		res.json({ status: '-1', data: null })
 	}
 })
- 
+
 router.get('/getInsurers', async (req, res) => {
 	try {
 		let query = await helper.getAll(helper.insurers_table_name);
 		res.json({ status: '1', data: query })
 	} catch (error) {
+		await helper.closeConnection();
 		console.log(error);
+		res.json({ status: '-1', data: null })
+	}
+});
+
+router.post('/addInsurer', async (req, res) => {
+	try {
+		let data = { name: `'${req.body.name}'` }
+		await helper.insert(data, helper.insurers_table_name);
+		res.json({ status: '1' })
+	} catch (error) {
+		await helper.closeConnection();
+		console.log(error);
+		log.error(error)
+		res.json({ status: '-1', data: null })
+	}
+});
+
+router.post('/deleteInsurer', async (req, res) => {
+	try {
+		await helper.delete(` name = '${req.body.name}'`, helper.insurers_table_name);
+		res.json({ status: '1' })
+	} catch (error) {
+		await helper.closeConnection();
+		console.log(error);
+		log.error(error)
 		res.json({ status: '-1', data: null })
 	}
 });
@@ -106,13 +136,13 @@ router.get('/getAllActivities', async (req, res) => {
 	let start = req.query.start_date == undefined ? null : req.query.start_date;
 	let end = req.query.end_date == undefined ? null : req.query.end_date;
 
-	try {   
+	try {
 		let objects;
-		if(start == null){
-			 objects = await activitiesHelper.getAll(activitiesHelper.table_name, limit, offset);
+		if (start == null) {
+			objects = await activitiesHelper.getAll(activitiesHelper.table_name, limit, offset);
 		}
-		else{
-			objects = await activitiesHelper.getMany( `  created_on >= '${start} 00:00:00' and created_on <= '${end} 23:59:59'`,activitiesHelper.table_name, limit, offset);
+		else {
+			objects = await activitiesHelper.getMany(`  created_on >= '${start} 00:00:00' and created_on <= '${end} 23:59:59'`, activitiesHelper.table_name, limit, offset);
 
 		}
 
@@ -124,6 +154,7 @@ router.get('/getAllActivities', async (req, res) => {
 		console.log(objects)
 		res.json({ status: '1', data: objects })
 	} catch (error) {
+		await helper.closeConnection();
 		res.json({ status: '-1', data: null })
 	}
 
@@ -144,6 +175,7 @@ router.get('/getActivities', async (req, res) => {
 
 		res.json({ status: '1', data: objects })
 	} catch (error) {
+		await helper.closeConnection();
 		res.json({ status: '-1', data: null })
 	}
 
@@ -158,7 +190,7 @@ router.get('/getUserActivities/:id', async (req, res) => {
 	let end = req.query.end_date == undefined ? null : req.query.end_date;
 
 	try {
-		let where = start == null ? `user_id = ${reg}`: ` user_id = ${reg} and created_on >= '${start} 00:00:00' and created_on <= '${end} 23:59:59'`;
+		let where = start == null ? `user_id = ${reg}` : ` user_id = ${reg} and created_on >= '${start} 00:00:00' and created_on <= '${end} 23:59:59'`;
 		let objects = await activitiesHelper.getMany(where, activitiesHelper.table_name, limit, offset);
 		let total = await activitiesHelper.countBy(where, activitiesHelper.table_name)
 		for (var i = 0; i < objects.length; i++) {
@@ -169,6 +201,7 @@ router.get('/getUserActivities/:id', async (req, res) => {
 
 		res.json({ status: '1', data: objects, total: total, limit: limit, user: user })
 	} catch (error) {
+		await helper.closeConnection();
 		console.log(error)
 		res.json({ status: '-1', data: null })
 	}
@@ -177,7 +210,7 @@ router.get('/getUserActivities/:id', async (req, res) => {
 
 router.get('/getUsers', async (req, res) => {
 	try {
-		
+
 
 		let objects = await helper.getAll(helper.table_name);
 		for (var i = 0; i < objects.length; i++) {
@@ -187,6 +220,7 @@ router.get('/getUsers', async (req, res) => {
 		}
 		res.json({ status: '1', data: objects })
 	} catch (error) {
+		await helper.closeConnection();
 		console.log(error)
 		res.json({ status: '-1', data: null })
 	}
@@ -257,6 +291,7 @@ router.post('/saveUser', async (req, res) => {
 		}
 		res.json({ status: '1', data: null })
 	} catch (error) {
+		await helper.closeConnection();
 		console.log(error)
 		res.json({ status: '-1', data: null })
 	}
@@ -278,6 +313,7 @@ router.post('/deleteUser', async (req, res) => {
 		await activitiesHelper.log(req.userid, `'deleted user ${user}'`)
 		res.json({ status: '1' })
 	} catch (error) {
+		await helper.closeConnection();
 		log.error(error)
 		res.json({ status: '-1' })
 	}
@@ -292,6 +328,7 @@ router.get('/getUser/:id', async (req, res) => {
 		object.role = await helper.getItem(`role_id = ${object.role_id}`, helper.roles_table)
 		res.json({ status: '1', data: object })
 	} catch (error) {
+		await helper.closeConnection();
 		log.error(error)
 		res.json({ status: '-1', data: null })
 	}
@@ -303,6 +340,7 @@ router.get('/getRoles', async (req, res) => {
 		let objects = await helper.getRoles();
 		res.json({ status: '1', data: objects })
 	} catch (error) {
+		await helper.closeConnection();
 		log.error(error)
 		res.json({ status: '-1', data: null })
 	}
@@ -314,6 +352,7 @@ router.get('/getRolesLimit', async (req, res) => {
 		let objects = await helper.getRoles();
 		res.json({ status: '1', data: objects })
 	} catch (error) {
+		await helper.closeConnection();
 		log.error(error)
 		res.json({ status: '-1', data: null })
 	}
@@ -330,6 +369,7 @@ router.get('/getRolePermissions/:id', async (req, res) => {
 
 		res.json({ status: '1', data: rp })
 	} catch (error) {
+		await helper.closeConnection();
 		log.error(error)
 		res.json({ status: '-1', data: null })
 	}
@@ -342,7 +382,7 @@ router.get('/getRoleExcludedPermissions/:id', async (req, res) => {
 		let id = req.params.id;
 		var rp = await h.getRolePermissions(id);
 		var allpermissions = await h.getPermissions();
-		
+
 		var permission_ids = [];
 		for (var i = 0; i < rp.length; i++) {
 			permission_ids.push(rp[i].permission_id);
@@ -357,6 +397,7 @@ router.get('/getRoleExcludedPermissions/:id', async (req, res) => {
 		}
 		res.json({ status: '1', data: objects })
 	} catch (error) {
+		await helper.closeConnection();
 		console.log(error)
 		res.json({ status: '-1', data: null })
 	}
@@ -379,6 +420,7 @@ router.post('/activateUser', async (req, res) => {
 		await activitiesHelper.log(req.userid, `'updated user status ${user} to ${active}'`)
 		res.json({ status: '1' })
 	} catch (error) {
+		await helper.closeConnection();
 		console.log(error)
 		res.json({ status: '-1' })
 	}
@@ -445,10 +487,11 @@ router.post('/addRole', async (req, res) => {
 		data.description = `'${req.body.description}'`;
 
 		id = await h.insert(data, h.roles_table);
-		
+
 		res.json({ status: `'${id}'` })
 		// await h.insertMany(['role_id, permission_id', perms, h.role_permissions_table])
 	} catch (error) {
+		await helper.closeConnection();
 		console.log(error)
 		res.json({ status: '-1' })
 	}
@@ -474,6 +517,7 @@ router.post('/deleteRole', async (req, res) => {
 
 		res.json({ status: '1' })
 	} catch (error) {
+		await helper.closeConnection();
 		log.error(error)
 		res.json({ status: '-1' })
 
@@ -493,6 +537,7 @@ router.get('/getRole/:id', async (req, res) => {
 		let object = await helper.getItem(`role_id = ${id}`, helper.roles_table)
 		res.json({ status: '1', data: object })
 	} catch (error) {
+		await helper.closeConnection();
 		log.error(error)
 		res.json({ status: '-1' })
 	}
@@ -507,10 +552,11 @@ router.post('/addRolePermission', async (req, res) => {
 		permission_id: permission_id
 	}
 	try {
-		 await helper.insert(data, helper.role_permissions_table)
+		await helper.insert(data, helper.role_permissions_table)
 		await activitiesHelper.log(req.userid, `' added a permission to role: ${role_id}'`)
 		res.json({ status: '1' })
 	} catch (error) {
+		await helper.closeConnection();
 		log.error(error)
 		res.json({ status: '-1' })
 	}
@@ -520,12 +566,13 @@ router.post('/addRolePermission', async (req, res) => {
 router.post('/deleteRolePermission', async (req, res) => {
 	let role_id = req.body.role_id;
 	let permission_id = req.body.permission_id;
-	
+
 	try {
-		 await helper.delete(`role_id = ${role_id} and permission_id = ${permission_id} `, helper.role_permissions_table)
+		await helper.delete(`role_id = ${role_id} and permission_id = ${permission_id} `, helper.role_permissions_table)
 		await activitiesHelper.log(req.userid, `' deleted a permission from role: ${role_id}'`)
 		res.json({ status: '1' })
 	} catch (error) {
+		await helper.closeConnection();
 		console.log(error)
 		res.json({ status: '-1' })
 	}
