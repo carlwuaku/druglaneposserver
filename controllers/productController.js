@@ -25,7 +25,7 @@ router.get('/getList', async (req, res) => {
         else{
             let where = [];
             for (let key in conditions) {
-                where.push(` ${key} = '${conditions[key]}' `)
+                where.push(` ${key} = ${conditions[key]} `)
                 
             }
             objects = await helper.getMany(where.join(" and "), helper.table_name, limit, offset);
@@ -117,6 +117,51 @@ router.get('/getUpdatedProducts', async (req, res) => {
         res.json({ status: '-1', data: null })
     }
 
+
+
+});
+
+router.get('/search', async (req, res) => {
+    let param = req.query.param ;
+    let offset = req.query.offset == undefined ? 0 : req.query.offset;
+    let limit = req.query.limit == undefined ? null : req.query.limit;
+    try {
+        let objects = await helper.search(param, limit, offset);
+        // console.log(objects)
+        // var t = param.toLowerCase().trim();
+        // objects.sort(function(a, b) {
+        //     let nameA = a.name.toLowerCase(); // ignore upper and lowercase
+        //     let nameB = b.name.toLowerCase(); // ignore upper and lowercase
+        //     if (nameA.indexOf(t) < nameB.indexOf(t)) {
+        //       return -1;
+        //     }
+        //     if (nameA > nameB) {
+        //       return 1;
+        //     }
+      
+        //     // names must be equal
+        //     return 0;
+        //   });
+        for (var i = 0; i < objects.length; i++) {
+            var obj = objects[i];
+            var stock = obj.current_stock;
+            var min = obj.min_stock;
+            var max = obj.max_stock;
+
+            obj.expired = helper.dateDifference(obj.expiry) == 'before';
+            obj.out_of_stock = stock < 1;
+            obj.near_min = stock > 0 && stock <= min;
+            obj.near_max = stock >= max;
+            obj.stock = obj.current_stock
+        }
+        res.json({ status: '1', data: objects })
+    } catch (error) {
+        await helper.closeConnection();
+        console.log(error)
+        log.error(error)
+        res.json({ status: '-1', data: null })
+    }
+
 });
 
 
@@ -133,7 +178,20 @@ router.post('/saveBranchDetails', async (req, res) => {
     let name = req.body.name;
     try {
         if (id == undefined) {
-            await helper.insert(data, helper.table_name);
+            let stockClass = require('../helpers/stockAdjustmentHelper');
+            let stockHelper = new stockClass();
+
+            let productid = await helper.insert(data, helper.table_name);
+            let date = helper.getToday()
+            let stock_data = { created_by: `'${req.query.userid}'`, date: `'${date}'`, product: productid, 
+            quantity_counted: req.body.stock, quantity_expected: 0, 
+            current_price: req.body.price, cost_price: req.body.cost_price };
+        await stockHelper.insert(stock_data, stockHelper.table_name);
+
+        await helper.refreshCurrentStock(productid)
+        
+
+
             await activities.log(req.query.userid, `"created a product: ${name}"`, `'Products'`)
         }
         else {
@@ -160,7 +218,7 @@ router.post('/saveBranchDetails', async (req, res) => {
 router.post('/massEdit', async (req, res) => {
     let id = req.body.id;//comma-separated
     let field = req.body.field;
-    let value = req.body.value;
+    let value = req.body.field == 'category' || req.body.field == 'expiry_date' ? `'${req.body.value}'` : req.body.value;
 
 
     try {
@@ -328,12 +386,12 @@ router.post('/saveStockAdjustment', async (req, res) => {
             data.date = `'${date}'`;
             data.product = products[i];
             console.log('i=' + i + 'product ' + products[i])
-            data.cost_price = cost_prices[i] == undefined ? '' : cost_prices[i];
+            data.cost_price = cost_prices[i] == undefined || cost_prices[i] == null || cost_prices[i] == '' ? `''` : cost_prices[i];
             data.quantity_expected = quantities_expected[i];
             data.quantity_counted = quantities_counted[i];
-            data.size = sizes[i] == undefined ? '' : `'${sizes[i]}'`;
-            data.expiry = expiries[i] == undefined ? '' : `'${expiries[i]}'`;
-            data.category = categories[i] == undefined ? '' : `'${categories[i]}'`;
+            data.size = sizes[i] == undefined ? `''` : `'${sizes[i]}'`;
+            data.expiry = expiries[i] == undefined ? `''` : `'${expiries[i]}'`;
+            data.category = categories[i] == undefined ? `''` : `'${categories[i]}'`;
             data.current_price = prices[i];
             objects.push(data);
             console.log(data)
@@ -344,6 +402,7 @@ router.post('/saveStockAdjustment', async (req, res) => {
         sql += `delete from ${stockHelper.table_name} where code = '${code}'; `;
         sql += stockHelper.generateInsertManyQuery(stockHelper.fields, objects, stockHelper.table_name);
         sql += "COMMIT;"
+        console.log(sql)
         await stockHelper.connection.exec(sql);
 
         for (var x = 0; x < products.length; x++) {

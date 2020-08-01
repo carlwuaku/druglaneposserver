@@ -8,6 +8,8 @@ class CustomerHelper extends dbClass {
     }
     fields = ["name", "phone", "email", "location"]
     table_name = "customers";
+    diagnostics_table_name = "customer_diagnostics";
+    diagnostics_master_table_name = "diagnostic_tests";
    
     not_string_fields = ["id"];
     //the fields which are not strings. used in prep_data

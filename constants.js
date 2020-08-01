@@ -737,6 +737,37 @@ const migrations = [
       CREATE  INDEX customer_diagnostics_test ON customer_diagnostics(test);
       `,
     version: 61
+  },
+  {
+    query: `
+
+    BEGIN TRANSACTION;
+
+    CREATE TABLE diagnostic_tests (
+            id integer primary key autoincrement,
+            test_name text NOT NULL,
+            parameters text NOT NULL,
+            comments text default NULL,
+            created_on text default CURRENT_TIMESTAMP
+            );
+            
+      insert into diagnostic_tests  (test_name, parameters, comments) values 
+      ('Blood Glucose Test', 'value (mmol/L)', 
+      'Normal ranges for non-diabetic: Before meals - 4.0 to 5.9 mmol/L; After meals - under 7.8 mmol/L; 
+      For diabetics: Before meals - 4 to 7 mmol/L; After meals - 5 to 9 mmol/L'),
+
+      ('Blood Pressure', 'systolic, diastolic', 
+      '90/60mmHg  to 120/80mmHg - ideal,
+      140/90mmHg or higher - high,
+      90/60mmHg or lower - low'),
+
+      ('Total Blood Cholesterol', 'value (mmol/L)', 
+      'Below 5.2 mmol/L - normal, 5.2 to 6.2 mmol/L - Borderline High, Above 6.2 mmol/L - High ');
+          
+          COMMIT;
+    
+          `,
+    version: 62
   }
 
  //

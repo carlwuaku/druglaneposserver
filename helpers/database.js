@@ -30,7 +30,10 @@ class Db {
                 }
                 else {
                     //its a string
-                    returner[key] = `'${data[key]}'`;
+                    if(data[key] != 'null'){
+                        returner[key] = `"${data[key]}"`;
+                    }
+                    
 
                 }
 
@@ -881,10 +884,15 @@ class Db {
      * @param {Array} fields
      * @param {int} limit 
      * @param {int} offset 
+     * @param {boolean} strpos a flag to order by the position of the parameter in the strpos_field
+     * @param {String} strpos_field the field to use with the strpos
+     * 
      */
-    async search(param, fields, table, limit = null, offset = 0) {
+    async search(param, fields, table, limit = null, offset = 0, strpos = false, strpos_field = null) {
         let words_array = param.split(",");
         let combined_where = [];
+        let first_words = words_array[0].split(' ');
+        let first_word = first_words[0];
         words_array.forEach(word => {
             let trim_word = word.trim();
             if (trim_word !== null && trim_word.length > 0) {
@@ -899,9 +907,15 @@ class Db {
 
         let sql = `select * from ${table} where ${final_where} `;
         // console.log(sql)
-        if (limit != null) {
-            sql += ` limit ${limit} offset ${offset}`
+        if(strpos){
+            sql = `select *, INSTR(lower(${strpos_field}), lower('${first_word}')) as pos  from ${table} where ${final_where} `;
+            sql += ` order by pos asc `
+
         }
+        if (limit != null) {
+            sql += ` limit ${limit} offset ${offset} `
+        }
+        // console.log(sql)
         try {
         await this.getConnection();
             let query = await this.connection.all(sql);

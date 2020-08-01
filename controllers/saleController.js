@@ -86,7 +86,7 @@ router.post('/saveBulk', async (req, res) => {
             let last_id = await helper.getField('max(id) as max_id', helper.table_name);
             console.log(last_id)
     
-        code = last_id.max_id == null ? `'00001'` : `'${(last_id.max_id + 1).toString().padStart(5, '0')}'`;
+        code = last_id.max_id == null ? '00001' : `${(last_id.max_id + 1).toString().padStart(5, '0')}`;
     
         }
         
@@ -100,7 +100,7 @@ router.post('/saveBulk', async (req, res) => {
         let prices = req.body.prices.split("||");
 
         //check if the code already exists
-        let exists = await helper.getItem(` code = ${code}`, helper.table_name)
+        let exists = await helper.getItem(` code = '${code}'`, helper.table_name)
         if (exists == undefined) {
             
             let objects = [];
@@ -113,7 +113,7 @@ router.post('/saveBulk', async (req, res) => {
                     || cost_prices[i] == '' ? 0 : cost_prices[i];
                 data.quantity = quantities[i];
                 data.price = prices[i];
-                data.code = code;
+                data.code = `'${code}'`;
                 objects.push(data);
             }
             console.log(objects)
@@ -122,7 +122,7 @@ router.post('/saveBulk', async (req, res) => {
             sales_data.date = `'${date}'`;
             sales_data.created_on = `'${created_on}'`;
             sales_data.created_by = req.userid;
-            sales_data.code = code;
+            sales_data.code = `'${code}'`;
             console.log(sales_data)
 
             let sql = "BEGIN TRANSACTION; ";
@@ -139,7 +139,9 @@ router.post('/saveBulk', async (req, res) => {
             }
             activities.log(req.query.userid, `"added new sales: ${code} : ${payment_method}"`, `'Sales'`)
             // helper.connection.close().then(succ => { }, err => { })
-            res.json({ status: '1' })
+
+
+            res.json({ status: '1', code: code})
         
         }
         else{
@@ -187,15 +189,19 @@ router.get('/getSaleDetails', async (req, res) => {
 
 router.post('/deleteByCode', async (req, res) => {
     try {
-        let code = req.body.code;
+        let codes = req.body.code.split(",");//comma-separated
+        let code_quotes = []
+        for(var i = 0; i < codes.length; i++){
+            code_quotes.push(`'${codes[i]}'`)
+        }
         let products = []
-        let product_query = await detailsHelper.getDistinct('product', detailsHelper.table_name, ` code = '${code}'`);
+        let product_query = await detailsHelper.getDistinct('product', detailsHelper.table_name, ` code in (${code_quotes.join(",")}) `);
         product_query.map(p => {
             products.push(p.product);
         })
 
-        await helper.delete(` code = '${code}'`, helper.table_name);
-        await activities.log(req.query.userid, `"deleted a sale receipt: ${code}  "`, `'Products'`)
+        await helper.delete(` code in (${code_quotes.join(",")}) `, helper.table_name);
+        await activities.log(req.query.userid, `"deleted  sales receipt: ${code_quotes.join(",")}  "`, `'Products'`)
 
 
         for (var x = 0; x < products.length; x++) {

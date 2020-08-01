@@ -4,6 +4,8 @@ const getPort = require('get-port');
 const constants = require('./constants');
 let PORT = constants.port;
 const log = require('electron-log');
+const expAutoSan = require('express-autosanitizer');
+
 // async function useGetPort() {
 
 //    await getPort({port: [5000, 5001, 5002]});
@@ -15,6 +17,8 @@ const log = require('electron-log');
 
 const app = express();
 const bodyParser = require('body-parser');
+
+
 // const mongoose = require('mongoose');
 const fileUpload = require('express-fileupload');
 // const { exec } = require("child_process");
@@ -52,7 +56,7 @@ app.set('views', path.join(__dirname, 'views'))
 app.use(bodyParser.urlencoded({ extended: false }));
 //be able to extract json data and do stuff like req.body.name
 app.use(bodyParser.json());
-
+app.use(expAutoSan.all);
 app.use(session({ secret: "eg[isfd-8OF9-7w2115df[-Ijsli__;to8" }));
 
 //file uploader
