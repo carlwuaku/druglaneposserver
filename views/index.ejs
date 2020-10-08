@@ -188,6 +188,17 @@
                         `);
                 $("#backup_alert").fadeIn('fast')
 
+                //send to the server
+                // $.post("/saveBackup",
+                // {
+                //     file_name: data.directory,
+                //     description: 'routine_backup',
+                //     created_by: 'admin'
+                // },
+                // function (data) {
+                //     alert("saved to db")
+                // });
+
         })
         $(document).ready(function () {
                 $(document).on("click", "#start_backup", function () {

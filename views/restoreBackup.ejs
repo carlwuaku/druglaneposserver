@@ -1,6 +1,5 @@
 <%- include ('partials/header') -%>
-<script src="js/angular.min.js"></script>
-<section ng-app="myApp" ng-controller="myCtrl" class="content">
+<section  class="content">
     
     <div class="flex-container small-margins">
         <div><a  class="backBtn link"><i class="fa fa-arrow-left"></i> Back</a></div>
@@ -19,8 +18,56 @@
                 </em>
             </div>
             <div class="card-body">
-                <i class="fa fa-spinner fa-spin" ng-show="loading"></i>
-                <table id="backup_list" class="table table-bordered table-hover">
+
+                <div class="card-body table-responsive">
+                    <table id="backup_list" class="table table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <td></td>
+                                <td>Date</td>
+                                <td>Description</td>
+                                <td>By</td>
+                                <td>Uploaded</td>
+                                <td>Db Version</td>
+                            </tr>
+                        <tbody>
+                            
+                                <% objects.forEach(function(item){ 
+                                        %>
+                                        <tr>
+                                            <td>
+                                                <div class="dropdown">
+                                                    <button class="btn btn-secondary dropdown-toggle" type="button"
+                                                      data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                      Menu
+                                                    </button>
+                                                    <div class="dropdown-menu" >
+                                                      <a class="dropdown-item delete" href="#">Delete</a>
+                                                      <a class="dropdown-item" href="#">Restore This</a>
+                                                    </div>
+                                                  </div>
+                                            </td>
+                                            <td><%= item.created_on %> <span class="itemid starthidden" ><%= item.id%></span> </td>
+                                            <td><%= item.description %> </td>
+                                            <td><%= item.created_by %></td>
+                                            <td><%= item.uploaded %></td>
+                                            <td><%= item.db_version %></td>
+                                        </tr>
+                                
+                                <% 
+                            }) %>
+    
+    
+                              
+    
+                        
+                            
+                        </tbody>
+    
+                        </thead>
+                    </table>
+                </div>
+                <!-- <table id="backup_list" class="table table-bordered table-hover">
                     <thead>
                         <tr>
                             <td></td>
@@ -38,7 +85,7 @@
                     </tbody>
 
                     </thead>
-                </table>
+                </table> -->
             </div>
         </div>
 
@@ -121,38 +168,40 @@
         $("#backing_up").hide();
         $("#done").show();
      
-    })
-
-    var app = angular.module('myApp', []);
-    app.controller('myCtrl', function ($scope) {
-        $scope.loading = false;
-        $scope.items = fs.readdirSync(constants.backup_folder);
-
-        $scope.getFiles = function () {
-            $scope.loading = true;
-            $scope.items = fs.readdirSync(constants.backup_folder);
-            $scope.loading = false;
-            //get the files
-            // fs.readdir(constants.backup_folder, (err, files) => {
-            //     $scope.name = files;
-            //     console.log(files)
-            //     console.log($scope.items)
-            //     files.forEach(file => {
-            //         console.log(file)
-            //         $scope.items.push(file)
-            //     });
-            // });
-        }
-        $scope.getFiles();
-
-        $scope.restore = function (filename) {
-            if (window.confirm(`Sure you want to restore your system to the selected version? You cannot reverse 
-            this action. Click OK to continue, CANCEL to cancel`)) {
-                ipcRenderer.send('restore', { filename })
-            }
-
-        }
     });
+
+
+
+    // var app = angular.module('myApp', []);
+    // app.controller('myCtrl', function ($scope) {
+    //     $scope.loading = false;
+    //     $scope.items = fs.readdirSync(constants.backup_folder);
+
+    //     $scope.getFiles = function () {
+    //         $scope.loading = true;
+    //         $scope.items = fs.readdirSync(constants.backup_folder);
+    //         $scope.loading = false;
+    //         //get the files
+    //         // fs.readdir(constants.backup_folder, (err, files) => {
+    //         //     $scope.name = files;
+    //         //     console.log(files)
+    //         //     console.log($scope.items)
+    //         //     files.forEach(file => {
+    //         //         console.log(file)
+    //         //         $scope.items.push(file)
+    //         //     });
+    //         // });
+    //     }
+    //     $scope.getFiles();
+
+    //     $scope.restore = function (filename) {
+    //         if (window.confirm(`Sure you want to restore your system to the selected version? You cannot reverse 
+    //         this action. Click OK to continue, CANCEL to cancel`)) {
+    //             ipcRenderer.send('restore', { filename })
+    //         }
+
+    //     }
+    // });
 
 
 
@@ -182,6 +231,8 @@
             //get the actual file name
             console.log(selected_file)
         })
+
+        //on
     })
 
 </script>

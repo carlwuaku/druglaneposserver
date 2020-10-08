@@ -1,0 +1,66 @@
+<%- include ('partials/header') -%>
+<script src="js/angular.min.js"></script>
+<section ng-app="myApp" ng-controller="myCtrl" class="content">
+    
+    <div class="flex-container small-margins">
+        <div><a  class="backBtn link"><i class="fa fa-arrow-left"></i> Back</a></div>
+        <div><a  href="/"><i class="fa fa-home"></i> Home </a></div>
+        <div><a ng-click="getFiles()" class=" link"><i class="fa fa-refresh"></i> Refresh List</a></div>
+        <!-- <div><a  href="#"><i class="fa fa-download"></i> Backup Now</a></div> -->
+    </div>
+    <div class="container">
+        <h4>Database backups</h4>
+        <div class="card">
+            <div class="card-header">
+                To restore your system from a previous backup <br> <input type="file" name="zip" id="pickzip"
+                    value="Click here to choose a backup file"> 
+                <em>Or select the necessary backup from the
+                    list below.
+                </em>
+            </div>
+            <div class="card-body">
+                <table id="backup_list" class="table table-bordered table-hover">
+                    <thead>
+                        <tr>
+                            <td>id</td>
+                            <td>name</td>
+                            <td>price</td>
+                        </tr>
+                    <tbody>
+                        
+                            <% data.forEach(function(item){ 
+                                    %>
+                                    <tr>
+                                        <td>
+                                            <%= item.id %> 
+                                        </td>
+                                        <td><%= item.name %>  </td>
+                                        <td><%= item.price %> </td>
+                                        
+                                    </tr>
+                            
+                            <% 
+                        }) %>
+
+
+                          
+
+                    
+                        
+                    </tbody>
+
+                    </thead>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+
+
+<!-- <script src="/socket.io/socket.io.js"></script>
+<script>
+  var socket = io();
+</script> -->
+<%- include ('partials/footer') -%>

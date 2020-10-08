@@ -1,13 +1,13 @@
 const path = require('path');
 // const os = require('os');
-const {app, BrowserWindow, Menu, ipcMain } = require('electron');
+const {app, BrowserWindow, Menu, ipcMain, ClientRequest } = require('electron');
 const server = require('./server');
 const fs = require('fs');
 const log = require('electron-log');
  
 // const MainWindow = require('./MainWindow')
 const AppTray = require('./AppTray')
-process.env.NODE_ENV = 'production';
+process.env.NODE_ENV = 'development';
 let constants = require('./constants')
 const isDev = process.env.NODE_ENV !== 'production' ? true : false;
 const isMac = process.platform === 'darwin' ? true : false;
@@ -16,6 +16,7 @@ let tray = null;
 let mainWindow;
 let aboutWindow;
 let backup_folder = constants.backup_folder
+let internal_backup_folder = constants.internal_backups_path
 //create folder for backups
 console.log('creating folder')
 if (!fs.existsSync(backup_folder)) fs.mkdir(backup_folder, function(err){
@@ -27,6 +28,24 @@ if (!fs.existsSync(backup_folder)) fs.mkdir(backup_folder, function(err){
     }
 });
 
+if (!fs.existsSync(internal_backup_folder)) fs.mkdir(internal_backup_folder, function(err){
+  if(err){
+      console.log('internal folder not created')
+  }
+  else{
+      console.log('internal backup folder created')
+  }
+});
+let PORT = constants.port;
+const FileStore = require('./Store');
+const filestore = new FileStore({
+    configName: 'system-settings',
+    defaults: {
+        port: PORT,
+        host: "localhost",
+        dbversion: 0
+    }
+});
  
 function createMainWindow(){
     //  mainWindow = new MainWindow(`./app/index.html`); 
@@ -242,6 +261,31 @@ app.on('window-all-closed', () => {
     output.on('close', function() {
       console.log(archive.pointer() + ' total bytes');
       console.log('archiver has been finalized and the output file descriptor has closed.');
+      //copy to the internal backup location
+      fs.copyFile(backup_folder + `/druglane_backup_${ts}.zip`, internal_backup_folder + `/druglane_backup_${ts}.zip`, (err) => {
+        if (err){
+          console.log(err)
+          console.log('could not copy to internal folder');
+
+        } 
+        else{
+          console.log('copied to internal folder');
+
+        }
+
+      });
+
+      var data = {
+        file_name: `"${internal_backup_folder}/druglane_backup_${ts}.zip"`,
+        description: `'manual backup'`,
+        created_by: `'admin'`,
+        uploaded: `'no'`,
+        db_version:  filestore.get('dbversion')
+    }
+      saveBackup(data)
+      
+
+
       mainWindow.webContents.send('backup_done', {directory: backup_folder + `/druglane_backup_${ts}.zip`})
     });
      
@@ -312,9 +356,30 @@ app.on('window-all-closed', () => {
     // listen for all archive data to be written
     // 'close' event is fired only when a file descriptor is involved
     output.on('close', function() {
-      console.log(archive.pointer() + ' total bytes');
-      console.log('archiver has been finalized and the output file descriptor has closed.');
-      log.info('backup automatically created.')
+      
+      fs.copyFile(backup_folder + `/druglane_backup_${ts}.zip`, internal_backup_folder + `/druglane_backup_${ts}.zip`, (err) => {
+        if (err){
+          console.log(err)
+          console.log('could not copy to internal folder');
+
+        } 
+        else{
+          console.log('copied to internal folder');
+
+        }
+
+      });
+
+      var data = {
+        file_name: `"${internal_backup_folder}/druglane_backup_${ts}.zip"`,
+        description: `'automatic backup'`,
+        created_by: `'system'`,
+        uploaded: `'no'`,
+        db_version:  filestore.get('dbversion')
+    }
+      saveBackup(data)
+      log.info('backup automatically created.');
+      
     });
      
     // This event is fired when the data source is drained no matter what was the data source.
@@ -376,6 +441,19 @@ app.on('window-all-closed', () => {
   ipcMain.on('restore', (event, option)=>{
     restoreBackup(option.filename)
   })
+
+  async function saveBackup(data){
+    try {
+      let helper = require('./helpers/backupsHelper');
+      let sh = new helper();
+  
+      
+      await sh.insert(data, sh.table_name);
+      log.info("backup inserted into db successfully")
+     } catch (error) {
+      log.error("error on backup insert into db")
+     }
+  }
 
   function restoreBackup(filename){
     let DecompressZip = require('decompress-zip');

@@ -34,6 +34,38 @@ class PurchaseHelper extends dbClass {
         return await super.search(param, ['code','invoice'],this.table_name, limit, offset);
     }
 
+    /**
+     * get the total amount paid to vendors over a certain period
+     * @param {String} start_date 
+     * @param {String} end_date 
+     * @param {String} payment_method 
+     * @param {String} vendor 
+     */
+    async getTotalPaidByDates(start_date, end_date, payment_method = '', vendor=''){
+        
+        let sql = `select sum(amount_paid) as total from ${this.table_name}
+          where created_on >= '${start_date}'  and created_on <= '${end_date}' `;
+        if(payment_method != '' && vendor == ''){
+            sql += ` and  payment_method = '${payment_method}' `
+        }
+        if(vendor != '' && payment_method == ''){
+            sql += ` and  vendor = '${vendor}' `
+        }
+
+        if(vendor != '' && payment_method != ''){
+            sql += ` and  vendor = '${vendor}' and payment_method = '${payment_method}' `
+        }
+
+        try {
+            await this.getConnection();
+            let q = await this.connection.get(sql);
+            return q.total == null ? 0 : q.total;
+        } catch (error) {
+            log.error(error);
+            throw new Error(error)
+        }
+    }
+
 
  }
 

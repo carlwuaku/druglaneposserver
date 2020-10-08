@@ -34,6 +34,48 @@ class SalesHelper extends dbClass {
         return await super.search(param, ['code'],this.table_name, limit, offset);
     }
 
+    /**
+     * get total discount for a period
+     * @param {String} start the start date
+     * @param {String} end the end date
+     */
+    async getTotalDiscount(start, end){
+        let sql = `select sum(discount) as total from ${this.table_name}  `;
+        if(start != ''){
+            sql += ` where date >= '${start}' and date <= '${end}' `
+        }
+
+        try {
+            await this.getConnection();
+            let q = await this.connection.get(sql);
+            return q.total == null ? 0 : q.total;
+        } catch (error) {
+            log.error(error);
+            throw new Error(error)
+        }
+    }
+
+     /**
+     * get total discount by a user for a period
+     * @param {String} start the start date
+     * @param {String} end the end date
+     * @param {String} user the user id
+     */
+    async getUserDiscount(user, start, end){
+        let sql = `select sum(discount) as total from ${this.table_name} where created_by = ${user} `;
+        if(start != ''){
+            sql += ` and date >= '${start}' and date <= '${end}' `
+        }
+
+        try {
+            await this.getConnection();
+            let q = await this.connection.get(sql);
+            return q.total == null ? 0 : q.total;
+        } catch (error) {
+            log.error(error);
+            throw new Error(error)
+        }
+    }
 
  }
 

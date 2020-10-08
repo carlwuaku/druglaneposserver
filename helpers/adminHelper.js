@@ -38,7 +38,7 @@ class AdminHelper extends dbClass {
         try {
             await this.getConnection();
             //use placeholders for the variables
-            let sql_getusername = `select * from ${this.table_name} where email = $username or username = $username`;
+            let sql_getusername = `select * from ${this.table_name} where lower(email) = lower($username) or lower(username) =lower($username)`;
             let query_getuser = await this.connection.get(sql_getusername, { $username: username });
             if (query_getuser !== undefined) {
                 //someone was found. check the password

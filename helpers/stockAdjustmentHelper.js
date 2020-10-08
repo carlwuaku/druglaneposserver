@@ -13,7 +13,7 @@ class StockAdjustmentHelper extends dbClass {
     }
     fields = ["date", "product", "quantity_counted", "quantity_expected", "current_price", 
         
-    "created_by","cost_price","code","category","size","expiry"]
+    "created_by","cost_price","code","category","size","expiry","quantity_damaged", "quantity_expired"]
     table_name = "stock_adjustment";
     sessions_table_name = 'stock_adjustment_sessions'
    
@@ -266,6 +266,7 @@ class StockAdjustmentHelper extends dbClass {
         try {
             await this.getConnection();
             let q = await this.connection.get(sql);
+            console.log(q)
             return q == undefined ? 0 : q.total;
         } catch (error) {
             log.error(error);
@@ -308,6 +309,46 @@ class StockAdjustmentHelper extends dbClass {
         try {
             await this.getConnection();
             let q = await this.connection.get(sql);
+            return q == undefined ? 0 : q.total;
+        } catch (error) {
+            log.error(error);
+            throw new Error(error)
+        }
+    }
+
+    /**
+     * get the total amount damaged ]
+     * @param {String} code 
+     * @returns {Number} 
+     */
+    async getTotalDamage(code){
+        let sql = `select sum(quantity_damaged * current_price) as total from ${this.table_name} where code = '${code}' `;
+        
+
+        try {
+            await this.getConnection();
+            let q = await this.connection.get(sql);
+            console.log(q)
+            return q == undefined ? 0 : q.total;
+        } catch (error) {
+            log.error(error);
+            throw new Error(error)
+        }
+    }
+
+     /**
+     * get the total amount expired 
+     * @param {String} code 
+     * @returns {Number} 
+     */
+    async getTotalExpired(code){
+        let sql = `select sum(quantity_expired * current_price) as total from ${this.table_name} where code = '${code}' `;
+        
+
+        try {
+            await this.getConnection();
+            let q = await this.connection.get(sql);
+            console.log(q)
             return q == undefined ? 0 : q.total;
         } catch (error) {
             log.error(error);

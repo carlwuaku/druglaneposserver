@@ -1,10 +1,8 @@
 const express = require('express');
 //const userController = require('./controllers/userController')
-const getPort = require('get-port');
 const constants = require('./constants');
 let PORT = constants.port;
 const log = require('electron-log');
-const expAutoSan = require('express-autosanitizer');
 
 // async function useGetPort() {
 
@@ -25,8 +23,55 @@ const fileUpload = require('express-fileupload');
 // const isMac = process.platform === 'darwin' ? true : false;
 const DatabaseConnection = require("./helpers/database")
 const path = require('path');
+
+
+
+/////////////////////TO BE REMOVED/////////////////
 const db = new DatabaseConnection();
 db.runMigrations();
+
+/////////////////////////////////////////////
+
+///////////////RUN SEQUELIZE MIGRATIONS///////////
+
+const Sequelize = require('sequelize')
+const Umzug = require('umzug')
+
+// creates a basic sqlite database
+const sequelize = require("./helpers/sequelize")
+
+
+const umzug = new Umzug({
+    migrations: {
+      // indicates the folder containing the migration .js files
+      path: path.join(__dirname, './migrations'),
+      // inject sequelize's QueryInterface in the migrations
+      params: [
+        sequelize.getQueryInterface()
+      ]
+    },
+    // indicates that the migration data should be store in the database
+    // itself through sequelize. The default configuration creates a table
+    // named `SequelizeMeta`.
+    storage: 'sequelize',
+    storageOptions: {
+      sequelize: sequelize
+    }
+  })
+  
+  ;(async () => {
+    // checks migrations and run them if they are not already applied
+    try {
+        await umzug.up()
+        console.log('All migrations performed successfully')
+        
+    } catch (error) {
+        console.log(error)
+    }
+   })()
+
+
+////////////////////////////////////////////
 const FileStore = require('./Store');
 const filestore = new FileStore({
     configName: 'system-settings',
@@ -56,11 +101,16 @@ app.set('views', path.join(__dirname, 'views'))
 app.use(bodyParser.urlencoded({ extended: false }));
 //be able to extract json data and do stuff like req.body.name
 app.use(bodyParser.json());
-app.use(expAutoSan.all);
 app.use(session({ secret: "eg[isfd-8OF9-7w2115df[-Ijsli__;to8" }));
 
 //file uploader
-app.use(fileUpload());
+app.use(fileUpload(
+    {
+        useTempFiles : true,
+        tempFileDir : '/tmp/',
+        debug: true
+    }
+));
 //CORS STUFF    
 app.use(async (req, res, next) => {
     //allow all clients
@@ -128,29 +178,21 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 
 const adminController = require('./controllers/adminController');
-const permissionsController = require('./controllers/permissionsController')
-const rolesController = require('./controllers/rolesController')
 const staffController = require('./controllers/staffController')
 const customerController = require('./controllers/customerController')
 const productController = require('./controllers/productController')
 const vendorController = require('./controllers/vendorController')
-const orderController = require('./controllers/orderController')
 const purchaseController = require('./controllers/purchaseController')
-const stockAdjustmentController = require('./controllers/stockAdjustmentController')
 const saleController = require('./controllers/saleController')
 const transferController = require('./controllers/transfersController')
 
 //any request starting with admin shd be forwarded to admin route
 app.use('/admin', adminController);
-app.use('/permissions', permissionsController);
-app.use('/roles', rolesController);
 app.use('/staff', staffController);
 app.use('/customers', customerController);
 app.use('/products', productController);
 app.use('/vendors', vendorController);
-app.use('/orders', orderController);
 app.use('/purchases', purchaseController);
-app.use('/stock', stockAdjustmentController);
 app.use('/sales', saleController);
 
 //due to some issues, we had to switch to php codeigniter for the backend.
@@ -158,15 +200,11 @@ app.use('/sales', saleController);
 //back to node less painless, we'll define more endpoints which will go to the same controllers
 
 app.use('/api_admin', staffController);
-app.use('/api_permissions', permissionsController);
-app.use('/api_roles', rolesController);
 app.use('/api_staff', staffController);
 app.use('/api_customer', customerController);
 app.use('/api_product', productController);
 app.use('/api_vendor', vendorController);
-app.use('/api_order', orderController);
 app.use('/api_purchase', purchaseController);
-app.use('/api_stock', stockAdjustmentController);
 app.use('/api_sale', saleController);
 app.use('/api_transfer', transferController);
 
@@ -231,10 +269,29 @@ app.get('/setup', async (req, res) => {
     // res.sendFile(__dirname + '/app/index.html'); 
 });
 
-app.get('/restoreBackup', checkSignIn, (req, res) => {
+app.get('/restoreBackup', checkSignIn, async(req, res) => {
+    let data = {};
+    if (req.query.m != undefined) {
+        data.message = req.query.m;
+    }
+    else {
+        data.message = "";
+    }
 
-    res.render('restoreBackup');
+    let Helper = require('./helpers/backupsHelper');
+    let h = new Helper();
+    data.objects = await h.getAll(h.table_name);
+
+    res.render('restoreBackup', data);
+
 });
+
+app.get('/upload_stock_taking', function(req, res){
+    res.render('upload');
+});
+
+
+
 
 app.post('/saveActivation', async (req, res) => {
     let settingsHelper = require('./helpers/settingsHelper');
@@ -732,6 +789,28 @@ app.post('/deleteRole', checkSignIn, async (req, res) => {
 app.get('/logout', function (req, res) {
     req.session.user = undefined;
     res.redirect('/')
+});
+
+app.post('/saveBackup', async (req, res) => {
+   try {
+    let helper = require('./helpers/backupsHelper');
+    let sh = new helper();
+
+    var data = {
+        file_name: `"${req.body.file_name}"`,
+        description: `'${req.body.description}'`,
+        created_by: `'System'`,
+        uploaded: `'no'`,
+        db_version:  filestore.get('dbversion')
+    }
+    await sh.insert(data, sh.table_name);
+    res.json({status: 1, message: 'successful'})
+   } catch (error) {
+       res.json({status: -1, message: error})
+   }
+    
+    
+
 });
 
 

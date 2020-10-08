@@ -179,6 +179,40 @@ class PurchaseDetailsHelper extends dbClass {
         }
     }
 
+    /**
+     * Get the total amount purchased from some vendor (optional) using credit, cash or prepaid
+     * @param {String} start_date 
+     * @param {String} end_date 
+     * @param {String} payment_method 
+     * @param {String} vendor 
+     */
+    async getTotalPurchasedByDates(start_date, end_date, payment_method = '', vendor=''){
+        
+        let sql = `select sum(quantity * price) as total from ${this.table_name}
+          where created_on >= '${start_date}'  and created_on <= '${end_date}' `;
+        if(payment_method != '' && vendor == ''){
+            sql += ` and code in (select code from purchases where payment_method = '${payment_method}') `
+        }
+        if(vendor != '' && payment_method == ''){
+            sql += ` and code in (select code from purchases where vendor = '${vendor}') `
+        }
+
+        if(vendor != '' && payment_method != ''){
+            sql += ` and code in (select code from purchases where vendor = '${vendor}' and payment_method = '${payment_method}') `
+        }
+
+        try {
+            await this.getConnection();
+            let q = await this.connection.get(sql);
+            return q.total == null ? 0 : q.total;
+        } catch (error) {
+            log.error(error);
+            throw new Error(error)
+        }
+    }
+
+    
+
  }
 
 module.exports = PurchaseDetailsHelper

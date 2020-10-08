@@ -1,0 +1,68 @@
+<%- include ('partials/header') -%>
+<section  class="content">
+    
+    <div class="flex-container small-margins">
+        <div><a  class="backBtn link"><i class="fa fa-arrow-left"></i> Back</a></div>
+        <div><a  href="/"><i class="fa fa-home"></i> Home </a></div>
+    </div>
+    <div class="container">
+        
+        <div class="profileIntro">
+            <h2>Publishing Your Price List</h2>
+            <p>Upload your price list in an excel file, so users can see your prices when they search</p>
+            <p><b>How to do it</b></p>
+            <form action="upload" method="POST" enctype="multipart/form-data">
+                <ol>
+
+                    <li>The file must be an excel file (example.xlsx). If you use an inventory
+                        software,
+                        export your products/stock list to excel and save the file somewhere on
+                        your desktop
+                    </li>
+                    <li><b>Super important:</b> <br>
+                        The order of the columns in your list must be:
+                        <ol>
+                            <li>Product Name</li>
+                            <li>Price</li>
+                            <li>Product Description / Other Information</li>
+                        </ol>
+
+                        Thus the first column in the excel file must contain the item names;
+                        The
+                        2nd
+                        column containing the prices;
+                        The 3rd containing any other information like a description, or unit
+                        package.
+                        
+
+                    </li>
+                    <li>Click the 'Select File' button below and navigate to where you saved
+                        the
+                        excel file. Then double-click on the file.
+                        <div class="file-upload profileImageUpload">
+                            <div class="upload-area">
+                                <input type="file" name="uploadfile" class="file"
+                                    accept=".xls, .xlsx">
+                               
+                            </div>
+                        </div>
+
+
+
+
+
+                    </li>
+                    <li> Click the submit button to upload it. <input type="submit" class="btn btn-primary"
+                            value="Submit" name="submit"></li>
+                    <li>That's it!</li>
+                </ol>
+            </form>
+        </div>
+
+    </div>
+</section>
+
+
+
+
+<%- include ('partials/footer') -%>

@@ -272,11 +272,16 @@ router.post('/saveUser', async (req, res) => {
 			let data = h.prep_data(req.body);
 			//update. else insert
 			var password = req.body.password;
-			if (password !== undefined && password !== null) {
+			console.log(password)
+			if (password !== undefined && password !== null && password != "undefined")  {
 				var bcrypt = require('bcryptjs');
 				var hash = bcrypt.hashSync(password, 10);
 				data.password_hash = `'${hash}'`;
 			}
+			else{
+				delete	data.password;
+			}
+			console.log(data)
 			let where = ` id = ${id} `;
 			await h.update(data, where, h.table_name);
 		}
@@ -301,6 +306,8 @@ router.post('/saveUser', async (req, res) => {
 
 
 });
+
+
 
 router.post('/deleteUser', async (req, res) => {
 
@@ -576,6 +583,43 @@ router.post('/deleteRolePermission', async (req, res) => {
 		console.log(error)
 		res.json({ status: '-1' })
 	}
+
+});
+
+router.post('/changeStaffPassword', async (req, res) => {
+
+	var bcrypt = require('bcryptjs');
+	var username = req.body.username;
+	var password = req.body.password;
+	var id = req.body.id;
+	var old = req.body.old_password
+	try {
+		var login = await helper.login(username, old);
+		if (!login) {
+			//wrong combination
+			res.json({ status: "-1", message: "The old password is wrong. Try again" })
+
+		}
+		else {
+			//update with the new one
+			var hash = bcrypt.hashSync(password, 10);
+			var data = {
+				password_hash: `'${hash}'`
+			}
+			await helper.update(data, ` id = ${id} `, helper.table_name)
+			
+			await activitiesHelper.log(login.id, "'updated own password'")
+
+			res.json({ status: "1" })
+		}
+
+	} catch (error) {
+		await helper.closeConnection();
+		console.log(error)
+		res.json({ status: -1, message: 'Server error. Please contact admin' })
+	}
+
+
 
 });
 

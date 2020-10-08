@@ -18,15 +18,15 @@ router.get('/getList', async (req, res) => {
         let conditions = helper.prep_data(req.query);
         let objects = null;
         let total = null;
-        if(Object.keys(conditions).length === 0 && conditions.constructor === Object){
-             objects = await helper.getAll(helper.table_name, limit, offset);
-             total = await helper.count('id', helper.table_name);
+        if (Object.keys(conditions).length === 0 && conditions.constructor === Object) {
+            objects = await helper.getAll(helper.table_name, limit, offset);
+            total = await helper.count('id', helper.table_name);
         }
-        else{
+        else {
             let where = [];
             for (let key in conditions) {
                 where.push(` ${key} = ${conditions[key]} `)
-                
+
             }
             objects = await helper.getMany(where.join(" and "), helper.table_name, limit, offset);
             total = await helper.countBy(where.join(" and "), helper.table_name);
@@ -52,20 +52,20 @@ router.get('/getProductsWithStock', async (req, res) => {
         let conditions = helper.prep_data(req.query);
         let objects = null;
         let total = null;
-        if(Object.keys(conditions).length === 0 && conditions.constructor === Object){
-             objects = await helper.getAll(helper.table_name, limit, offset);
-             total = await helper.count('id', helper.table_name);
+        if (Object.keys(conditions).length === 0 && conditions.constructor === Object) {
+            objects = await helper.getAll(helper.table_name, limit, offset);
+            total = await helper.count('id', helper.table_name);
         }
-        else{
+        else {
             let where = [];
             for (let key in conditions) {
                 where.push(` ${key} = '${conditions[key]}' `)
-                
+
             }
             objects = await helper.getMany(where.join(" and "), helper.table_name, limit, offset);
             total = await helper.countBy(where.join(" and "), helper.table_name);
         }
-        
+
         let last_update_time = await helper.getField('max(last_modified) as time', helper.table_name);
         for (var i = 0; i < objects.length; i++) {
             var obj = objects[i];
@@ -122,7 +122,7 @@ router.get('/getUpdatedProducts', async (req, res) => {
 });
 
 router.get('/search', async (req, res) => {
-    let param = req.query.param ;
+    let param = req.query.param;
     let offset = req.query.offset == undefined ? 0 : req.query.offset;
     let limit = req.query.limit == undefined ? null : req.query.limit;
     try {
@@ -138,7 +138,7 @@ router.get('/search', async (req, res) => {
         //     if (nameA > nameB) {
         //       return 1;
         //     }
-      
+
         //     // names must be equal
         //     return 0;
         //   });
@@ -183,13 +183,15 @@ router.post('/saveBranchDetails', async (req, res) => {
 
             let productid = await helper.insert(data, helper.table_name);
             let date = helper.getToday()
-            let stock_data = { created_by: `'${req.query.userid}'`, date: `'${date}'`, product: productid, 
-            quantity_counted: req.body.stock, quantity_expected: 0, 
-            current_price: req.body.price, cost_price: req.body.cost_price };
-        await stockHelper.insert(stock_data, stockHelper.table_name);
+            let stock_data = {
+                created_by: `'${req.query.userid}'`, date: `'${date}'`, product: productid,
+                quantity_counted: req.body.stock, quantity_expected: 0,
+                current_price: req.body.price, cost_price: req.body.cost_price
+            };
+            await stockHelper.insert(stock_data, stockHelper.table_name);
 
-        await helper.refreshCurrentStock(productid)
-        
+            await helper.refreshCurrentStock(productid)
+
 
 
             await activities.log(req.query.userid, `"created a product: ${name}"`, `'Products'`)
@@ -249,6 +251,34 @@ router.post('/delete', async (req, res) => {
     } catch (error) {
         await helper.closeConnection();
         console.log(error)
+        res.json({ status: '-1' })
+    }
+
+});
+
+router.post('/erase', async (req, res) => {
+    let id = req.body.id;//comma-separated
+    //this deletes every record of the product. stock, purchase, sale
+
+
+    try {
+        
+        //lazy shortcut taken to avoid creating objects for each table
+        await helper.delete(` product in (${id})`, 'sales_details')
+        await helper.delete(` product in (${id})`, 'stock_adjustment')
+        await helper.delete(` product in (${id})`, 'purchase_details')
+        await helper.delete(` product in (${id})`, 'received_transfer_details')
+        await helper.delete(` product in (${id})`, 'transfer_details')
+        await helper.delete(` product_id in (${id})`, 'refills')
+        await helper.delete(` product in (${id})`, 'stock_adjustment_pending')
+        let where = ` id in (${id}) `
+        await helper.delete(where, helper.table_name);
+        await activities.log(req.query.userid, `"deleted a product edited  "`, `'Products'`)
+
+        res.json({ status: '1' })
+    } catch (error) {
+        await helper.closeConnection();
+    log.error(error)
         res.json({ status: '-1' })
     }
 
@@ -340,6 +370,8 @@ router.get('/createStockAdjustmentSession', async (req, res) => {
         let stockHelper = new stockClass();
         let date = req.query.date == undefined ? helper.getToday() : req.query.date;
         let created_on = req.query.created_on == undefined ? helper.getToday('timestamp') : req.query.created_on;
+        //set the status of all the others to closed
+        await stockHelper.updateField('status', `'closed'`, ` id > 1 `, stockHelper.sessions_table_name)
 
         let data = { created_by: `'${req.query.userid}'`, created_on: `'${created_on}'`, date: `'${date}'` };
         let id = await stockHelper.insert(data, stockHelper.sessions_table_name);
@@ -353,9 +385,46 @@ router.get('/createStockAdjustmentSession', async (req, res) => {
     }
 });
 
+
+///get the code that's still open. if there's none, create one
+router.get('/getLatestSession', async (req, res) => {
+    try {
+        
+        let stockClass = require('../helpers/stockAdjustmentHelper');
+
+        let stockHelper = new stockClass();
+
+        await stockHelper.getConnection();
+        let where = ` status = 'in_progress' and id = (select max(id) from ${stockHelper.sessions_table_name})`;
+        let item = await stockHelper.getItem(where, stockHelper.sessions_table_name)
+        if (item != null && item != undefined) {
+            res.json({ status: '1', data: item })
+        }
+        else {
+            let date = helper.getToday();
+            let created_on = helper.getToday('timestamp');
+          
+            let data = { created_by: `'${req.query.userid}'`, created_on: `'${created_on}'`, date: `'${date}'` };
+            let id = await stockHelper.insert(data, stockHelper.sessions_table_name);
+            let code = id.toString().padStart(5, '0');
+            await stockHelper.updateField('code', `'${code}'`, ` id = ${id} `, stockHelper.sessions_table_name)
+            data.code = code;
+            
+            res.json({ status: '1', data: data })
+        }
+    } catch (error) {
+        await helper.closeConnection();
+        console.log(error)
+        res.json({ status: '-1' })
+    }
+});
+
 router.post('/saveStockAdjustment', async (req, res) => {
     let stockClass = require('../helpers/stockAdjustmentHelper');
     let stockHelper = new stockClass();
+
+    let stockPendingClass = require('../helpers/stockAdjustmentPendingHelper');
+    let stockPendingHelper = new stockPendingClass();
     try {
 
         let date = req.body.date == undefined ? helper.getToday() : req.body.date;
@@ -363,6 +432,7 @@ router.post('/saveStockAdjustment', async (req, res) => {
 
 
         let products = req.body.products.split("||");
+        let product_names = req.body.product_names.split("||");
         let cost_prices = req.body.cost_prices.split("||");
         let quantities_expected = req.body.quantities_expected.split("||");
         let quantities_counted = req.body.quantities_counted.split("||");
@@ -370,22 +440,29 @@ router.post('/saveStockAdjustment', async (req, res) => {
         let expiries = req.body.expiries.split("||");
         let categories = req.body.categories.split("||");
         let prices = req.body.prices.split("||");
-        let code = req.body.code;
+        let damaged = req.body.quantities_damaged == undefined ? [] : req.body.quantities_damaged.split("||")
+        let expired = req.body.quantities_expired == undefined ? [] : req.body.quantities_expired.split("||")
+        let units = req.body.units.split("||")
+        let shelves = req.body.shelves.split("||")
 
+        let code = req.body.code;
+        
         //delete existing with the code and replace with incoming
         // await stockHelper.delete(` code = '${code}' `, stockHelper.table_name);
-
+        let sql = "BEGIN TRANSACTION; ";
 
         await stockHelper.getConnection();
         // stockHelper.connection.run("BEGIN TRANSACTION");
         let objects = [];
         for (let i = 0; i < products.length; i++) {
             let data = stockHelper.prep_data(req.body);
+            // console.log(data.code)
+
             data.created_by = req.userid
             data.created_on = `'${created_on}'`;
             data.date = `'${date}'`;
             data.product = products[i];
-            console.log('i=' + i + 'product ' + products[i])
+            // console.log('i=' + i + 'product ' + products[i])
             data.cost_price = cost_prices[i] == undefined || cost_prices[i] == null || cost_prices[i] == '' ? `''` : cost_prices[i];
             data.quantity_expected = quantities_expected[i];
             data.quantity_counted = quantities_counted[i];
@@ -393,23 +470,69 @@ router.post('/saveStockAdjustment', async (req, res) => {
             data.expiry = expiries[i] == undefined ? `''` : `'${expiries[i]}'`;
             data.category = categories[i] == undefined ? `''` : `'${categories[i]}'`;
             data.current_price = prices[i];
-            objects.push(data);
-            console.log(data)
-        }
-        console.log(objects)
+            data.quantity_expired = expired[i] == undefined || expired[i] == null || expired[i] == '' ? 0 : expired[i];
+            data.quantity_damaged = damaged[i] == undefined || damaged[i] == null || damaged[i] == '' ? 0 : damaged[i];
 
-        let sql = "BEGIN TRANSACTION; ";
+
+            //check if the item exists first
+            var exists = await helper.getItem(`id = '${products[i]}' `, helper.table_name);
+            // console.log(exists)
+            if (exists == undefined || exists == null) {
+                // console.log(` ${product_names[i]} ${products[i]} new`)
+                //not found. create new item
+                let new_product = await helper.insert(
+                    {
+                        name: `"${product_names[i]}"`,
+                        price: prices[i],
+                        size: data.size,
+                        cost_price: cost_prices[i],
+                        expiry: `"${expiries[i]}"`,
+                        category: `"${categories[i]}"`,
+                        current_stock: quantities_counted[i],
+                        unit: `"${units[i]}"`,
+                        shelf: `"${shelves[i]}"`
+                    },
+                    helper.table_name
+                );
+                // console.log(` ${product_names[i]} ${products[i]} new - ${new_product}`)
+                data.product = new_product;
+            }
+            else {
+                //update the price and unit and stuff
+                let product_update_data = {
+                    cost_price: data.cost_price,
+                    price: data.current_price,
+                    expiry: data.expiry,
+                    category: data.category,
+                    current_stock: data.quantity_counted,
+                    size: data.size,
+                    unit: `"${units[i]}"`,
+                        shelf: `"${shelves[i]}"`
+                }
+                sql += stockHelper.generateUpdateQuery(product_update_data, ` id = ${products[i]} `, helper.table_name);
+
+            }
+
+
+            objects.push(data);
+        }
+        // console.log(objects)
+
+
         sql += `delete from ${stockHelper.table_name} where code = '${code}'; `;
+        sql += `delete from ${stockPendingHelper.table_name} where code = '${code}'; `;
+
+        sql += `update ${stockHelper.sessions_table_name} set status = 'closed' where code = '${code}'; `;
         sql += stockHelper.generateInsertManyQuery(stockHelper.fields, objects, stockHelper.table_name);
         sql += "COMMIT;"
-        console.log(sql)
+        // console.log(sql)
         await stockHelper.connection.exec(sql);
 
-        for (var x = 0; x < products.length; x++) {
+        // for (var x = 0; x < products.length; x++) {
 
-            let pid = products[x];
-            await helper.refreshCurrentStock(pid)
-        }
+        //     let pid = products[x];
+        //     await helper.refreshCurrentStock(pid)
+        // }
         activities.log(req.query.userid, `'added new stock adjustment'`, `'Products'`)
         // stockHelper.connection.run("COMMIT");
         // stockHelper.connection.close().then(succ => { }, err => { })
@@ -429,6 +552,131 @@ router.post('/saveStockAdjustment', async (req, res) => {
         res.json({ status: '-1' })
     }
 });
+
+router.post('/saveStockAdjustmentToPending', async (req, res) => {
+    let stockClass = require('../helpers/stockAdjustmentPendingHelper');
+    let stockHelper = new stockClass();
+    try {
+
+        let date = req.body.date == undefined ? helper.getToday() : req.body.date;
+        let created_on = req.body.created_on == undefined ? helper.getToday('timestamp') : req.body.created_on;
+
+
+        let products = req.body.products.split("||");
+        let product_names = req.body.product_names.split("||");
+        let cost_prices = req.body.cost_prices.split("||");
+        let quantities_expected = req.body.quantities_expected.split("||");
+        let quantities_counted = req.body.quantities_counted.split("||");
+        let sizes = req.body.sizes.split("||");
+        let expiries = req.body.expiries.split("||");
+        let categories = req.body.categories.split("||");
+        let prices = req.body.prices.split("||");
+        let code = req.body.code;
+        let damaged = req.body.quantities_damaged.split("||")
+        let expired = req.body.quantities_expired.split("||")
+        let units = req.body.units.split("||")
+        let shelves = req.body.shelves.split("||")
+        //delete existing with the code and replace with incoming
+        // await stockHelper.delete(` code = '${code}' `, stockHelper.table_name);
+        let sql = "BEGIN TRANSACTION; ";
+
+        await stockHelper.getConnection();
+        // stockHelper.connection.run("BEGIN TRANSACTION");
+        let objects = [];
+        for (let i = 0; i < products.length; i++) {
+            let data = stockHelper.prep_data(req.body);
+            // console.log(data.code)
+
+            data.created_by = req.userid
+            data.created_on = `'${created_on}'`;
+            data.date = `'${date}'`;
+            data.product = products[i];
+            // console.log('i=' + i + 'product ' + products[i])
+            data.cost_price = cost_prices[i] == undefined || cost_prices[i] == null || cost_prices[i] == '' ? `''` : cost_prices[i];
+            data.quantity_expected = quantities_expected[i];
+            data.quantity_counted = quantities_counted[i];
+            data.size = sizes[i] == undefined ? `''` : `"${sizes[i]}"`;
+            data.expiry = expiries[i] == undefined ? `''` : `"${expiries[i]}"`;
+            data.category = categories[i] == undefined ? `''` : `"${categories[i]}"`;
+            data.current_price = prices[i];
+            data.quantity_expired = expired[i] == undefined || expired[i] == null || expired[i] == '' ? 0 : expired[i];
+            data.quantity_damaged = damaged[i] == undefined || damaged[i] == null || damaged[i] == '' ? 0 : damaged[i];
+            data.unit = units[i] == undefined || units[i] == null  ? `''` : `"${units[i]}"`;
+            data.shelf = shelves[i] == undefined || shelves[i] == null  ? `''` : `"${shelves[i]}"`;
+
+            //check if the item exists first
+            var exists = await helper.getItem(`id = ${products[i]}`, helper.table_name);
+            // console.log(exists)
+            if (exists == undefined || exists == null) {
+                // console.log(` ${product_names[i]} ${products[i]} new`)
+                //not found. create new item
+                let new_product = await helper.insert(
+                    {
+                        name: `"${product_names[i]}"`,
+                        price: prices[i],
+                        cost_price: cost_prices[i],
+                        expiry: `"${expiries[i]}"`,
+                        category: `"${categories[i]}"`,
+                        shelf: `"${shelves[i]}"`,
+                        unit: `"${units[i]}"`,
+                        current_stock: quantities_counted[i]
+                    },
+                    helper.table_name
+                );
+                // console.log(` ${product_names[i]} ${products[i]} new - ${new_product}`)
+                data.product = new_product;
+            }
+            else {
+                //update the price and unit and stuff
+                // let product_update_data = {
+                //     cost_price: data.cost_price,
+                //     price: data.current_price,
+                //     expiry: data.expiry,
+                //     category: data.category,
+                //     current_stock: data.quantity_counted,
+                //     size: data.size
+                // }
+                // sql += stockHelper.generateUpdateQuery(product_update_data, ` id = ${products[i]} `, helper.table_name);
+
+            }
+
+
+            objects.push(data);
+        }
+        // console.log(objects)
+
+
+        sql += `delete from ${stockHelper.table_name} where code = '${code}'; `;
+        sql += stockHelper.generateInsertManyQuery(stockHelper.fields, objects, stockHelper.table_name);
+        sql += "COMMIT;"
+        // console.log(sql)
+        await stockHelper.connection.exec(sql);
+
+        // for (var x = 0; x < products.length; x++) {
+
+        //     let pid = products[x];
+        //     await helper.refreshCurrentStock(pid)
+        // }
+        activities.log(req.query.userid, `'added new stock adjustment pending authorization'`, `'Products'`)
+        // stockHelper.connection.run("COMMIT");
+        // stockHelper.connection.close().then(succ => { }, err => { })
+        res.json({ status: '1' })
+    } catch (error) {
+        await helper.closeConnection();
+        //   try {
+        //     await stockHelper.connection.run("ROLL BACK;");
+        //     stockHelper.connection.close().then(succ => {}, err => {})
+        //   } catch (error) { await helper.closeConnection();
+        //       console.log(error)
+        //   }
+
+
+
+        console.log(error)
+        res.json({ status: '-1' })
+    }
+});
+
 
 
 router.post('/saveSingleStockAdjustment', async (req, res) => {
@@ -452,7 +700,7 @@ router.post('/saveSingleStockAdjustment', async (req, res) => {
         await stockHelper.connection.exec(sql);
 
         await helper.refreshCurrentStock(product_id)
-        activities.log(req.query.userid, `added new stock adjustment for ${name}. new quantity: ${qtt}`, 'Products')
+        activities.log(req.query.userid, `added new stock adjustment for ${name} pending approval. new quantity: ${qtt}`, 'Products')
 
         res.json({ status: '1' })
     } catch (error) {
@@ -464,6 +712,66 @@ router.post('/saveSingleStockAdjustment', async (req, res) => {
 
 });
 
+router.post('/savePendingSingleStockAdjustment', async (req, res) => {
+    try {
+        let stockClass = require('../helpers/stockAdjustmentPendingHelper');
+        let stockHelper = new stockClass();
+
+        let date = req.body.date == undefined ? helper.getToday() : req.body.date;
+        let created_on = req.body.created_on == undefined ? helper.getToday('timestamp') : req.body.created_on;
+        let product_id = req.body.product;
+        let qtt = req.body.quantity_counted;
+        let name = req.body.product_name;
+        let code = req.body.code;
+        let data = stockHelper.prep_data(req.body);
+        data.created_on = `"${created_on}"`;
+        data.date = `"${date}"`;
+        await stockHelper.getConnection();
+        let sql = "BEGIN TRANSACTION; ";
+        sql += `delete from ${stockHelper.table_name} where code = '${code}' and product = ${product_id}; `;
+
+        sql += stockHelper.generateInsertQuery(data, stockHelper.table_name);
+        sql += "COMMIT;"
+        await stockHelper.connection.exec(sql);
+
+        // await helper.refreshCurrentStock(product_id)
+        activities.log(req.query.userid, `"added new stock adjustment for ${name} pending approval. new quantity: ${qtt}"`, '"Products"')
+
+        res.json({ status: '1' })
+    } catch (error) {
+        await helper.closeConnection();
+        // stockHelper.connection.run("ROLL BACK");
+        console.log(error)
+        res.json({ status: '-1' })
+    }
+
+});
+
+///get the quantity if any previously entered for an item
+router.get('/getPendingStockQuantity', async (req, res) => {
+    try {
+        let stockClass = require('../helpers/stockAdjustmentPendingHelper');
+        let code = req.query.code;
+        let product = req.query.product
+        let stockHelper = new stockClass();
+
+
+        let where = ` product = ${product} and code = '${code}' `;
+        let item = await stockHelper.getItem(where, stockHelper.table_name)
+        if (item != null && item != undefined) {
+            res.json({ status: '1', data: item })
+        }
+        else {
+            res.json({ status: '0', data: null })
+        }
+    } catch (error) {
+        await helper.closeConnection();
+        console.log(error)
+        res.json({ status: '-1' })
+    }
+});
+
+
 router.get('/getStockAdjustmentSessions', async (req, res) => {
     let year = req.query.year == undefined ? helper.getThisYear() : req.query.year;
     let stockClass = require('../helpers/stockAdjustmentHelper');
@@ -473,6 +781,31 @@ router.get('/getStockAdjustmentSessions', async (req, res) => {
     let adminHelper = new adminClass();
     try {
         let objects = await stockHelper.getMany(` strftime('%Y', date) = '${year}' `, stockHelper.sessions_table_name);
+        for (var i = 0; i < objects.length; i++) {
+            var obj = objects[i];
+            obj.created_by = await adminHelper.getUserName(obj.created_by);
+            obj.total_difference = await stockHelper.getSessionTotalDifference(obj.code);
+            obj.num_items = await stockHelper.getSessionNumItems(obj.code);
+
+        }
+
+        res.json({ status: '1', data: objects })
+    } catch (error) {
+        await helper.closeConnection();
+        res.json({ status: '-1', data: null })
+    }
+
+});
+
+router.get('/getPendingStockAdjustmentSessions', async (req, res) => {
+    let year = req.query.year == undefined ? helper.getThisYear() : req.query.year;
+    let stockClass = require('../helpers/stockAdjustmentHelper');
+    let stockHelper = new stockClass();
+
+    let adminClass = require('../helpers/adminHelper');
+    let adminHelper = new adminClass();
+    try {
+        let objects = await stockHelper.getMany(`status = 'in_progress' and strftime('%Y', date) = '${year}' `, stockHelper.sessions_table_name);
         for (var i = 0; i < objects.length; i++) {
             var obj = objects[i];
             obj.created_by = await adminHelper.getUserName(obj.created_by);
@@ -557,7 +890,10 @@ router.get('/getStockAdjustmentsByCode', async (req, res) => {
             obj.name = product.name;
             obj.difference = difference;
             obj.total_cost = difference * cost_price;
-            obj.total = difference * price;
+            obj.total_damaged = (price * obj.quantity_damaged).toFixed(2)
+            obj.total_expired = (price * obj.quantity_expired).toFixed(2)
+
+            obj.total = (difference * price).toFixed(2);
 
         }
         let num_excess = await stockHelper.getNumberPositive(code);
@@ -565,6 +901,9 @@ router.get('/getStockAdjustmentsByCode', async (req, res) => {
         let num_neutral = await stockHelper.getNumberNeutral(code);
         let total_excess = await stockHelper.getTotalPositive(code);
         let total_loss = await stockHelper.getTotalNegative(code);
+        let total_expired = await stockHelper.getTotalExpired(code);
+        let total_damaged = await stockHelper.getTotalDamage(code);
+
         let total_difference = total_excess + total_loss
 
         res.json({
@@ -572,13 +911,69 @@ router.get('/getStockAdjustmentsByCode', async (req, res) => {
             number_excess: num_excess,
             number_loss: num_loss,
             number_neutral: num_neutral,
-            total_excess: total_excess,
-            total_loss: total_loss,
-            total_difference: total_difference,
+            total_excess: total_excess == null ? 0.00 : total_excess.toFixed(2),
+            total_loss: total_loss == null ? 0.00 : total_loss.toFixed(2),
+            total_difference: total_difference == null ? 0.00 : total_difference.toFixed(2),
+            total_expired: total_expired == null ? 0.00 : total_expired.toFixed(2),
+            total_damaged: total_damaged == null ? 0.00 : total_damaged.toFixed(2),
             data: objects
         })
     } catch (error) {
         await helper.closeConnection();
+        console.log(error)
+        res.json({ status: '-1', data: null })
+    }
+
+});
+
+
+router.get('/getPendingStockAdjustmentsByCode', async (req, res) => {
+    try {
+        let code = req.query.code
+
+        let stockClass = require('../helpers/stockAdjustmentPendingHelper');
+        let stockHelper = new stockClass();
+
+
+        let objects = await stockHelper.getMany(` code = '${code}'  `, stockHelper.table_name);
+        for (var i = 0; i < objects.length; i++) {
+            var obj = objects[i];
+            let difference = obj.quantity_counted - obj.quantity_expected;
+            let price = obj.current_price;
+            let cost_price = obj.cost_price;
+            let product = await helper.getItem(` id = ${obj.product} `, helper.table_name);
+            obj.total_damaged = (price * obj.quantity_damaged).toFixed(2)
+            obj.total_expired = (price * obj.quantity_expired).toFixed(2)
+            obj.name = product.name;
+            obj.difference = difference;
+            obj.total_cost = difference * cost_price;
+            obj.total = (difference * price).toFixed(2);
+
+        }
+        let num_excess = await stockHelper.getNumberPositive(code);
+        let num_loss = await stockHelper.getNumberNegative(code);
+        let num_neutral = await stockHelper.getNumberNeutral(code);
+        let total_excess = await stockHelper.getTotalPositive(code);
+        let total_loss = await stockHelper.getTotalNegative(code);
+        let total_expired = await stockHelper.getTotalExpired(code);
+        let total_damaged = await stockHelper.getTotalDamage(code);
+        let total_difference = total_excess + total_loss
+
+        res.json({
+            status: '1',
+            number_excess: num_excess,
+            number_loss: num_loss,
+            number_neutral: num_neutral,
+            total_excess: total_excess == null ? 0.00 : total_excess.toFixed(2),
+            total_loss: total_loss == null ? 0.00 : total_loss.toFixed(2),
+            total_difference: total_difference == null ? 0.00 : total_difference.toFixed(2),
+            total_expired: total_expired == null ? 0.00 : total_expired.toFixed(2),
+            total_damaged: total_damaged == null ? 0.00 : total_damaged.toFixed(2),
+            data: objects
+        })
+    } catch (error) {
+        await helper.closeConnection();
+        console.log(error)
         res.json({ status: '-1', data: null })
     }
 
@@ -586,12 +981,6 @@ router.get('/getStockAdjustmentsByCode', async (req, res) => {
 
 
 
-router.post('/delete', function (req, res) {
-
-
-
-
-});
 
 router.get('/getStockOutCount', async (req, res) => {
     try {
@@ -1041,6 +1430,96 @@ router.get('/refreshAllProducts', async (req, res) => {
 
 
 
+router.post('/merge', async (req, res) => {
+    try {
+        //merge a number of items into the first one. it has to convert sales, purchases, stockadjustments of all to the first one
+        let stockClass = require('../helpers/stockAdjustmentHelper');
+        let stockHelper = new stockClass();
 
+        let date = req.body.date == undefined ? helper.getToday() : req.body.date;
+        let created_on = req.body.created_on == undefined ? helper.getToday('timestamp') : req.body.created_on;
+        let product_id = req.body.product;
+        let qtt = req.body.quantity_counted;
+        let name = req.body.product_name;
+
+        let data = stockHelper.prep_data(req.body);
+        data.created_on = created_on;
+        data.date = date;
+        await stockHelper.getConnection();
+        let sql = "BEGIN TRANSACTION; ";
+        sql += stockHelper.generateInsertQuery(data, stockHelper.table_name);
+        sql += "COMMIT;"
+        await stockHelper.connection.exec(sql);
+
+        await helper.refreshCurrentStock(product_id)
+        activities.log(req.query.userid, `added new stock adjustment for ${name}. new quantity: ${qtt}`, 'Products')
+
+        res.json({ status: '1' })
+    } catch (error) {
+        await helper.closeConnection();
+        // stockHelper.connection.run("ROLL BACK");
+        console.log(error)
+        res.json({ status: '-1' })
+    }
+
+});
+ 
+
+
+
+router.post('/upload', (req, res, next) => {
+    try {
+        var file = req.files.uploadfile
+        var xlsx = require('xlsx');
+        var workbook = xlsx.read(file.data);
+        var sheet_name_list = workbook.SheetNames;
+        // var csv = xlsx.utils.sheet_to_csv(workbook.Sheets[sheet_name_list[0]]);
+        var arr = xlsx.utils.sheet_to_json(workbook.Sheets[sheet_name_list[0]])
+        var mother_array = []; //this will contain the sets of 100 arrays
+        for (var i = 0; i < arr.length; i++) {
+            var insert_array = []
+            //convert each line to an array of items, by the commas
+            var obj_array = arr[i];
+            //console.log(obj_array);
+            var id = obj_array.id;
+            var name = obj_array.name;
+            var price = obj_array.price;
+            var cost_price = obj_array.cost_price == undefined ? 0 : obj_array.cost_price;
+            var category = obj_array.category == undefined ? "Miscellaneous" : obj_array.category;
+            var expiry = obj_array.expiry == undefined ? "1970-01-01" : obj_array.expiry;
+            var expected = obj_array.expected == undefined ? 0 : obj_array.expected;
+            var counted = obj_array.counted == undefined ? 0 : obj_array.counted;
+            var shelf = obj_array.shelf == undefined ? "" : obj_array.shelf;
+            var unit = obj_array.unit == undefined ? "" : obj_array.unit;
+            if (name != undefined && name != null && name != "") {
+                mother_array.push({
+                    id: id,
+                    name: name,
+                    price: price,
+                    cost_price: cost_price,
+                    category: category,
+                    expiry: expiry,
+                    quantity: counted,
+                    stock: expected,
+                    difference: counted - expected,
+                    shelf: shelf,
+                    unit: unit
+                })
+            }
+
+
+
+        }//end for
+
+
+        res.json({ status: '1', data: mother_array })
+    } catch (error) {
+        console.log(error)
+        res.json({ status: '-1' })
+    }
+
+
+
+});
 //export the whole thingy
 module.exports = router;

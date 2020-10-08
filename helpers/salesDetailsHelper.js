@@ -153,7 +153,7 @@ class SalesDetailsHelper extends dbClass {
         try {
             await this.getConnection();
             let q = await this.connection.get(sql);
-            return q.total == null ? 0 : q.total;
+            return q.total == null ? 0 : (q.total).toFixed(2);
         } catch (error) {
             log.error(error);
             throw new Error(error)
@@ -185,7 +185,7 @@ class SalesDetailsHelper extends dbClass {
         if(start != ''){
             sql += ` where sales_details.date >= '${start}' and sales_details.date <= '${end}' `
         }
-        sql += ` group by created_by `
+        sql += ` group by sales.created_by `
         try {
             await this.getConnection();
             let q = await this.connection.all(sql);
@@ -250,7 +250,6 @@ class SalesDetailsHelper extends dbClass {
         try {
             await this.getConnection();
             let q = await this.connection.get(sql);
-            console.log(q)
             return q.total == null ? 0 : q.total;
         } catch (error) {
             log.error(error);
@@ -272,7 +271,7 @@ class SalesDetailsHelper extends dbClass {
             log.error(error);
             throw new Error(error)
         }
-    }
+    } 
 
     async getDailySales(start, end){
         let sql = `select sum(quantity * price) as total, date from ${this.table_name}  `;
@@ -284,7 +283,7 @@ class SalesDetailsHelper extends dbClass {
         try {
             await this.getConnection();
             let q = await this.connection.get(sql);
-            return q.total == null ? 0 : q.total;
+            return q == undefined ? 0 : q.total;
         } catch (error) {
             console.log(sql)
             log.error(error);
@@ -292,6 +291,43 @@ class SalesDetailsHelper extends dbClass {
         }
     }
 
+    async getBestSellers(start, end, limit=10){
+        let sql = `select product, products.name, sum(quantity * ${this.table_name}.price) as total,
+        sum (quantity) as total_quantity, avg(${this.table_name}.price) as avg_price from
+        ${this.table_name} join products on ${this.table_name}.product = products.id `;
+        if(start != ''){
+            sql += ` where date >= '${start}' and date <= '${end}' group by product order by total desc limit ${limit}`
+        }
+       console.log(sql)
+        try {
+            await this.getConnection();
+            let q = await this.connection.all(sql);
+            return q;
+        } catch (error) {
+            console.log(sql)
+            log.error(error);
+            throw new Error(error)
+        }
+    }
+
+    async getWorstSellers(start, end, limit=10){
+        let sql = `select product, products.name, sum(quantity * ${this.table_name}.price) as total,
+        sum (quantity) as total_quantity, avg(${this.table_name}.price) as avg_price from
+        ${this.table_name} join products on ${this.table_name}.product = products.id `;
+        if(start != ''){
+            sql += ` where date >= '${start}' and date <= '${end}' group by product order by total asc limit ${limit}`
+        }
+       
+        try {
+            await this.getConnection();
+            let q = await this.connection.all(sql);
+            return q;
+        } catch (error) {
+            console.log(sql)
+            log.error(error);
+            throw new Error(error)
+        }
+    }
  }
 
 module.exports = SalesDetailsHelper

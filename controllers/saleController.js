@@ -30,9 +30,9 @@ router.get('/getList', async (req, res) => {
             obj.quantity = await detailsHelper.getNumItems(obj.code)
         }
 
-        objects.map(obj => {
-            obj.stock = obj.current_stock
-        })
+        // objects.map(obj => {
+        //     obj.stock = obj.current_stock
+        // })
         res.json({ status: '1', data: objects })
     } catch (error) {
         await helper.closeConnection();
@@ -52,12 +52,14 @@ router.get('/getProductSales', async (req, res) => {
         for (var i = 0; i < objects.length; i++) {
             var obj = objects[i];
             obj.total_amount = await detailsHelper.getSaleTotal(obj.code)
-            obj.quantity = await detailsHelper.getNumItems(obj.code)
+            // obj.quantity = await detailsHelper.getNumItems(obj.code)
+            let product = await productHelper.getItem(` id = ${obj.product} `, productHelper.table_name);
+            obj.product = product;
         }
 
-        objects.map(obj => {
-            obj.stock = obj.current_stock
-        })
+        // objects.map(obj => {
+        //     obj.stock = obj.current_stock
+        // })
         res.json({ status: '1', data: objects })
     } catch (error) {
         await helper.closeConnection();
@@ -162,7 +164,7 @@ router.get('/getSaleDetails', async (req, res) => {
     try {
         let code = req.query.code
         let details = await helper.getItem(` code = '${code}'`, helper.table_name);
-
+        details.cashier = await adminHelper.getUserName(details.created_by)
 
         let objects = await detailsHelper.getMany(` code = '${code}'  `, detailsHelper.table_name);
         for (var i = 0; i < objects.length; i++) {
@@ -315,8 +317,9 @@ router.get('/findUserSummaryBetweenDates', async (req, res) => {
             let credit = await detailsHelper.getUserSalesByPaymentMethod(obj.created_by, 'Credit', start, end)
             let insurance = await detailsHelper.getUserSalesByPaymentMethod(obj.created_by, 'Insurance', start, end)
             let other = await detailsHelper.getUserSalesByPaymentMethod(obj.created_by, 'Other', start, end)
+            let discount = await helper.getUserDiscount(obj.created_by, start, end);
 
-
+            obj.total_amount = obj.total_amount.toFixed(2)
             obj.cash = cash.toFixed(2)
             obj.momo = momo.toFixed(2)
             obj.cheque = cheque.toFixed(2)
@@ -324,8 +327,9 @@ router.get('/findUserSummaryBetweenDates', async (req, res) => {
             obj.credit = credit.toFixed(2)
             obj.insurance = insurance.toFixed(2)
             obj.other = other.toFixed(2)
-
-
+            obj.discount = discount.toFixed(2)
+            let discounted_total = obj.total_amount - discount;
+            obj.discounted_total = discounted_total.toFixed(2)
             obj.display_name = await adminHelper.getUserName(obj.created_by)
         }
 
@@ -424,7 +428,8 @@ router.get('/getDailySales', async (req, res) => {
         let credit = await detailsHelper.getSalesByPaymentMethod('Credit', start, end)
         let insurance = await detailsHelper.getSalesByPaymentMethod('Insurance', start, end)
         let other = await detailsHelper.getSalesByPaymentMethod('Other', start, end)
-
+        let discount = await helper.getTotalDiscount(start, end);
+        let discounted_total = total - discount
 
 
         res.json({
@@ -438,6 +443,8 @@ router.get('/getDailySales', async (req, res) => {
             credit: credit.toFixed(2),
             insurance: insurance.toFixed(2),
             other: other.toFixed(2),
+            discount: discount.toFixed(2),
+            discounted_total: discounted_total.toFixed(2),
             data: objects
         })
     } catch (error) {
@@ -489,12 +496,18 @@ router.get('/getBranchDailySalesSummary', async (req, res) => {
             obj.other = other == null ? 0.00 : other.toFixed(2);
             objects.push(obj)
         }
-
-
+        let best_sellers = await detailsHelper.getBestSellers(start_date, end_date);
+        let worst_sellers = await detailsHelper.getWorstSellers(start_date, end_date);
+        let total = await detailsHelper.getTotalSales(start_date, end_date);
+        let avg = await detailsHelper.getAverageSales(start_date, end_date)
 
         res.json({
             status: '1',
-            data: objects
+            data: objects,
+            best_sellers : best_sellers,
+            worst_sellers: worst_sellers,
+            total : total,
+            average : avg
         })
     } catch (error) {
         await helper.closeConnection();

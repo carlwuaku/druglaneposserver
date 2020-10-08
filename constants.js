@@ -14,10 +14,12 @@ exports.settings_location = (electron.app || electron.remote.app).getPath('userD
 const path = require('path')
 exports.settings_path =path.join( this.settings_location,'system-settings.json');
 exports.db_path =path.join( this.settings_location,'druglane.db');
+exports.sequelize_db = path.join( this.settings_location,'sequelize_druglane.db');
 exports.backup_folder = path.join((electron.app || electron.remote.app).getPath('documents'), "druglaneBackups");
 exports.settings_filename = 'system-settings.json';
 exports.db_filename = 'druglane.db';
- 
+exports.internal_backups_path =path.join( this.settings_location,'backups');
+
 exports.default_config = {
   port: PORT,
   host: "localhost",
@@ -110,7 +112,6 @@ const migrations = [
   {
     query: `CREATE UNIQUE INDEX product_name_unique 
       ON products(name);
-      CREATE UNIQUE INDEX  product_barcode_unique ON products(barcode);
       CREATE  INDEX product_index  ON products(price, category, max_stock, min_stock, expiry,
          current_stock, last_modified, status);
       `,
@@ -768,6 +769,467 @@ const migrations = [
     
           `,
     version: 62
+  },
+  {
+    query: `
+    PRAGMA foreign_keys=off;
+
+    BEGIN TRANSACTION;
+
+    CREATE TABLE stock_adjustment_new (
+      id integer primary key autoincrement,
+      date text NOT NULL,
+      product integer NOT NULL,
+      quantity_counted real NOT NULL,
+      quantity_expected real NOT NULL,
+      current_price real default NULL,
+      created_by integer default NULL,
+      code text DEFAULT NULL,
+      created_on text default CURRENT_TIMESTAMP ,
+      cost_price real DEFAULT NULL,
+      category text DEFAULT NULL,
+      size text DEFAULT NULL,
+      expiry text DEFAULT NULL,
+      comments text DEFAULT NULL,
+      quantity_expired real NOT NULL DEFAULT 0,
+      quantity_damaged real NOT NULL DEFAULT 0,
+      foreign key (product) references products (id) ON DELETE RESTRICT ON UPDATE CASCADE
+
+          );
+
+          INSERT INTO stock_adjustment_new 
+      SELECT *
+      FROM stock_adjustment;
+
+      DROP TABLE IF EXISTS stock_adjustment;
+      DROP INDEX IF EXISTS stock_adj_index_1;
+      ALTER TABLE stock_adjustment_new RENAME TO stock_adjustment;
+          
+          COMMIT;
+    
+          PRAGMA foreign_keys=on;
+          `,
+    version: 63
+  },
+  
+  {
+    query: `
+      
+      CREATE  INDEX stock_adj_index_1 ON stock_adjustment(date, quantity_counted,
+        quantity_expected, category, expiry);
+      `,
+    version: 64
+  },
+  {
+
+    query: `INSERT INTO permissions (permission_id, name, description) values 
+    (83, 'Manage Settings', 'edit company name, phone, address, etc');`,
+    version: 65
+  },
+  {
+    query: `INSERT INTO role_permissions (role_id, permission_id) values 
+    (1, 83);`,
+    version: 66
+  },
+  {
+    query: `
+    PRAGMA foreign_keys=off;
+
+    BEGIN TRANSACTION;
+
+    CREATE TABLE products_new (
+      id integer primary key autoincrement,
+            name text NOT NULL,
+            price real NOT NULL,
+            category text NOT NULL DEFAULT 'Uncategorised',
+            notes text DEFAULT NULL,
+            unit text DEFAULT NULL,
+            picture text DEFAULT NULL,
+            created_on text  DEFAULT CURRENT_TIMESTAMP,
+            max_stock real DEFAULT NULL,
+            min_stock real NOT NULL DEFAULT 1,
+            expiry text DEFAULT NULL,
+            barcode text DEFAULT NULL,
+            current_stock real DEFAULT NULL,
+            last_modified text DEFAULT NULL,
+            cost_price real default null,
+            size text default null,
+            description text default null,
+            status integer  DEFAULT null
+          );
+
+          INSERT INTO products_new (id, name, price, category, notes, unit, picture, created_on, 
+            max_stock, min_stock, expiry, barcode, current_stock, last_modified, cost_price, status)
+      SELECT *
+      FROM products;
+
+
+      DROP INDEX IF EXISTS product_name_unique;
+      DROP INDEX IF EXISTS product_index;
+      DROP INDEX IF EXISTS product_barcode_unique;
+
+      DROP TABLE IF EXISTS products;
+
+      ALTER TABLE products_new RENAME TO products;
+          
+          COMMIT;
+    
+          PRAGMA foreign_keys=on;
+          `,
+    version: 67
+  },
+  {
+    query: `CREATE  INDEX product_name
+      ON products(name);
+      CREATE  INDEX product_index  ON products(price, category, max_stock, min_stock, expiry,
+         current_stock, last_modified, status);
+      `,
+    version: 68
+  },
+  {
+    query: ` 
+
+ 
+    CREATE TABLE if not exists stock_adjustment_pending (
+      id integer primary key autoincrement,
+      date text NOT NULL,
+      product integer NOT NULL,
+      quantity_counted real NOT NULL,
+      quantity_expected real NOT NULL,
+      current_price real default NULL,
+      created_by integer default NULL,
+      code text DEFAULT NULL,
+      created_on text default CURRENT_TIMESTAMP ,
+      cost_price real DEFAULT NULL,
+      category text DEFAULT NULL,
+      size text DEFAULT NULL,
+      expiry text DEFAULT NULL,
+      comments text DEFAULT NULL,
+      quantity_expired real NOT NULL DEFAULT 0,
+      quantity_damaged real NOT NULL DEFAULT 0,
+      foreign key (product) references products (id) ON DELETE RESTRICT ON UPDATE CASCADE
+
+          );
+
+      
+          
+    
+          `,
+    version: 69
+  },
+  
+  {
+    query: `
+      
+      CREATE  INDEX stock_adj_pending_index_1 ON stock_adjustment_pending(date, quantity_counted,
+        quantity_expected, category, expiry);
+      `,
+    version: 70
+  },
+  {
+    query: `
+    PRAGMA foreign_keys=off;
+
+    BEGIN TRANSACTION;
+
+    CREATE TABLE stock_adjustment_sessions_new (
+      id integer primary key autoincrement,
+            date text NOT NULL,
+            code text DEFAULT NULL,
+            created_on text default CURRENT_TIMESTAMP,
+            created_by integer DEFAULT NULL,
+            status text default 'in_progress'
+
+
+          );
+
+          INSERT INTO stock_adjustment_sessions_new (id, date, code, created_on, created_by) 
+      SELECT id, date, code, created_on, created_by 
+      FROM stock_adjustment_sessions;
+
+      DROP TABLE IF EXISTS stock_adjustment_sessions;
+      ALTER TABLE stock_adjustment_sessions_new RENAME TO stock_adjustment_sessions;
+
+      DROP INDEX IF EXISTS stock_index_1 ;
+      DROP INDEX IF EXISTS stock_index_2;
+
+
+          COMMIT;
+    
+          PRAGMA foreign_keys=on;
+          `,
+    version: 71
+  },
+  {
+    query: `
+      CREATE UNIQUE INDEX stock_index_1 ON stock_adjustment_sessions(code);
+      CREATE  INDEX stock_index_2 ON stock_adjustment_sessions(date);
+      `,
+    version: 72
+  },
+  {
+    query: `
+    PRAGMA foreign_keys=off;
+
+    BEGIN TRANSACTION;
+
+    CREATE TABLE products_new (
+      id integer primary key autoincrement,
+            name text NOT NULL,
+            price real NOT NULL,
+            category text NOT NULL DEFAULT 'Uncategorised',
+            notes text DEFAULT NULL,
+            unit text DEFAULT NULL,
+            picture text DEFAULT NULL,
+            created_on text  DEFAULT CURRENT_TIMESTAMP,
+            max_stock real DEFAULT NULL,
+            min_stock real NOT NULL DEFAULT 1,
+            expiry text DEFAULT NULL,
+            barcode text DEFAULT NULL,
+            current_stock real DEFAULT NULL,
+            last_modified text DEFAULT NULL,
+            cost_price real default null,
+            size text default null,
+            description text default null,
+            status integer  DEFAULT null,
+            shelf text default null
+          );
+
+          INSERT INTO products_new (id, name, price, category, notes, unit, picture, created_on, 
+            max_stock, min_stock, expiry, barcode, current_stock, last_modified, cost_price, size,
+            description, status)
+      SELECT *
+      FROM products;
+
+
+      DROP INDEX IF EXISTS product_name_unique;
+      DROP INDEX IF EXISTS product_index;
+      DROP INDEX IF EXISTS product_barcode_unique;
+
+      DROP TABLE IF EXISTS products;
+
+      ALTER TABLE products_new RENAME TO products;
+          
+          COMMIT;
+    
+          PRAGMA foreign_keys=on;
+          `,
+    version: 73
+  },
+  {
+    query: `CREATE  INDEX product_name
+      ON products(name);
+      CREATE  INDEX product_index  ON products(price, category, max_stock, min_stock, expiry,
+         current_stock, last_modified, status);
+      `,
+    version: 74
+  },
+  {
+    query: `
+    PRAGMA foreign_keys=off;
+
+    BEGIN TRANSACTION;
+
+    CREATE TABLE dbbackups (
+      id integer primary key autoincrement,
+            file_name text NOT NULL,
+            created_on text  DEFAULT CURRENT_TIMESTAMP,
+            created_by text DEFAULT NULL,
+            description text DEFUALT NULL,
+            uploaded text default null,
+            db_version text default null
+          );
+
+          
+          
+          COMMIT;
+    
+          PRAGMA foreign_keys=on;
+          `,
+    version: 75
+  },
+  {
+    query: `CREATE  INDEX dbbackups_name
+      ON dbbackups(file_name,created_on,description,uploaded,db_version);
+      `,
+    version: 76
+  },
+  {
+    query: ` 
+
+    PRAGMA foreign_keys=off;
+
+    BEGIN TRANSACTION;
+
+    CREATE TABLE if not exists _stock_adjustment_pending (
+      id integer primary key autoincrement,
+      date text NOT NULL,
+      product integer NOT NULL,
+      quantity_counted real NOT NULL,
+      quantity_expected real NOT NULL,
+      current_price real default NULL,
+      created_by integer default NULL,
+      code text DEFAULT NULL,
+      created_on text default CURRENT_TIMESTAMP ,
+      cost_price real DEFAULT NULL,
+      category text DEFAULT NULL,
+      size text DEFAULT NULL,
+      expiry text DEFAULT NULL,
+      comments text DEFAULT NULL,
+      quantity_expired real NOT NULL DEFAULT 0,
+      quantity_damaged real NOT NULL DEFAULT 0,
+      shelf text DEFAULT NULL,
+      unit text DEFAULT NULL,
+      foreign key (product) references products (id) ON DELETE RESTRICT ON UPDATE CASCADE
+
+          );
+
+      INSERT INTO _stock_adjustment_pending (id, date, product, quantity_counted, quantity_expected,
+         current_price, created_by, created_on, 
+            code, cost_price, category, size, expiry, comments, quantity_expired, quantity_damaged)
+      SELECT *
+      FROM stock_adjustment_pending;
+
+
+      DROP INDEX IF EXISTS stock_adj_pending_index_1;
+      
+
+      DROP TABLE IF EXISTS stock_adjustment_pending;
+
+      ALTER TABLE _stock_adjustment_pending RENAME TO stock_adjustment_pending;
+          
+          COMMIT;
+    
+          PRAGMA foreign_keys=on;
+          
+    
+          `,
+    version: 77
+  },
+  
+  {
+    query: `
+      
+      CREATE  INDEX stock_adj_pending_index_1 ON stock_adjustment_pending(date, quantity_counted,
+        quantity_expected, category, expiry);
+      `,
+    version: 78
+  },
+  {
+    query: ` 
+
+    PRAGMA foreign_keys=off;
+
+    BEGIN TRANSACTION;
+
+    CREATE TABLE if not exists refills (
+      id integer primary key autoincrement,
+      product text NOT NULL,
+      product_id integer default NULL,
+      quantity real NOT NULL,
+      start_date date NOT NULL,
+      end_date date default NULL,
+      created_by integer default NULL,
+      status text DEFAULT NULL,
+      
+      foreign key (product_id) references products (id) ON DELETE SET NULL ON UPDATE CASCADE
+
+          );
+
+      
+          
+          COMMIT;
+    
+          PRAGMA foreign_keys=on;
+          
+    
+          `,
+    version: 79
+  },
+  {
+    query: ` 
+
+    PRAGMA foreign_keys=off;
+
+    BEGIN TRANSACTION;
+
+    CREATE TABLE if not exists _refills (
+      id integer primary key autoincrement,
+      product text NOT NULL,
+      product_id integer default NULL,
+      quantity real NOT NULL,
+      start_date date NOT NULL,
+      end_date date default NULL,
+      created_by integer default NULL,
+      status text DEFAULT NULL,
+      customer_id integer not null,
+      created_on date default current_timestamp,
+      
+      foreign key (product_id) references products (id) ON DELETE SET NULL ON UPDATE CASCADE
+
+          );
+
+      INSERT INTO _refills (id, product, product_id, start_date, end_date,
+         status, created_by, 
+             quantity)
+      SELECT *
+      FROM refills;
+
+
+      DROP TABLE IF EXISTS refills;
+
+      ALTER TABLE _refills RENAME TO refills;
+          
+          COMMIT;
+    
+          PRAGMA foreign_keys=on;
+          
+    
+          `,
+    version: 80
+  },
+  {
+    query: ` 
+
+    PRAGMA foreign_keys=off;
+
+    BEGIN TRANSACTION;
+
+    CREATE TABLE if not exists _refills (
+      id integer primary key autoincrement,
+      product text NOT NULL,
+      product_id integer default NULL,
+      quantity text NOT NULL,
+      start_date date NOT NULL,
+      end_date date default NULL,
+      created_by integer default NULL,
+      status text DEFAULT NULL,
+      customer_id integer default null,
+      customer_name text default null,
+      created_on date default current_timestamp,
+      
+      foreign key (product_id) references products (id) ON DELETE SET NULL ON UPDATE CASCADE
+
+          );
+
+      INSERT INTO _refills (id, product, product_id, start_date, end_date,
+         status, created_by, 
+             quantity,customer_id, created_on)
+      SELECT *
+      FROM refills;
+
+
+      DROP TABLE IF EXISTS refills;
+
+      ALTER TABLE _refills RENAME TO refills;
+          
+          COMMIT;
+    
+          PRAGMA foreign_keys=on;
+          
+    
+          `,
+    version: 81
   }
 
  //

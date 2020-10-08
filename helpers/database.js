@@ -476,7 +476,12 @@ class Db {
     }
 
     async closeConnection() {
-        await this.connection.close().then(succ => { this.connection = null; }, err => { })
+        try {
+            await this.connection.close().then(succ => { this.connection = null; }, err => { })
+            await this.getConnection();
+        } catch (error) {
+            log.error(error)
+        }
 
     }
 
@@ -908,7 +913,7 @@ class Db {
         let sql = `select * from ${table} where ${final_where} `;
         // console.log(sql)
         if(strpos){
-            sql = `select *, INSTR(lower(${strpos_field}), lower('${first_word}')) as pos  from ${table} where ${final_where} `;
+            sql = `select *, INSTR(lower(${strpos_field}), lower("${first_word}")) as pos  from ${table} where ${final_where} `;
             sql += ` order by pos asc `
 
         }
@@ -946,7 +951,7 @@ class Db {
             let inner_temp = [];
             var k = 0;
             while (k < fields.length) {
-                inner_temp.push(`${fields[k]} like '%${word}%'`);
+                inner_temp.push(`${fields[k]} like "%${word}%"`);
                 k++;
             }
             temp_where += inner_temp.join(" or ");
