@@ -21,8 +21,8 @@ class SettingsHelper extends dbClass {
    */
     async getSetting(name){
        let q = await this.getItem(`name = ${name}`, this.table_name);
-        if(!q){
-            return 'n/a';
+        if(q == undefined){
+            return null;
         }
         return q.value;
     }

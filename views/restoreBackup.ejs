@@ -18,7 +18,14 @@
                 </em>
             </div>
             <div class="card-body">
-
+                <%
+          if(message != ""){
+      %>
+                <div class="alert alert-info">
+                        <%= message %>
+                </div>
+                <% } 
+        %>
                 <div class="card-body table-responsive">
                     <table id="backup_list" class="table table-bordered table-hover">
                         <thead>
@@ -43,6 +50,8 @@
                                                     </button>
                                                     <div class="dropdown-menu" >
                                                       <a class="dropdown-item delete" href="#">Delete</a>
+                                                      <a class="dropdown-item " href="/uploadBackupToServer?id=<%= item.id%>">Upload</a>
+
                                                       <a class="dropdown-item" href="#">Restore This</a>
                                                     </div>
                                                   </div>

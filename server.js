@@ -43,32 +43,32 @@ const sequelize = require("./helpers/sequelize")
 
 const umzug = new Umzug({
     migrations: {
-      // indicates the folder containing the migration .js files
-      path: path.join(__dirname, './migrations'),
-      // inject sequelize's QueryInterface in the migrations
-      params: [
-        sequelize.getQueryInterface()
-      ]
+        // indicates the folder containing the migration .js files
+        path: path.join(__dirname, './migrations'),
+        // inject sequelize's QueryInterface in the migrations
+        params: [
+            sequelize.getQueryInterface()
+        ]
     },
     // indicates that the migration data should be store in the database
     // itself through sequelize. The default configuration creates a table
     // named `SequelizeMeta`.
     storage: 'sequelize',
     storageOptions: {
-      sequelize: sequelize
+        sequelize: sequelize
     }
-  })
-  
-  ;(async () => {
-    // checks migrations and run them if they are not already applied
-    try {
-        await umzug.up()
-        console.log('All migrations performed successfully')
-        
-    } catch (error) {
-        console.log(error)
-    }
-   })()
+})
+
+    ; (async () => {
+        // checks migrations and run them if they are not already applied
+        try {
+            await umzug.up()
+            console.log('All migrations performed successfully')
+
+        } catch (error) {
+            console.log(error)
+        }
+    })()
 
 
 ////////////////////////////////////////////
@@ -106,8 +106,8 @@ app.use(session({ secret: "eg[isfd-8OF9-7w2115df[-Ijsli__;to8" }));
 //file uploader
 app.use(fileUpload(
     {
-        useTempFiles : true,
-        tempFileDir : '/tmp/',
+        useTempFiles: true,
+        tempFileDir: '/tmp/',
         debug: true
     }
 ));
@@ -151,10 +151,10 @@ app.use(async (req, res, next) => {
         }
 
     }
-    else{
+    else {
         next();
     }
-   
+
 
 
 
@@ -269,7 +269,7 @@ app.get('/setup', async (req, res) => {
     // res.sendFile(__dirname + '/app/index.html'); 
 });
 
-app.get('/restoreBackup', checkSignIn, async(req, res) => {
+app.get('/restoreBackup', checkSignIn, async (req, res) => {
     let data = {};
     if (req.query.m != undefined) {
         data.message = req.query.m;
@@ -286,7 +286,7 @@ app.get('/restoreBackup', checkSignIn, async(req, res) => {
 
 });
 
-app.get('/upload_stock_taking', function(req, res){
+app.get('/upload_stock_taking', function (req, res) {
     res.render('upload');
 });
 
@@ -321,7 +321,7 @@ app.post('/saveActivation', async (req, res) => {
             name: `'digital_address'`,
             value: `'${req.body.digital_address}'`,
             module: `'System'`
-        },
+        }
     ]
     let success = await sh.insertMany(sh.insert_fields, data, sh.table_name);
     if (success) {
@@ -348,6 +348,11 @@ app.post('/saveSetup', async (req, res) => {
         {
             name: `'admin_password'`,
             value: `'${hash}'`,
+            module: `'System'`
+        },
+        {
+            name: `'number_of_shifts'`,
+            value: `'${req.body.number_of_shifts}'`,
             module: `'System'`
         }
     ]
@@ -429,6 +434,7 @@ app.get('/settings', checkSignIn, async (req, res) => {
     data.email = await sh.getSetting(`'email'`);
     data.address = await sh.getSetting(`'address'`);
     data.digital_address = await sh.getSetting(`'digital_address'`);
+    data.number_of_shifts = await sh.getSetting(`'number_of_shifts'`);
 
     res.render('settings', data);
     // res.sendFile(__dirname + '/app/index.html');
@@ -463,6 +469,11 @@ app.post('/saveSettings', checkSignIn, async (req, res) => {
             value: `'${req.body.digital_address}'`,
             module: `'System'`
         },
+        {
+            name: `'number_of_shifts'`,
+            value: `'${req.body.number_of_shifts}'`,
+            module: `'System'`
+        }
     ]
 
     let q1 = await sh.update({
@@ -490,8 +501,30 @@ app.post('/saveSettings', checkSignIn, async (req, res) => {
         value: `'${req.body.digital_address}'`,
 
     }, "name = 'digital_address'", sh.table_name);
+    //check if setting exists
+    let q6_exists =  await sh.getSetting(`'number_of_shifts'`);
+    let q6 = null;
+    if(q6_exists == null){
+        var data = [
+           
+            {
+                name: `'number_of_shifts'`,
+                value: `'${req.body.number_of_shifts}'`,
+                module: `'System'`
+            }
+        ]
+        q6 = await sh.insertMany(sh.insert_fields, data, sh.table_name);
+    }
+    else{
+        q6 = await sh.update({
+
+            value: `'${req.body.number_of_shifts}'`,
+    
+        }, "name = 'number_of_shifts'", sh.table_name);
+    }
+    
     //update
-    let success = q1 && q2 && q3 && q4 && q5;
+    let success = q1 && q2 && q3 && q4 && q5 && q6;
 
     if (success) {
         //successful. go to admin setup
@@ -792,24 +825,93 @@ app.get('/logout', function (req, res) {
 });
 
 app.post('/saveBackup', async (req, res) => {
-   try {
-    let helper = require('./helpers/backupsHelper');
-    let sh = new helper();
+    try {
+        let helper = require('./helpers/backupsHelper');
+        let sh = new helper();
 
-    var data = {
-        file_name: `"${req.body.file_name}"`,
-        description: `'${req.body.description}'`,
-        created_by: `'System'`,
-        uploaded: `'no'`,
-        db_version:  filestore.get('dbversion')
+        var data = {
+            file_name: `"${req.body.file_name}"`,
+            description: `'${req.body.description}'`,
+            created_by: `'System'`,
+            uploaded: `'no'`,
+            db_version: filestore.get('dbversion')
+        }
+        await sh.insert(data, sh.table_name);
+        res.json({ status: 1, message: 'successful' })
+    } catch (error) {
+        res.json({ status: -1, message: error })
     }
-    await sh.insert(data, sh.table_name);
-    res.json({status: 1, message: 'successful'})
-   } catch (error) {
-       res.json({status: -1, message: error})
-   }
-    
-    
+
+
+
+});
+
+//upload backup file to cloud server
+app.get('/uploadBackupToServer', checkSignIn, async (req, res) => {
+    //get the file name, location
+    try {
+        let id = req.query.id;
+        let helper = require('./helpers/backupsHelper');
+        let sh = new helper();
+
+
+        let row = await sh.getItem(` id = ${id} `, sh.table_name);
+        if (row != null) {
+            let filepath = row.file_name;
+            //split the path to get the filename
+            let splitfilename = filepath.split("/")
+            let filename = splitfilename.pop();
+            const FormData = require('form-data');
+            const fetch = require('node-fetch');
+
+            // const req = require("request");
+            const fs = require("fs");
+            // const multiparty = require("multiparty");
+            // let form = new multiparty.Form();
+
+            let file_location = path.join(constants.internal_backups_path, filename)
+
+            // let formData = {
+            //     file: {
+            //         value: fs.createReadStream(file_location),
+            //         options: {
+            //             filename: 'uploadFile'
+            //         }
+            //     }
+            // };
+            const postUrl = constants.server_url+"/api_admin/receive_file" //replace your upload url here     req.post({url: postUrl,formData: formData }, function(err, httpResponse, body) {        
+            const form = new FormData();
+            form.append('file', fs.createReadStream(file_location), {
+                filename: filename,
+            });
+
+            (async () => {
+                const response = await fetch(postUrl, { method: 'POST', body: form });
+                // const json = await response.json();
+                await sh.updateField("uploaded", "'yes'", ` id = ${id}`, sh.table_name)
+
+                console.log(response)
+                console.log("done successfully")
+                log.info("last backup file uploaded successfully.")
+                res.redirect('restoreBackup?m=Backup uploaded successfully');
+            })();
+
+
+        }
+        else {
+            console.log("file not found")
+
+            res.redirect('restoreBackup?m=Backup file not found. Please try again');
+        }
+    } catch (error) {
+        console.log(error)
+
+        res.redirect('restoreBackup?m=Server error. Please try again or contact your admin');
+
+    }
+
+
+
 
 });
 

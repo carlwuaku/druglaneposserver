@@ -1230,6 +1230,65 @@ const migrations = [
     
           `,
     version: 81
+  },
+  {
+    query: `
+      
+    PRAGMA foreign_keys=off;
+
+    BEGIN TRANSACTION;
+    
+
+    
+    
+    CREATE TABLE _sales_old (
+    
+      id integer primary key autoincrement,
+            customer text DEFAULT NULL,
+            code text NOT NULL,
+            created_by integer NOT NULL,
+            created_on text default CURRENT_TIMESTAMP,
+            date text NOT NULL,
+            amount_paid real NOT NULL DEFAULT 0,
+            payment_method text NOT NULL DEFAULT 'Cash',
+            momo_reference text DEFAULT NULL,
+            insurance_provider text DEFAULT NULL,
+            insurance_member_name text DEFAULT NULL,
+            insurance_member_id text DEFAULT NULL,
+            creditor_name text DEFAULT NULL,
+            credit_paid integer NOT NULL DEFAULT 0,
+            discount real NOT NULL DEFAULT 0,
+            shift text default null,
+            foreign key (insurance_provider) references insurance_providers (name) ON DELETE RESTRICT ON UPDATE CASCADE
+          
+    );
+    
+    INSERT INTO _sales_old (id, customer, code, created_by, created_on, date, amount_paid, payment_method,
+      momo_reference, insurance_provider, insurance_member_name, insurance_member_id, creditor_name, 
+      credit_paid, discount)
+      SELECT id, customer, code, created_by, created_on, date, amount_paid, payment_method,
+        momo_reference, insurance_provider, insurance_member_name, insurance_member_id, creditor_name, 
+        credit_paid, discount 
+      FROM sales;
+
+      DROP TABLE IF EXISTS sales;
+
+      ALTER TABLE _sales_old RENAME TO sales;
+    
+    COMMIT;
+    
+    PRAGMA foreign_keys=on;
+     
+      `,
+    version: 82
+  },
+  {
+    query: `
+      CREATE  INDEX sales_index_1 ON sales(created_on, 
+        date, payment_method, insurance_member_id, insurance_member_name);
+         CREATE UNIQUE INDEX sales_index_2 ON sales(code);
+      `,
+    version: 83 
   }
 
  //

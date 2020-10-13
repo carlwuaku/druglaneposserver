@@ -42,6 +42,7 @@ router.post('/login', async (req, res) => {
 			login.company_phone = await sh.getSetting(`'phone'`);
 			login.company_address = await sh.getSetting(`'address'`);
 			login.digital_address = await sh.getSetting(`'digital_address'`);
+			login.number_of_shifts = await sh.getSetting(`'number_of_shifts'`);
 			login.company = {
 				id: 0, name: login.company_name, address: login.company_address,
 				phone: login.company_phone, digital_address: login.digital_address
@@ -620,6 +621,22 @@ router.post('/changeStaffPassword', async (req, res) => {
 	}
 
 
+
+});
+
+router.get('/getSetting', async (req, res) => {
+	try {
+		let setting = req.query.setting;
+		let settingsHelper = require('../helpers/settingsHelper');
+			let sh = new settingsHelper();
+			let result = await sh.getSetting(`'${setting}'`);
+		
+		res.json({ status: '1', data: result })
+	} catch (error) {
+		await helper.closeConnection();
+		log.error(error)
+		res.json({ status: '-1', data: null })
+	}
 
 });
 

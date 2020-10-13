@@ -1,9 +1,18 @@
 const path = require('path');
 // const os = require('os');
 const {app, BrowserWindow, Menu, ipcMain, ClientRequest } = require('electron');
-const server = require('./server');
-const fs = require('fs');
 const log = require('electron-log');
+let server = null;
+try {
+   server = require('./server');
+} catch (error) {
+  log.error(error);
+  console.log(error)
+  // app.quit()
+}
+
+const fs = require('fs');
+
  
 // const MainWindow = require('./MainWindow')
 const AppTray = require('./AppTray')
@@ -92,11 +101,10 @@ app.on('ready', function(){
     tray = new AppTray(icon, mainWindow);
     
 
-
     //register global shortcuts
     // globalShortcut.register('CmdOrCtrl+R', () => mainWindow.reload());
     // globalShortcut.register('CmdOrCtrl+Alt+i', () => {mainWindow.toggleDevTools()});
-
+  
     mainWindow.on('close', (e)=>{ 
         if(!app.isQuitting){
             e.preventDefault();
@@ -449,6 +457,8 @@ app.on('window-all-closed', () => {
   
       
       await sh.insert(data, sh.table_name);
+      uploadfiles();
+
       log.info("backup inserted into db successfully")
      } catch (error) {
       log.error("error on backup insert into db")
@@ -482,6 +492,71 @@ app.on('window-all-closed', () => {
         path: constants.settings_location
     });
   }
+
+  async function uploadfiles() {
+    try {
+      let helper = require('./helpers/backupsHelper');
+      let sh = new helper();
+
+
+      let row = await sh.getItem(` id = (SELECT MAX(id) from ${sh.table_name}) `, sh.table_name);
+      if (row != null) {
+        let id = row.id;
+          let filepath = row.file_name;
+          //split the path to get the filename
+          let splitfilename = filepath.split("/")
+          let filename = splitfilename.pop();
+          const FormData = require('form-data');
+          const fetch = require('node-fetch');
+
+          // const req = require("request");
+          const fs = require("fs");
+          // const multiparty = require("multiparty");
+          // let form = new multiparty.Form();
+
+          let file_location = path.join(constants.internal_backups_path, filename)
+
+          // let formData = {
+          //     file: {
+          //         value: fs.createReadStream(file_location),
+          //         options: {
+          //             filename: 'uploadFile'
+          //         }
+          //     }
+          // };
+          const postUrl = constants.server_url+"/api_admin/receive_file" //replace your upload url here     req.post({url: postUrl,formData: formData }, function(err, httpResponse, body) {        
+          const form = new FormData();
+          form.append('file', fs.createReadStream(file_location), {
+              filename: filename,
+          });
+
+          (async () => {
+              const response = await fetch(postUrl, { method: 'POST', body: form });
+              // const json = await response.json();
+              await sh.updateField("uploaded", "'yes'", ` id = ${id}`, sh.table_name)
+
+              console.log(response)
+              console.log("done successfully")
+              log.info("last backup file uploaded successfully.")
+              // res.redirect('restoreBackup?m=Backup uploaded successfully');
+          })();
+
+
+      }
+      else {
+          console.log("file not found")
+
+          res.redirect('restoreBackup?m=Backup file not found. Please try again');
+      }
+  } catch (error) {
+      console.log(error)
+
+      res.redirect('restoreBackup?m=Server error. Please try again or contact your admin');
+
+  }
+    
+    }
+    
 
  
 

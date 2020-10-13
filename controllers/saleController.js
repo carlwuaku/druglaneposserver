@@ -349,6 +349,63 @@ router.get('/findUserSummaryBetweenDates', async (req, res) => {
 
 });
 
+//get the shift summary
+router.get('/findShiftSummaryBetweenDates', async (req, res) => {
+    try {
+
+        let start = req.query.start_date == undefined ? helper.getToday() : req.query.start_date;
+        let end = req.query.end_date == undefined ? helper.getToday() : req.query.end_date;
+        //get the shifts.
+        // let shifts = helper.getDistinct('shift', helper.table_name, ` date >= '${start}' and date <= '${end}'  `)
+        //
+        //for each shift, get totals
+        let objects = await detailsHelper.getShiftTotalSales(start, end);
+        let total_sales = 0;
+        let num_sales = 0;
+
+        for (var i = 0; i < objects.length; i++) {
+            var obj = objects[i];
+            total_sales += obj.total_amount;
+            num_sales += obj.num_of_items;
+            //get the total for the shift
+            let cash = await detailsHelper.getShiftSalesByPaymentMethod(obj.shift, 'Cash', start, end)
+            let momo = await detailsHelper.getShiftSalesByPaymentMethod(obj.shift, 'Mobile Money', start, end)
+            let cheque = await detailsHelper.getShiftSalesByPaymentMethod(obj.shift, 'Cheque', start, end)
+            let pos = await detailsHelper.getShiftSalesByPaymentMethod(obj.shift, 'POS', start, end)
+            let credit = await detailsHelper.getShiftSalesByPaymentMethod(obj.shift, 'Credit', start, end)
+            let insurance = await detailsHelper.getShiftSalesByPaymentMethod(obj.shift, 'Insurance', start, end)
+            let other = await detailsHelper.getShiftSalesByPaymentMethod(obj.shift, 'Other', start, end)
+            let discount = await helper.getShiftDiscount(obj.shift, start, end);
+
+            obj.total_amount = obj.total_amount.toFixed(2)
+            obj.cash = cash.toFixed(2)
+            obj.momo = momo.toFixed(2)
+            obj.cheque = cheque.toFixed(2)
+            obj.pos = pos.toFixed(2)
+            obj.credit = credit.toFixed(2)
+            obj.insurance = insurance.toFixed(2)
+            obj.other = other.toFixed(2)
+            obj.discount = discount.toFixed(2)
+            let discounted_total = obj.total_amount - discount;
+            obj.discounted_total = discounted_total.toFixed(2)
+        }
+
+
+        res.json({
+            status: '1',
+            num_sales: num_sales,
+            total: total_sales.toFixed(2),
+            data: objects
+        })
+    } catch (error) {
+        await helper.closeConnection();
+        console.log(error)
+        log.error(error)
+        res.json({ status: '-1', data: null })
+    }
+
+});
+
 
 router.get('/findPaymentMethodSummaryBetweenDates', async (req, res) => {
     try {

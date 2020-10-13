@@ -13,7 +13,7 @@ class SalesHelper extends dbClass {
     }
     fields = ["customer", "code", "status", "created_by", "created_on", "date", "amount_paid",
     "payment_method", "insurance_provider","creditor_name","insurance_member_id", 
-    "insurance_member_name","momo_reference","discount"]
+    "insurance_member_name","momo_reference","discount","shift"]
     table_name = "sales";
    
     not_string_fields = ["id","amount_paid", "discount"];
@@ -63,6 +63,28 @@ class SalesHelper extends dbClass {
      */
     async getUserDiscount(user, start, end){
         let sql = `select sum(discount) as total from ${this.table_name} where created_by = ${user} `;
+        if(start != ''){
+            sql += ` and date >= '${start}' and date <= '${end}' `
+        }
+
+        try {
+            await this.getConnection();
+            let q = await this.connection.get(sql);
+            return q.total == null ? 0 : q.total;
+        } catch (error) {
+            log.error(error);
+            throw new Error(error)
+        }
+    }
+
+    /**
+     * get total discount by a shift for a period
+     * @param {String} start the start date
+     * @param {String} end the end date
+     * @param {String} shift the shift
+     */
+    async getShiftDiscount(shift, start, end){
+        let sql = `select sum(discount) as total from ${this.table_name} where shift = '${shift}' `;
         if(start != ''){
             sql += ` and date >= '${start}' and date <= '${end}' `
         }

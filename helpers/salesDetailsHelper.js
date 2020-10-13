@@ -179,6 +179,11 @@ class SalesDetailsHelper extends dbClass {
         }
     }
 
+    /**
+     * get the sales summarised by user
+    * @param {String} start 
+     * @param {String} end 
+     */
     async getUserSales(start='', end='' ){
         let sql = `select sales.created_by, COUNT(distinct sales_details.code) as num_of_items, sum(price * quantity) as total_amount
         from ${this.table_name} join sales on sales_details.code = sales.code `;
@@ -186,6 +191,28 @@ class SalesDetailsHelper extends dbClass {
             sql += ` where sales_details.date >= '${start}' and sales_details.date <= '${end}' `
         }
         sql += ` group by sales.created_by `
+        try {
+            await this.getConnection();
+            let q = await this.connection.all(sql);
+            return q;
+        } catch (error) {
+            log.error(error);
+            throw new Error(error)
+        }
+    
+    }
+/**
+     * get the sales summarised by shifts
+    * @param {String} start 
+     * @param {String} end 
+     */
+    async getShiftTotalSales(start='', end='' ){
+        let sql = `select sales.shift, COUNT(distinct sales_details.code) as num_of_items, sum(price * quantity) as total_amount
+        from ${this.table_name} join sales on sales_details.code = sales.code `;
+        if(start != ''){
+            sql += ` where sales_details.date >= '${start}' and sales_details.date <= '${end}' `
+        }
+        sql += ` group by sales.shift `
         try {
             await this.getConnection();
             let q = await this.connection.all(sql);
@@ -226,6 +253,57 @@ class SalesDetailsHelper extends dbClass {
     async getUserSalesByPaymentMethod(user,method, start='', end='' ){
         let sql = `select sum(price * quantity) as total
         from ${this.table_name} where code in (select code from sales where payment_method = '${method}' and created_by = ${user}) `;
+        if(start != ''){
+            sql += ` and date >= '${start}' and date <= '${end}' `
+        }
+        try {
+            await this.getConnection();
+            let q = await this.connection.get(sql);
+            return q.total == null ? 0 : q.total;
+        } catch (error) {
+            log.error(error);
+            throw new Error(error)
+        }
+
+    
+    }
+
+    /**
+     * 
+     * @param {String} shift 
+     * @param {String} method 
+     * @param {String} start 
+     * @param {String} end 
+     * @returns {Number}
+     */
+    async getShiftSalesByPaymentMethod(shift,method, start='', end='' ){
+        let sql = `select sum(price * quantity) as total
+        from ${this.table_name} where code in (select code from sales where payment_method = '${method}' and shift = '${shift}') `;
+        if(start != ''){
+            sql += ` and date >= '${start}' and date <= '${end}' `
+        }
+        try {
+            await this.getConnection();
+            let q = await this.connection.get(sql);
+            return q.total == null ? 0 : q.total;
+        } catch (error) {
+            log.error(error);
+            throw new Error(error)
+        }
+
+    
+    }
+
+    /**
+     * 
+     * @param {String} method 
+     * @param {String} start 
+     * @param {String} end 
+     * @returns {Number}
+     */
+    async getShiftlessSalesByPaymentMethod(method, start='', end='' ){
+        let sql = `select sum(price * quantity) as total
+        from ${this.table_name} where code in (select code from sales where payment_method = '${method}' and shift is null) `;
         if(start != ''){
             sql += ` and date >= '${start}' and date <= '${end}' `
         }
