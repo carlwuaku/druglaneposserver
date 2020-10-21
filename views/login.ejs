@@ -1,25 +1,32 @@
 <%- include ('partials/header') -%>
-<section class="content">
+<style>
+    .content{
+      height: calc(100vh);
+    }
+  </style>
+<section class="content bg">
     <div class="flex-container small-margins">
         <div><a  class="backBtn link"><i class="fa fa-arrow-left"></i> Back</a></div>
         <div><a  href="/"><i class="fa fa-home"></i> Home </a></div>
-        <div><a  href="/setup"><i class="fa fa-home"></i> Setup </a></div>
+        <!-- <div><a  href="/setup"><i class="fa fa-home"></i> Setup </a></div> -->
     </div>
     <div class="container">
-        <h3>Login - DruglanePOS Server</h3>
+        
       
      <div class="row justify-content-center">
         
 
         <div class="col-md-6">
-            <div class="card card-body dashboard-card">
+            <h3 class="text-white text-shadow">Login - DruglanePOS Server</h3>
+            <div class="card card-body">
                 <div class=" text-center">
+                    
                     <h5>Enter the Administrator Password</h5>
                     <%
                         if(error != ""){
                     %>
                     <div class="alert alert-danger">
-                        Wrong combination. Try again.
+                        Wrong password. Try again.
                     </div>
                     <% } %>
                         <form action="dologin" method="POST">

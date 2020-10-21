@@ -1,12 +1,43 @@
 <%- include ('partials/header') -%>
-<section class="content">
+<section class="content bg">
         <div class="container">
-                <h3><%= name%> - DruglanePOS Server</h3>
+                <h3 class="text-white text-shadow"><%= name%> - DruglanePOS Server</h3>
                 <div class="alert alert-info">
                         <i class="fa fa-info"> </i> The server address is : http://<%= host%>:<%= port%>
                 </div>
                 <div class="alert alert-info">
-                        <i class="fa fa-info"> </i> Automatic backups are done everyday at 7:00PM. You can also manually 
+                        <i class="fa fa-info"> </i> Automatic backups are done once everyday.
+                        <b>Select the time for the backups: </b> 
+                        <select id="backup_time" name="backup_time">
+                                <option <%= backup_time == 0 ? 'selected' : '' %> value="0">12 AM</option>
+                                <option <%= backup_time == 1 ? 'selected' : '' %> value="1">1 AM</option>
+                                <option <%= backup_time == 2 ? 'selected' : '' %>  value="2">2 AM</option>
+                                <option <%= backup_time == 3 ? 'selected' : '' %>  value="3">3 AM</option>
+                                <option  <%= backup_time == 4 ? 'selected' : '' %> value="4">4 AM</option>
+                                <option <%= backup_time == 5 ? 'selected' : '' %>  value="5">5 AM</option>
+                                <option <%= backup_time == 6 ? 'selected' : '' %>  value="6">6 AM</option>
+                                <option <%= backup_time == 7 ? 'selected' : '' %>  value="7">7 AM</option>
+                                <option <%= backup_time == 8 ? 'selected' : '' %>  value="8">8 AM</option>
+                                <option <%= backup_time == 9 ? 'selected' : '' %>  value="9">9 AM</option>
+                                <option <%= backup_time == 10 ? 'selected' : '' %>  value="10">10 AM</option>
+                                <option <%= backup_time == 11 ? 'selected' : '' %>  value="11">11 AM</option>
+                                <option <%= backup_time == 12 ? 'selected' : '' %>  value="12">12 PM</option>
+                                <option <%= backup_time == 13 ? 'selected' : '' %>  value="13">1 PM</option>
+                                <option <%= backup_time == 14 ? 'selected' : '' %>  value="14">2 PM</option>
+                                <option <%= backup_time == 15 ? 'selected' : '' %>  value="15">3 PM</option>
+                                <option <%= backup_time == 16 ? 'selected' : '' %>  value="16">4 PM</option>
+                                <option <%= backup_time == 17 ? 'selected' : '' %>  value="17">5 PM</option>
+                                <option <%= backup_time == 18 ? 'selected' : '' %> value="18">6 PM</option>
+                                <option <%= backup_time == 19 ? 'selected' : '' %> value="19">7 PM</option>
+                                <option <%= backup_time == 20 ? 'selected' : '' %>  value="20">8 PM</option>
+                                <option <%= backup_time == 21 ? 'selected' : '' %>  value="21">9 PM</option>
+                                <option <%= backup_time == 22 ? 'selected' : '' %>  value="22">10 PM</option>
+                                <option <%= backup_time == 23 ? 'selected' : '' %>  value="23">11 PM</option>
+                            </select>
+                             <button id="save_auto_backup_time_btn" class="btn btn-sm btn-primary">Save</button>
+                            <br>
+
+                         You can also manually 
                         create a backup any time you want by using the tabs below. 
                 </div>
                 <div class="alert alert-info">
@@ -27,10 +58,11 @@
                 <%  }
       else{ %>
 
-        <a href="login"  class="btn btn-success">Login As Administrator</a> 
+        <a href="login"  class="btn btn-white">Login As Administrator</a> 
                 <% }
       %>
-      <a href="http://<%= host%>:<%= port%>/client" target="_blank"  class="btn btn-success">Go To Main System</a> 
+
+      <a href="http://<%= host%>:<%= port%>/client" target="_blank"  class="btn btn-white">Go To Main System</a> 
 <hr>
 
 
@@ -155,7 +187,7 @@
                                         <div class="card card-body dashboard-card">
                                                 <div class=" text-center">
                                                         <!-- <i class="fa fa-list fa-3x"></i> -->
-                                                        <img src="images/011-blueprint.png" height="75" alt="png">
+                                                        <img src="images/003-backup-1.png" height="75" alt="png">
                                                         <div class="dashboard-text">
                                                                 Refresh Database
                                                                 
@@ -188,21 +220,25 @@
                         `);
                 $("#backup_alert").fadeIn('fast')
 
-                //send to the server
-                // $.post("/saveBackup",
-                // {
-                //     file_name: data.directory,
-                //     description: 'routine_backup',
-                //     created_by: 'admin'
-                // },
-                // function (data) {
-                //     alert("saved to db")
-                // });
+                
 
         })
+
+        ipcRenderer.on('backup_time_changed', (e, data) => {
+               
+                        alert("Automatic backup time changed successfully")
+                
+
+        })
+
         $(document).ready(function () {
                 $(document).on("click", "#start_backup", function () {
                         ipcRenderer.send('startBackup')
+                })
+
+                $(document).on("click", "#save_auto_backup_time_btn", function () {
+                        let time = $("#backup_time").val()
+                        ipcRenderer.send('change_backup_time', {new_time: time})
                 })
         })
 

@@ -8,8 +8,8 @@ class Store{
         const userDataPath = (electron.app || electron.remote.app).getPath('userData');
         this.path = constants.settings_path
         this.data = parseDataFile(this.path, options.defaults);
-
-    }
+        
+    } 
 
   
 
@@ -27,6 +27,7 @@ function parseDataFile(filePath, defaults){
     try {
         return JSON.parse(fs.readFileSync(filePath))
     } catch (error) {
+        console.log(error)
         return defaults;
     }
 }

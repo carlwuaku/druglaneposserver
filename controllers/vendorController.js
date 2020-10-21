@@ -34,12 +34,12 @@ router.post('/save', async (req, res) => {
         let id = req.body.id == undefined ? null : req.body.id;
         if (id == null) {
             id = await helper.insert(data, helper.table_name);
-            await activities.log(req.userid, `"added a new vendor: ${data.name}"`, "'Vendors'")
+            await activities.log(req.userid, `"added a new vendor: ${req.body.name}"`, "'Vendors'")
 
         }
         else {
             await helper.update(data, ` id = ${id}`, helper.table_name);
-            await activities.log(req.userid, `"updated vendor: ${data.name}"`, "'Vendors'")
+            await activities.log(req.userid, `"updated vendor: ${req.body.name}"`, "'Vendors'")
         }
 
         res.json({ status: id, data: null })

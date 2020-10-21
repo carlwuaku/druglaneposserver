@@ -27,7 +27,8 @@ let vendorClass = require('../helpers/vendorHelper');
 let vendorHelper = new vendorClass();
 const log = require('electron-log');
 
-
+let stockValueClass = require('../helpers/stockValueHelper')
+let stockValueHelper = new stockValueClass();
 
 
 router.get('/getList', async (req, res) => {
@@ -119,6 +120,7 @@ router.post('/saveBulk', async (req, res) => {
             let pid = products[x];
             await productHelper.refreshCurrentStock(pid)
         }
+        await stockValueHelper.updateStockValue();
         await activities.log(req.query.userid, `"added new transfer: ${code} : to ${receiver.name}"`, `'Purchase'`)
         // helper.connection.close().then(succ => { }, err => { })
 
@@ -267,7 +269,7 @@ router.post('/deleteItem', async (req, res) => {
             let pid = products[x];
             await productHelper.refreshCurrentStock(pid)
         }
-
+        await stockValueHelper.updateStockValue();
         res.json({ status: '1', data: null })
     } catch (error) {
         await helper.closeConnection();
@@ -303,7 +305,7 @@ router.post('/deleteReceivedItem', async (req, res) => {
             let pid = products[x];
             await productHelper.refreshCurrentStock(pid)
         }
-
+        await stockValueHelper.updateStockValue();
         res.json({ status: '1', data: null })
     } catch (error) {
         await helper.closeConnection();
@@ -591,6 +593,7 @@ router.post('/saveBulkReceive', async (req, res) => {
             let pid = products[x];
             await productHelper.refreshCurrentStock(pid)
         }
+        await stockValueHelper.updateStockValue();
         await activities.log(req.query.userid, `"received transfers: ${code} "`, `'Transfers'`)
         // helper.connection.close().then(succ => { }, err => { })
 

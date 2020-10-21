@@ -468,6 +468,14 @@ label {
 
 
 .bg{
-  background-image: url(../images/brown-wooden-dock-surrounded-with-green-grass-near-mountain-808465.jpg);
+  background-blend-mode: overlay;
+  background-image: url(../images/geometric-bg-overlay-01-1024x427.jpg),
+  linear-gradient(135deg,#53a0fd 0%,#4161d4 100%)!important;
+  background-attachment: fixed;
   background-size: cover;
+}
+
+.title{
+  font-size: 60px;
+  font-weight: 600;
 }

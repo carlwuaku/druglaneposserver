@@ -8,6 +8,8 @@ const Helper = require('../helpers/productHelper.js');
 const helper = new Helper();
 const ActivitiesHelper = require('../helpers/activitiesHelper');
 const activities = new ActivitiesHelper();
+let stockValueClass = require('../helpers/stockValueHelper')
+let stockValueHelper = new stockValueClass();
 
 router.get('/getList', async (req, res) => {
     let offset = req.query.offset == undefined ? 0 : req.query.offset;
@@ -191,7 +193,7 @@ router.post('/saveBranchDetails', async (req, res) => {
             await stockHelper.insert(stock_data, stockHelper.table_name);
 
             await helper.refreshCurrentStock(productid)
-
+            await stockValueHelper.updateStockValue();
 
 
             await activities.log(req.query.userid, `"created a product: ${name}"`, `'Products'`)
@@ -533,6 +535,7 @@ router.post('/saveStockAdjustment', async (req, res) => {
         //     let pid = products[x];
         //     await helper.refreshCurrentStock(pid)
         // }
+        await stockValueHelper.updateStockValue();
         activities.log(req.query.userid, `'added new stock adjustment'`, `'Products'`)
         // stockHelper.connection.run("COMMIT");
         // stockHelper.connection.close().then(succ => { }, err => { })
@@ -657,6 +660,7 @@ router.post('/saveStockAdjustmentToPending', async (req, res) => {
         //     let pid = products[x];
         //     await helper.refreshCurrentStock(pid)
         // }
+        await stockValueHelper.updateStockValue();
         activities.log(req.query.userid, `'added new stock adjustment pending authorization'`, `'Products'`)
         // stockHelper.connection.run("COMMIT");
         // stockHelper.connection.close().then(succ => { }, err => { })
@@ -699,7 +703,8 @@ router.post('/saveSingleStockAdjustment', async (req, res) => {
         sql += "COMMIT;"
         await stockHelper.connection.exec(sql);
 
-        await helper.refreshCurrentStock(product_id)
+        await helper.refreshCurrentStock(product_id);
+        await stockValueHelper.updateStockValue();
         activities.log(req.query.userid, `added new stock adjustment for ${name} pending approval. new quantity: ${qtt}`, 'Products')
 
         res.json({ status: '1' })
@@ -1328,6 +1333,35 @@ router.get('/getExpiryList', async (req, res) => {
 
 });
 
+router.get('/getStockValueList', async (req, res) => {
+    try {
+        let defs = helper.setDates('this_month')
+        let start = req.query.start_date == undefined ? defs.start_date : req.query.start_date;
+        let end = req.query.end_date == undefined ? defs.end_date : req.query.end_date;
+
+
+        let objects = await stockValueHelper.getMany(`  date >= '${start}' and date <= '${end}' `, stockValueHelper.table_name)
+        for (var i = 0; i < objects.length; i++) {
+            var obj = objects[i];
+            var sv = obj.selling_value;
+            var cv = obj.cost_value;
+            //loss, profit, ...
+
+            obj.selling_value = helper.dateDifference(obj.expiry) == 'before';
+            obj.out_of_stock = stock < 1;
+            obj.near_min = stock > 0 && stock <= min;
+            obj.near_max = stock >= max;
+            obj.stock = obj.current_stock
+        }
+        res.json({ status: '1', data: objects })
+    } catch (error) {
+        await helper.closeConnection();
+        console.log(error)
+        res.json({ status: '-1', data: null })
+    }
+
+});
+
 
 router.get('/getExpiredCount', async (req, res) => {
     try {
@@ -1405,6 +1439,21 @@ router.get('/getCategories', async (req, res) => {
 
 });
 
+router.get('/getStockValues', async (req, res) => {
+
+    try {
+        let cost_value = await stockValueHelper.getCostValue();
+        let selling_value = await stockValueHelper.getSellingValue();
+        
+        res.json({ status: '1', data: {cost_value: cost_value.toFixed(2), selling_value: selling_value.toFixed(2)} })
+    } catch (error) {
+        await helper.closeConnection();
+        res.json({ status: '-1', data: null })
+    }
+
+
+});
+
 router.get('/refreshAllProducts', async (req, res) => {
     var msg = "";
     try {
@@ -1452,6 +1501,7 @@ router.post('/merge', async (req, res) => {
         await stockHelper.connection.exec(sql);
 
         await helper.refreshCurrentStock(product_id)
+        await stockValueHelper.updateStockValue();
         activities.log(req.query.userid, `added new stock adjustment for ${name}. new quantity: ${qtt}`, 'Products')
 
         res.json({ status: '1' })

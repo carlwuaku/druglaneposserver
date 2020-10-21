@@ -20,7 +20,8 @@ let adminHelper = new adminClass();
 let vendorClass = require('../helpers/vendorHelper');
 let vendorHelper = new vendorClass();
 
-
+let stockValueClass = require('../helpers/stockValueHelper')
+let stockValueHelper = new stockValueClass();
 
 
 router.get('/getList', async (req, res) => {
@@ -127,7 +128,109 @@ router.post('/saveBulk', async (req, res) => {
             let pid = products[x];
             await productHelper.refreshCurrentStock(pid)
         }
+        await stockValueHelper.updateStockValue();
         activities.log(req.query.userid, `"added new purchases: ${code} : ${payment_method}"`, `'Purchase'`)
+        // helper.connection.close().then(succ => { }, err => { })
+
+
+
+        res.json({ status: '1' })
+    } catch (error) {
+        await helper.closeConnection();
+        log.error(error)
+        // console.log(error)
+        res.json({ status: '-1' })
+    }
+});
+
+
+router.post('/edit', async (req, res) => {
+    try {
+
+        //delete the receipt first
+        let id = req.body.id;
+        let code = req.body.code;
+
+        let delete_products = []
+        let product_query = await detailsHelper.getDistinct('product', detailsHelper.table_name, ` code = '${code}'`);
+        product_query.map(p => {
+            delete_products.push(p.product);
+        })
+
+        await helper.delete(` id in (${id})`, helper.table_name);
+        await activities.log(req.userid, `"deleted purchase: ${code}"`, "'Vendors'")
+
+        for (var x = 0; x < delete_products.length; x++) {
+
+            let pid = delete_products[x];
+            await productHelper.refreshCurrentStock(pid)
+        }
+        //then insert
+
+        let date = req.body.date;
+        let created_on = req.body.created_on;
+        let payment_method = req.body.payment_method;
+        let products = req.body.products.split("||");
+        let prices = req.body.prices.split("||");
+        let quantities = req.body.quantities.split("||");
+        let selling_prices = req.body.selling_prices.split("||");
+        let expiries = req.body.expiries.split("||");
+        let units = req.body.units.split("||");
+        let markups = req.body.markups.split("||");
+
+
+        await helper.getConnection();
+        
+
+        let objects = [];
+        let product_updates = [];
+        for (let i = 0; i < products.length; i++) {
+            let data = detailsHelper.prep_data(req.body);
+            data.created_on = `'${created_on}'`;
+            data.date = `'${date}'`;
+            data.unit = `'${units[i]}'`;
+            data.product = products[i];
+            data.selling_price = selling_prices[i];
+            data.quantity = quantities[i];
+            data.price = prices[i];
+            data.markup = markups[i];
+            data.code = `'${code}'`;
+            data.created_by = req.userid;
+            objects.push(data);
+            //generate the update for the product
+            let product_data = {
+                price: selling_prices[i],
+                cost_price: prices[i],
+                unit: `'${units[i]}'`,
+                expiry: `'${expiries[i]}'`
+            }
+            let p = productHelper.generateUpdateQuery(product_data, ` id = ${products[i]} `, productHelper.table_name)
+            product_updates.push(p);
+        }
+        // console.log(objects)
+
+        let purchase_data = helper.prep_data(req.body);
+        purchase_data.date = `'${date}'`;
+        purchase_data.created_on = `'${created_on}'`;
+        purchase_data.created_by = req.userid;
+        purchase_data.code = `'${code}'`;
+        // console.log(purchase_data)
+
+        let sql = "BEGIN TRANSACTION; ";
+        sql += helper.generateInsertQuery(purchase_data, helper.table_name);
+        sql += detailsHelper.generateInsertManyQuery(detailsHelper.fields, objects, detailsHelper.table_name);
+        sql += product_updates.join(" ")
+        sql += "COMMIT;"
+        // console.log(sql)
+        await helper.connection.exec(sql);
+
+        for (var x = 0; x < products.length; x++) {
+
+            let pid = products[x];
+            await productHelper.refreshCurrentStock(pid)
+        }
+        await stockValueHelper.updateStockValue();
+        activities.log(req.query.userid, `"edited  purchases: ${code} : ${payment_method}"`, `'Purchase'`)
         // helper.connection.close().then(succ => { }, err => { })
 
 
@@ -229,6 +332,7 @@ router.post('/delete', async (req, res) => {
             let pid = products[x];
             await productHelper.refreshCurrentStock(pid)
         }
+        await stockValueHelper.updateStockValue();
 
         res.json({ status: '1', data: null })
     } catch (error) {
@@ -263,7 +367,7 @@ router.post('/deleteItem', async (req, res) => {
             let pid = products[x];
             await productHelper.refreshCurrentStock(pid)
         }
-
+        await stockValueHelper.updateStockValue();
         res.json({ status: '1', data: null })
     } catch (error) {
         await helper.closeConnection();
@@ -279,14 +383,29 @@ router.post('/deleteItem', async (req, res) => {
 router.get('/findById', async (req, res) => {
     try {
         let id = req.query.id;
-
+        let details = []
         let object = await helper.getItem(`id = ${id} `, helper.table_name);
+        if(object != null && object != undefined){
+            object.vendor = await vendorHelper.getItem(` id = ${object.vendor} `, vendorHelper.table_name)
+            details = await detailsHelper.getMany(` code = '${object.code}' `, detailsHelper.table_name)
+            for(var i = 0; i < details.length; i++){
+                let product  = await productHelper.getItem(` id = ${details[i].product} `, productHelper.table_name)
+                details[i].product_name = product.name
+                details[i].expiry = product.expiry
+                details[i].stock = 'n/a'
+                details[i].product_id = product.id
+                details[i].name = product.name
+                details[i].product = product
 
+            }
+        }
+         
 
 
         res.json({
             status: '1',
-            data: object
+            data: object,
+            details: details
         })
     } catch (error) {
         await helper.closeConnection();
@@ -399,7 +518,7 @@ router.get('/findReceiptsByVendor', async (req, res) => {
         })
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        // console.log(error)
         log.error(error)
         res.json({ status: '-1', data: null })
     }
@@ -431,7 +550,7 @@ router.get('/getPurchaseTotals', async (req, res) => {
         })
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        // console.log(error)
         log.error(error)
         res.json({ status: '-1', data: null })
     }

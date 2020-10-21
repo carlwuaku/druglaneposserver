@@ -16,6 +16,8 @@ const activities = new ActivitiesHelper();
 let adminClass = require('../helpers/adminHelper');
 let adminHelper = new adminClass();
 
+let stockValueClass = require('../helpers/stockValueHelper')
+let stockValueHelper = new stockValueClass();
 const log = require('electron-log');
 
 
@@ -69,6 +71,32 @@ router.get('/getProductSales', async (req, res) => {
 
 });
 
+
+router.get('/getCustomerSales', async (req, res) => {
+    let offset = req.query.offset == undefined ? 0 : req.query.offset;
+    let limit = req.query.limit == undefined ? null : req.query.limit;
+    try {
+        let id = req.query.customer;
+        let objects = await detailsHelper.getMany(` code in (select code from sales where customer = ${id} ) `, detailsHelper.table_name, limit, offset);
+        for (var i = 0; i < objects.length; i++) {
+            var obj = objects[i];
+            obj.total_amount = await detailsHelper.getSaleTotal(obj.code)
+            // obj.quantity = await detailsHelper.getNumItems(obj.code)
+            let product = await productHelper.getItem(` id = ${obj.product} `, productHelper.table_name);
+            obj.product = product;
+        }
+
+        // objects.map(obj => {
+        //     obj.stock = obj.current_stock
+        // })
+        res.json({ status: '1', data: objects })
+    } catch (error) {
+        await helper.closeConnection();
+        log.error(error)
+        res.json({ status: '-1', data: null })
+    }
+
+});
 
 router.post('/saveBulk', async (req, res) => {
     try {
@@ -140,6 +168,7 @@ router.post('/saveBulk', async (req, res) => {
                 await productHelper.refreshCurrentStock(pid)
             }
             activities.log(req.query.userid, `"added new sales: ${code} : ${payment_method}"`, `'Sales'`)
+            await stockValueHelper.updateStockValue();
             // helper.connection.close().then(succ => { }, err => { })
 
 
@@ -211,7 +240,7 @@ router.post('/deleteByCode', async (req, res) => {
             let pid = products[x];
             await productHelper.refreshCurrentStock(pid)
         }
-
+        await stockValueHelper.updateStockValue();
         res.json({
             status: '1'
         })
@@ -259,6 +288,7 @@ router.get('/findReceiptsBetweenDates', async (req, res) => {
         let start = req.query.start_date == undefined ? helper.getToday() : req.query.start_date;
         let end = req.query.end_date == undefined ? helper.getToday() : req.query.end_date;
         let code = req.query.code;
+        let product = req.query.product;//if user searches with product name
         let payment_method = req.query.payment_method;
         let objects = null;
         if (code != undefined) {
@@ -272,6 +302,48 @@ router.get('/findReceiptsBetweenDates', async (req, res) => {
             objects = await helper.getMany(` date >= '${start}' and date <= '${end}' `, helper.table_name);
 
         }
+
+        for (var i = 0; i < objects.length; i++) {
+            var obj = objects[i];
+            obj.total_amount = await detailsHelper.getSaleTotal(obj.code);
+            obj.num_of_items = await detailsHelper.getNumItems(obj.code);
+            obj.display_name = await adminHelper.getUserName(obj.created_by)
+        }
+
+
+        res.json({
+            status: '1',
+            data: objects
+        })
+    } catch (error) {
+        await helper.closeConnection();
+        console.log(error)
+        log.error(error)
+        res.json({ status: '-1', data: null })
+    }
+
+});
+
+router.get('/findReceiptsByProduct', async (req, res) => {
+    try {
+
+        let start = req.query.start_date == undefined ? helper.getToday() : req.query.start_date;
+        let end = req.query.end_date == undefined ? helper.getToday() : req.query.end_date;
+        let code = req.query.code;
+        let product = req.query.product;//if user searches with product name
+        let payment_method = req.query.payment_method;
+        let search_results = await productHelper.search(product);
+        console.log(search_results)
+        let product_ids = [];
+        for (var i = 0; i < search_results.length; i++) {
+            var obj = search_results[i];
+            product_ids.push(obj.id) 
+            
+        }
+        let product_id_string = product_ids.join(",")
+        let objects = await helper.getMany(` date >= '${start}' and date <= '${end}' and code in (select code from ${detailsHelper.table_name} 
+            where product in (${product_id_string})) `, helper.table_name);
+
 
         for (var i = 0; i < objects.length; i++) {
             var obj = objects[i];

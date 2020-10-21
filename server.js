@@ -211,6 +211,7 @@ app.use('/api_transfer', transferController);
 app.get('/', async (req, res) => {
 
 
+try {
 
     let settingsHelper = require('./helpers/settingsHelper');
     let sh = new settingsHelper();
@@ -235,21 +236,26 @@ app.get('/', async (req, res) => {
     data.address = await sh.getSetting(`'address'`);
     data.host = filestore.get('host');
     data.port = filestore.get('port');
+    data.backup_time = filestore.get("auto_backup_time") == undefined ? 19 : filestore.get("auto_backup_time")
 
     let done = filestore.get('company_set');
     let admin_done = filestore.get('admin_set');
     if (done !== 'yes') {
         res.redirect('/activate')
     }
-    else if (admin_done !== 'yes') {
+    else if (admin_done !== 'yes') { 
         res.redirect('/setup')
     }
-
+ 
     else {
         res.render('index', data);
-    }
+    }    
+} catch (error) {
+    res.redirect('/welcome')
+    //go to the welcome page. most likely the database has not yet been setup
+}
 
-    // res.sendFile(__dirname + '/app/index.html');
+    // res.sendFile(__dirname + '/app/index.html'); 
 });
 
 
@@ -258,6 +264,35 @@ app.get('/activate', (req, res) => {
     res.render('activate');
     // res.sendFile(__dirname + '/app/index.html');
 });
+
+app.get('/welcome', (req, res) => {
+
+    res.render('welcome');
+    // res.sendFile(__dirname + '/app/index.html');
+});
+
+app.get('/firstrun', async (req, res) => {
+    let data = {}
+    try {
+        let settingsHelper = require('./helpers/settingsHelper');
+        let sh = new settingsHelper();
+        //if the table is created, no error will be thrown.else one will be
+         await sh.getSetting(`'company_name'`);
+         data.message = "Initial setup complete. Click the button below to activate the system";
+         data.success = true;
+        res.redirect("/activate")
+    } catch (error) {
+        //if there was an error, wait for 10 seconds for migrations to complete and try again
+        setTimeout(() => {
+            res.redirect("/firstrun") 
+        }, 10000);
+        // db.runMigrations();
+        
+    }
+   
+    // res.sendFile(__dirname + '/app/index.html');
+});
+
 
 app.get('/setup', async (req, res) => {
     let data = {};
@@ -349,14 +384,15 @@ app.post('/saveSetup', async (req, res) => {
             name: `'admin_password'`,
             value: `'${hash}'`,
             module: `'System'`
-        },
-        {
-            name: `'number_of_shifts'`,
-            value: `'${req.body.number_of_shifts}'`,
-            module: `'System'`
         }
     ]
     let success = await sh.insertMany(sh.insert_fields, data, sh.table_name);
+    
+    await sh.update({
+
+        value: `'${req.body.number_of_shifts}'`,
+
+    }, "name = 'number_of_shifts'", sh.table_name);
     if (success) {
         filestore.set('admin_set', 'yes')
         //successful. go to admin setup
@@ -435,12 +471,13 @@ app.get('/settings', checkSignIn, async (req, res) => {
     data.address = await sh.getSetting(`'address'`);
     data.digital_address = await sh.getSetting(`'digital_address'`);
     data.number_of_shifts = await sh.getSetting(`'number_of_shifts'`);
-
     res.render('settings', data);
     // res.sendFile(__dirname + '/app/index.html');
 });
 
 app.post('/saveSettings', checkSignIn, async (req, res) => {
+    let electron = require('electron');
+    
     let settingsHelper = require('./helpers/settingsHelper');
     let sh = new settingsHelper();
     var data = [
@@ -525,6 +562,8 @@ app.post('/saveSettings', checkSignIn, async (req, res) => {
     
     //update
     let success = q1 && q2 && q3 && q4 && q5 && q6;
+
+   
 
     if (success) {
         //successful. go to admin setup

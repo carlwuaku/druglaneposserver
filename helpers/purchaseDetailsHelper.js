@@ -12,7 +12,7 @@ class PurchaseDetailsHelper extends dbClass {
         super();
     }
     fields = ["date", "code", "product", "quantity",
-    "price", "unit", "markup","selling_price","created_by"]
+    "price", "unit", "markup","selling_price","created_by","created_on"]
     table_name = "purchase_details";
    
     not_string_fields = ["id","quantity","product", "price", "markup", "selling_price"];

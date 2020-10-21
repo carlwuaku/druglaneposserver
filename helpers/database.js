@@ -444,7 +444,6 @@ class Db {
             let res = await this.connection.run(query);
 
 
-            // //this.connection.close().then(succ => { }, err => { })
             return res.lastID;
         } catch (err) {
             console.log(query)

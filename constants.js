@@ -2,7 +2,7 @@
 const PORT = process.env.PORT || 5000;
 //exports.base_url = "http://localhost:"+PORT+"/";
 exports.base_url = "https://revolfoods.herokuapp.com/";
-exports.server_url = "http://localhost/stock/";
+exports.server_url = "https://druglanepms.calgadsoftwares.com/";
 exports.customer_image_url = "assets/customer_images/";
 exports.customer_image_thumbnail_url = "assets/customer_images/thumbnails/";
 
@@ -25,7 +25,8 @@ exports.default_config = {
   host: "localhost",
   dbversion: 0,
   admin_set: 'no',
-  company_set: 'no'
+  company_set: 'no',
+  auto_backup_time: 19
 }
  
 //database migrations
@@ -1289,6 +1290,41 @@ const migrations = [
          CREATE UNIQUE INDEX sales_index_2 ON sales(code);
       `,
     version: 83 
+  },
+  {
+    query: `
+     INSERT OR IGNORE INTO settings (name, value, module) values ('number_of_shifts', 2, 'System');
+    `,
+    version: 84
+  },
+  {
+    query: ` 
+
+    PRAGMA foreign_keys=off;
+
+    BEGIN TRANSACTION;
+
+    CREATE TABLE if not exists stock_values (
+      id integer primary key autoincrement,
+      date text unique NOT NULL,
+      last_modified text default current_timestamp,
+      selling_value real NOT NULL,
+      cost_value date NOT NULL,
+      
+      created_on date default current_timestamp
+      
+
+          );
+
+      
+          
+          COMMIT;
+    
+          PRAGMA foreign_keys=on;
+          
+    
+          `,
+    version: 85
   }
 
  //
