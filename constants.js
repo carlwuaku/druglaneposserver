@@ -1325,6 +1325,111 @@ const migrations = [
     
           `,
     version: 85
+  },
+  {
+    query: ` 
+
+    PRAGMA foreign_keys=off;
+
+    BEGIN TRANSACTION;
+
+    CREATE TABLE if not exists outgoing_payments (
+      id integer primary key autoincrement,
+      date text  NOT NULL,
+      amount text not null,
+      type text NOT NULL,
+      recipient text NOT NULL,
+      payment_method text default 'CASH',
+      transaction_id text not null,
+      item_code text default null,
+      notes text default null,
+      created_by integer default null,
+      
+      created_on date default current_timestamp
+      
+
+          );
+
+      
+          
+          COMMIT;
+    
+          PRAGMA foreign_keys=on;
+          
+    
+          `,
+    version: 86
+  },
+  {
+    query: ` 
+
+    PRAGMA foreign_keys=off;
+
+    BEGIN TRANSACTION;
+
+    CREATE TABLE if not exists online_backups (
+      id integer primary key autoincrement,
+      date text unique NOT NULL,
+      url text not null,
+      
+      created_on date default current_timestamp
+      
+          );
+          
+          COMMIT;
+    
+          PRAGMA foreign_keys=on;
+          
+    
+          `,
+    version: 87
+  },
+  {
+    query: ` 
+
+    PRAGMA foreign_keys=off;
+
+    BEGIN TRANSACTION;
+
+    CREATE TABLE if not exists item_active_ingredients (
+      id integer primary key autoincrement,
+      product integer not null,
+      
+      created_on date default current_timestamp
+      
+          );
+          
+          COMMIT;
+    
+          PRAGMA foreign_keys=on;
+          
+    
+          `,
+    version: 88
+  }
+  ,
+  {
+    query: ` 
+
+    PRAGMA foreign_keys=off;
+
+    BEGIN TRANSACTION;
+
+    CREATE TABLE if not exists active_ingredients (
+      id integer primary key autoincrement,
+      name text  NOT NULL,
+      
+      created_on date default current_timestamp
+      
+          );
+          
+          COMMIT;
+    
+          PRAGMA foreign_keys=on;
+          
+    
+          `,
+    version: 88
   }
 
  //

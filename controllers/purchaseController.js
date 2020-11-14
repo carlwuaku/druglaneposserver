@@ -527,6 +527,10 @@ router.get('/findReceiptsByVendor', async (req, res) => {
 
 
 router.get('/getPurchaseTotals', async (req, res) => {
+
+    
+let paymentClass = require('../helpers/outgoingPaymentHelper')
+let paymentHelper = new paymentClass();
     try {
         //get the total purchased, total credit, total paid, total arrears
         let vendor = req.query.vendor == undefined ? '' : req.query.vendor;
@@ -535,8 +539,8 @@ router.get('/getPurchaseTotals', async (req, res) => {
         //get the total amount in purchases
         let total_purchase = await detailsHelper.getTotalPurchasedByDates(start, end, '',vendor)
         let total_credit = await detailsHelper.getTotalPurchasedByDates(start, end, 'Credit', vendor)
-        let total_paid = await helper.getTotalPaidByDates(start, end,'Credit', vendor)
-        let balance = total_credit - total_paid
+        let total_paid = await paymentHelper.getTotalPaid(start, end)
+        let balance = total_purchase - total_paid;
         
 
 

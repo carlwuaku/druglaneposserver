@@ -640,5 +640,210 @@ router.get('/getSetting', async (req, res) => {
 
 });
 
+//////////////////ACCOUNT STUFF///////////////////////
+
+router.post('/saveOutgoingPayment', async (req, res) => {
+	try {
+		let helperClass = require('../helpers/outgoingPaymentHelper')
+		let h = new helperClass();
+
+			let data = h.prep_data(req.body);
+			
+			// console.log(data)
+			await h.insert(data,  h.table_name);
+		
+		res.json({ status: '1', data: null })
+	} catch (error) {
+		await helper.closeConnection();
+		console.log(error)
+		log.error(error)
+		res.json({ status: '-1', data: null })
+	}
+
+
+
+
+
+});
+
+router.get('/findOutgoingPaymentsBetweenDates', async (req, res) => {
+    try {
+		let helperClass = require('../helpers/outgoingPaymentHelper')
+		let h = new helperClass();
+		let vendorClass = require('../helpers/vendorHelper');
+		let vendorHelper = new vendorClass();
+
+        let start = req.query.start_date == undefined ? h.getToday() : req.query.start_date;
+        let end = req.query.end_date == undefined ? h.getToday() : req.query.end_date;
+		let code = req.query.code;
+		let type = req.query.type
+
+        let objects = null;
+        if (code != undefined) {
+            objects = await h.search(code)
+		}
+		else if (type != undefined) {
+            objects = await h.getMany(` date >= '${start}' and date <= '${end}' and type ='${type}'`, h.table_name);
+        }
+        else {
+            objects = await h.getMany(` date >= '${start}' and date <= '${end}' `, h.table_name);
+
+        }
+
+        for (var i = 0; i < objects.length; i++) {
+			var obj = objects[i];
+			//if a purchase credit, get the vendor
+			if(obj.type== 'Credit Purchase Payment'){
+				try {
+					let vendor = await vendorHelper.getItem(` id = ${obj.recipient}`, vendorHelper.table_name);
+				obj.recipient = vendor.name;
+				} catch (error) {
+					log.error(error)
+					obj.recipient = 'Unknown Vendor';
+
+				}
+				
+			}
+            
+
+        }
+
+
+        res.json({
+            status: '1',
+            data: objects
+        })
+    } catch (error) {
+        await helper.closeConnection();
+        // console.log(error)
+        log.error(error)
+        res.json({ status: '-1', data: null })
+    }
+
+});
+
+router.get('/findVendorOutgoingPaymentsBetweenDates', async (req, res) => {
+    try {
+		let helperClass = require('../helpers/outgoingPaymentHelper')
+		let h = new helperClass();
+		let vendorClass = require('../helpers/vendorHelper');
+		let vendorHelper = new vendorClass();
+
+        let start = req.query.start_date == undefined ? h.getToday() : req.query.start_date;
+        let end = req.query.end_date == undefined ? h.getToday() : req.query.end_date;
+        let vendor = req.query.vendor;
+
+        let objects = null;
+		objects = await h.getMany(` recipient = ${vendor} and date >= '${start}' and date <= '${end}' `, h.table_name);
+
+
+        for (var i = 0; i < objects.length; i++) {
+			var obj = objects[i];
+			//if a purchase credit, get the vendor
+			if(obj.type== 'Credit Purchase Payment'){
+				try {
+					let vendor = await vendorHelper.getItem(` id = ${obj.recipient}`, vendorHelper.table_name);
+				obj.recipient = vendor.name;
+				} catch (error) {
+					log.error(error)
+					obj.recipient = 'Unknown Vendor';
+
+				}
+				
+			}
+            
+
+        }
+
+
+        res.json({
+            status: '1',
+            data: objects
+        })
+    } catch (error) {
+        await helper.closeConnection();
+        // console.log(error)
+        log.error(error)
+        res.json({ status: '-1', data: null })
+    }
+
+});
+
+
+router.post('/deletePayment', async (req, res) => {
+	let helperClass = require('../helpers/outgoingPaymentHelper')
+		let h = new helperClass();
+    try {
+        let codes = req.body.code.split(",");//comma-separated
+        let code_quotes = []
+        for(var i = 0; i < codes.length; i++){
+            code_quotes.push(`${codes[i]}`)
+        }
+        
+
+        await h.delete(` id in (${code_quotes.join(",")}) `, h.table_name);
+        await activitiesHelper.log(req.query.userid, `"deleted  payment receipt: ${code_quotes.join(",")}  "`, `'Accounts'`)
+
+
+       
+        res.json({
+            status: '1'
+        })
+    } catch (error) {
+        await helper.closeConnection();
+        log.error(error)
+        res.json({ status: '-1', data: null })
+    }
+
+});
+
+router.get('/getPaymentRecipients', async (req, res) => {
+    try {
+		let helperClass = require('../helpers/outgoingPaymentHelper')
+		let h = new helperClass();
+		let vendorClass = require('../helpers/vendorHelper');
+		let vendorHelper = new vendorClass();
+
+        let start = req.query.start_date == undefined ? h.getToday() : req.query.start_date;
+        let end = req.query.end_date == undefined ? h.getToday() : req.query.end_date;
+        let vendor = req.query.vendor;
+
+        let objects = null;
+		objects = await h.getMany(` recipient = ${vendor} and date >= '${start}' and date <= '${end}' `, h.table_name);
+
+
+        for (var i = 0; i < objects.length; i++) {
+			var obj = objects[i];
+			//if a purchase credit, get the vendor
+			if(obj.type== 'Credit Purchase Payment'){
+				try {
+					let vendor = await vendorHelper.getItem(` id = ${obj.recipient}`, vendorHelper.table_name);
+				obj.recipient = vendor.name;
+				} catch (error) {
+					log.error(error)
+					obj.recipient = 'Unknown Vendor';
+
+				}
+				
+			}
+            
+
+        }
+
+
+        res.json({
+            status: '1',
+            data: objects
+        })
+    } catch (error) {
+        await helper.closeConnection();
+        // console.log(error)
+        log.error(error)
+        res.json({ status: '-1', data: null })
+    }
+
+});
+//////////////////END ACCOUNT STUFF///////////////////
+
 //export the whole thingy
 module.exports = router;

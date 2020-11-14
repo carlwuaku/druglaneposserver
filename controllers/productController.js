@@ -169,7 +169,8 @@ router.get('/search', async (req, res) => {
 
 
 router.post('/saveBranchDetails', async (req, res) => {
-
+    let stockClass = require('../helpers/stockAdjustmentHelper');
+    let stockHelper = new stockClass();
 
     //                $parent_company_id = $this->getUserParentCompany($auth);
     //this is to edit the price and stuff for an individual branch
@@ -178,10 +179,10 @@ router.post('/saveBranchDetails', async (req, res) => {
     let data = helper.prep_data(req.body);
     data.last_modified = `'${helper.getToday('timestamp')}'`
     let name = req.body.name;
+    let change_stock = req.body.change_stock;
     try {
         if (id == undefined) {
-            let stockClass = require('../helpers/stockAdjustmentHelper');
-            let stockHelper = new stockClass();
+           
 
             let productid = await helper.insert(data, helper.table_name);
             let date = helper.getToday()
@@ -199,6 +200,20 @@ router.post('/saveBranchDetails', async (req, res) => {
             await activities.log(req.query.userid, `"created a product: ${name}"`, `'Products'`)
         }
         else {
+            if(change_stock == 'yes'){
+
+           
+            let date = helper.getToday()
+            let stock_data = {
+                created_by: `'${req.query.userid}'`, date: `'${date}'`, product: id,
+                quantity_counted: req.body.stock, quantity_expected: 0,
+                current_price: req.body.price, cost_price: req.body.cost_price
+            };
+            await stockHelper.insert(stock_data, stockHelper.table_name);
+
+            await helper.refreshCurrentStock(id)
+            await stockValueHelper.updateStockValue();
+        }
 
             await helper.update(data, ` id = ${id}`, helper.table_name);
             await activities.log(req.query.userid, `"updated a product: ${name}"`, `'Products'`)

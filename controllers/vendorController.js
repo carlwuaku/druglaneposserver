@@ -6,8 +6,16 @@ let adminHelper = new adminClass();
 
 let vendorClass = require('../helpers/vendorHelper');
 let helper = new vendorClass();
+
+let paymentClass = require('../helpers/outgoingPaymentHelper')
+		let paymentHelper = new paymentClass();
+
 const ActivitiesHelper = require('../helpers/activitiesHelper');
 const activities = new ActivitiesHelper();
+
+const DetailsHelper = require('../helpers/purchaseDetailsHelper.js');
+const purchaseDetailsHelper = new DetailsHelper();
+
 const log = require('electron-log');
 
 router.get('/getList', async (req, res) => {
@@ -15,7 +23,18 @@ router.get('/getList', async (req, res) => {
     let limit = req.query.limit == undefined ? null : req.query.limit;
     try {
         let objects = await helper.getAll(helper.table_name, limit, offset);
-
+        let today = helper.getToday()
+        for(var i = 0; i < objects.length; i++){
+            let curr = objects[i]
+            let total_paid = await paymentHelper.getTotalPaidToVendor(curr.id, '', today);
+        
+        let total_bought = await purchaseDetailsHelper.getTotalAmountFromVendor(curr.id);
+        let balance = total_bought - total_paid;
+        curr.total_paid = total_paid.toFixed(2)
+        curr.total_bought = total_bought.toFixed(2);
+        curr.balance = balance.toFixed(2)
+        }
+        
 
         res.json({ status: '1', data: objects })
     } catch (error) {
@@ -77,9 +96,15 @@ router.post('/delete', async (req, res) => {
 router.get('/findById', async (req, res) => {
     try {
         let id = req.query.id;
-
+        let today = helper.getToday()
         let object = await helper.getItem(`id = ${id} `, helper.table_name);
-
+        let total_paid = await paymentHelper.getTotalPaidToVendor(id, '', today);
+        
+        let total_bought = await purchaseDetailsHelper.getTotalAmountFromVendor(id);
+        let balance = total_bought - total_paid;
+        object.total_paid = total_paid.toFixed(2)
+        object.total_bought = total_bought.toFixed(2);
+        object.balance = balance.toFixed(2)
 
 
         res.json({

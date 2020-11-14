@@ -212,6 +212,67 @@ class PurchaseDetailsHelper extends dbClass {
     }
 
     
+    /**
+     * get the total quantity of an items bought from a vendor
+     * @param {Number} id the vendor id
+     * @param {String} start_date optional
+     * @param {String} end_date optional
+     * @returns {Number} 
+     */
+    async getTotalAmountFromVendor(id, start_date='', end_date=''){
+        let sql = `select sum(quantity * price) as total from ${this.table_name} 
+        where code in (select code from purchases where vendor = ${id} `;
+        
+        if(start_date != ''){
+            sql += ` and date >= '${start_date}' `
+        }
+
+        if(end_date != ''){
+            sql += ` and date <= '${end_date}' `
+        }
+
+        sql += ` ) `
+
+        try {
+            await this.getConnection();
+            let q = await this.connection.get(sql);
+            return q.total == null ? 0 : q.total;;
+        } catch (error) {
+            log.error(error);
+            throw new Error(error)
+        }
+    }
+
+    /**
+     * get the total quantity of an items bought from a vendor
+     * @param {Number} id the vendor id
+     * @param {String} start_date optional
+     * @param {String} end_date optional
+     * @returns {Number} 
+     */
+    async getTotalCreditAmountFromVendor(id, start_date='', end_date=''){
+        let sql = `select sum(quantity * price) as total from ${this.table_name} 
+        where code in (select code from purchases where vendor = ${id} and payment_method = 'Credit' `;
+        
+        if(start_date != ''){
+            sql += ` and date >= '${start_date}' `
+        }
+
+        if(end_date != ''){
+            sql += ` and date <= '${end_date}' `
+        }
+        sql += ` ) `
+        
+
+        try {
+            await this.getConnection();
+            let q = await this.connection.get(sql);
+            return q.total == null ? 0 : q.total;;
+        } catch (error) {
+            log.error(error);
+            throw new Error(error)
+        }
+    }
 
  }
 
