@@ -12,6 +12,7 @@ exports.port = PORT;
 const electron = require('electron');
 exports.settings_location = (electron.app || electron.remote.app).getPath('userData');
 const path = require('path')
+
 exports.settings_path =path.join( this.settings_location,'system-settings.json');
 exports.db_path =path.join( this.settings_location,'druglane.db');
 exports.sequelize_db = path.join( this.settings_location,'sequelize_druglane.db');
@@ -28,6 +29,7 @@ exports.default_config = {
   company_set: 'no',
   auto_backup_time: 19
 }
+const drug_info = require('./drug_info')
  
 //database migrations
 const migrations = [
@@ -1384,30 +1386,7 @@ const migrations = [
           `,
     version: 87
   },
-  {
-    query: ` 
-
-    PRAGMA foreign_keys=off;
-
-    BEGIN TRANSACTION;
-
-    CREATE TABLE if not exists item_active_ingredients (
-      id integer primary key autoincrement,
-      product integer not null,
-      
-      created_on date default current_timestamp
-      
-          );
-          
-          COMMIT;
-    
-          PRAGMA foreign_keys=on;
-          
-    
-          `,
-    version: 88
-  }
-  ,
+  
   {
     query: ` 
 
@@ -1418,6 +1397,10 @@ const migrations = [
     CREATE TABLE if not exists active_ingredients (
       id integer primary key autoincrement,
       name text  NOT NULL,
+      indication text default null,
+      side_effect text default null,
+      caution text default null,
+      pregnancy text default null,
       
       created_on date default current_timestamp
       
@@ -1430,8 +1413,46 @@ const migrations = [
     
           `,
     version: 88
-  }
+  },
+  {
+    query: ` 
 
+    PRAGMA foreign_keys=off;
+
+    BEGIN TRANSACTION;
+
+    CREATE TABLE if not exists item_active_ingredients (
+      id integer primary key autoincrement,
+      product integer not null,
+      ingredient integer not null,
+      FOREIGN KEY (product) REFERENCES products (id) ON DELETE RESTRICT ON UPDATE CASCADE,
+      FOREIGN KEY (ingredient) REFERENCES active_ingredients (id) ON DELETE RESTRICT ON UPDATE CASCADE
+
+      
+          );
+          
+          COMMIT;
+    
+          PRAGMA foreign_keys=on;
+          
+    
+          `,
+    version: 89
+  } ,
+  {
+    query: `CREATE UNIQUE INDEX ai_name_unique 
+      ON active_ingredients(name);
+      CREATE  INDEX ai_index  ON active_ingredients(indication,
+         side_effect, caution, pregnancy);
+         CREATE  INDEX item_ai_index  ON item_active_ingredients(product,
+          ingredient);
+      `,
+    version: 90
+  },
+  {
+    query: drug_info.drug_info,
+    version: 91
+  }
  //
 ];
 exports.migrations = migrations;

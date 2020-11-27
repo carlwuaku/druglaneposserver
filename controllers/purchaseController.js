@@ -539,7 +539,7 @@ let paymentHelper = new paymentClass();
         //get the total amount in purchases
         let total_purchase = await detailsHelper.getTotalPurchasedByDates(start, end, '',vendor)
         let total_credit = await detailsHelper.getTotalPurchasedByDates(start, end, 'Credit', vendor)
-        let total_paid = await paymentHelper.getTotalPaid(start, end)
+        let total_paid = await paymentHelper.getTotalPaidToVendor(vendor,start, end)
         let balance = total_purchase - total_paid;
         
 

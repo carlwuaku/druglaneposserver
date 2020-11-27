@@ -59,6 +59,80 @@ class SalesDetailsHelper extends dbClass {
         }
     }
 
+    async getTotalQuantityAndAmount(id, start_date='', end_date=''){
+        let sql = `select sum(quantity) as total, sum(quantity * price) as amount from ${this.table_name} where product = ${id} `;
+        if(start_date != ''){
+            sql += ` and date >= '${start_date}' `
+        }
+
+        if(end_date != ''){
+            sql += ` and date <= '${end_date}' `
+        }
+
+        try {
+            await this.getConnection();
+            let q = await this.connection.get(sql);
+            return q;
+        } catch (error) {
+            log.error(error);
+            throw new Error(error)
+        }
+    }
+
+    /**
+     * get the average quantity of an item sold between some dates
+     * @param {Number} id the product id
+     * @param {String} start_date optional
+     * @param {String} end_date optional
+     * @returns {Number} 
+     */
+    async getAverageQuantity(id, start_date='', end_date=''){
+        let sql = `select avg(quantity) as total from ${this.table_name} where product = ${id} `;
+        if(start_date != ''){
+            sql += ` and date >= '${start_date}' `
+        }
+
+        if(end_date != ''){
+            sql += ` and date <= '${end_date}' `
+        }
+
+        try {
+            await this.getConnection();
+            let q = await this.connection.get(sql);
+            return q.total == null ? 0 : q.total;
+        } catch (error) {
+            log.error(error);
+            throw new Error(error)
+        }
+    }
+
+    /**
+     * get the average quantity of an item sold between some dates
+     * @param {Number} id the product id
+     * @param {String} start_date optional
+     * @param {String} end_date optional
+     * @returns {Number} 
+     */
+    async getAverageMonthlyQuantities(id, start_date='', end_date=''){
+        let sql = `select STRFTIME('%Y', date) as year, STRFTIME('%m', date) as month, avg(quantity) as average, min(quantity) as min, max(quantity) as max from ${this.table_name} where product = ${id} `;
+        if(start_date != ''){
+            sql += ` and date >= '${start_date}' `
+        }
+
+        if(end_date != ''){
+            sql += ` and date <= '${end_date}' `
+        }
+        sql += ` GROUP BY STRFTIME('%Y', date), STRFTIME('%m', date) `
+        try {
+            await this.getConnection();
+            let q = await this.connection.all(sql);
+            return q;
+        } catch (error) {
+            log.error(error);
+            throw new Error(error)
+        }
+    }
+
     /**
      * get the total quantity*price of an item sold between some dates
      * @param {Number} id the product id
@@ -335,6 +409,22 @@ class SalesDetailsHelper extends dbClass {
         }
     }
 
+    async getTotalSalesCost(start, end){
+        let sql = `select sum(quantity * cost_price) as total from ${this.table_name}  `;
+        if(start != ''){
+            sql += ` where date >= '${start}' and date <= '${end}' `
+        }
+
+        try {
+            await this.getConnection();
+            let q = await this.connection.get(sql);
+            return q.total == null ? 0 : q.total;
+        } catch (error) {
+            log.error(error);
+            throw new Error(error)
+        }
+    }
+
     async getAverageSales(start, end){
         let sql = `select avg(quantity * price) as total from ${this.table_name}  `;
         if(start != ''){
@@ -346,6 +436,7 @@ class SalesDetailsHelper extends dbClass {
             let q = await this.connection.get(sql);
             return q.total == null ? 0 : q.total;
         } catch (error) {
+            console.log(error)
             log.error(error);
             throw new Error(error)
         }
@@ -396,6 +487,30 @@ class SalesDetailsHelper extends dbClass {
             sql += ` where date >= '${start}' and date <= '${end}' group by product order by total asc limit ${limit}`
         }
        
+        try {
+            await this.getConnection();
+            let q = await this.connection.all(sql);
+            return q;
+        } catch (error) {
+            console.log(sql)
+            log.error(error);
+            throw new Error(error)
+        }
+    }
+
+    /**
+     * get the amount for each category sold between some periods
+     * @param {String} start 
+     * @param {String} end 
+     * @param {String} limit 
+     */
+    async getCategorySales(start, end, limit=10){
+        let sql = `select category, sum(sales_details.price * sales_details.quantity) as total from products join sales_details on 
+        products.id = sales_details.product `;
+        if(start != ''){
+            sql += ` where date >= '${start}' and date <= '${end}' `
+        }
+       sql += ` group by category  order by total desc limit ${limit}`;
         try {
             await this.getConnection();
             let q = await this.connection.all(sql);

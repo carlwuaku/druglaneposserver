@@ -398,7 +398,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 
 
-lodash
+lodash-es
 MIT
 Copyright OpenJS Foundation and other contributors <https://openjsf.org/>
 

@@ -603,6 +603,7 @@ router.get('/getBranchDailySalesSummary', async (req, res) => {
             let obj = {};
 
             let total = await detailsHelper.getTotalSales(start, end);
+            let total_cost = await detailsHelper.getTotalSalesCost(start, end);
             let avg = await detailsHelper.getAverageSales(start, end);
             let cash = await detailsHelper.getSalesByPaymentMethod('Cash', start, end)
             let momo = await detailsHelper.getSalesByPaymentMethod('Mobile Money', start, end)
@@ -611,6 +612,7 @@ router.get('/getBranchDailySalesSummary', async (req, res) => {
             let credit = await detailsHelper.getSalesByPaymentMethod('Credit', start, end)
             let insurance = await detailsHelper.getSalesByPaymentMethod('Insurance', start, end)
             let other = await detailsHelper.getSalesByPaymentMethod('Other', start, end)
+            let profit = total - total_cost
 
 
             obj.date = start;
@@ -623,20 +625,47 @@ router.get('/getBranchDailySalesSummary', async (req, res) => {
             obj.credit = credit == null ? 0.00 : credit.toFixed(2)
             obj.insurance = insurance == null ? 0.00 : insurance.toFixed(2)
             obj.other = other == null ? 0.00 : other.toFixed(2);
+            obj.profit = profit.toFixed(2)
+            obj.cost = total_cost.toFixed(2)
             objects.push(obj)
         }
         let best_sellers = await detailsHelper.getBestSellers(start_date, end_date);
         let worst_sellers = await detailsHelper.getWorstSellers(start_date, end_date);
         let total = await detailsHelper.getTotalSales(start_date, end_date);
         let avg = await detailsHelper.getAverageSales(start_date, end_date)
-
+        let total_cost = await detailsHelper.getTotalSalesCost(start_date, end_date);
+        let cost = total_cost.toFixed(2)
+        let overall_profit = total - total_cost
         res.json({
             status: '1',
             data: objects,
             best_sellers : best_sellers,
             worst_sellers: worst_sellers,
             total : total,
-            average : avg
+            average : avg,
+            profit: overall_profit.toFixed(2),
+            cost: cost
+        })
+    } catch (error) {
+        await helper.closeConnection();
+        console.log(error)
+        log.error(error)
+        res.json({ status: '-1', data: null })
+    }
+
+});
+
+router.get('/getCategorySales', async (req, res) => {
+    try {
+
+        let start_date = req.query.start_date == undefined ? helper.getToday() : req.query.start_date;
+        let end_date = req.query.end_date == undefined ? helper.getToday() : req.query.end_date;
+
+        
+        let data = await detailsHelper.getCategorySales(start_date, end_date);
+        res.json({
+            status: '1',
+            data: data
         })
     } catch (error) {
         await helper.closeConnection();

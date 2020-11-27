@@ -42,8 +42,11 @@ class OutgoingPaymentHelper extends dbClass {
      * @returns {Number} 
      */
     async getTotalPaidToVendor(id, start_date='', end_date=''){
-        let sql = `select sum(amount) as total from ${this.table_name} where recipient = ${id} 
-        and type = 'Credit Purchase Payment' `;
+        let sql = `select sum(amount) as total from ${this.table_name} where 
+        type = 'Credit Purchase Payment' `;
+        if(id != ''){
+            sql += ` and recipient = ${id}  `
+        }
         if(start_date != ''){
             sql += ` and date >= '${start_date}' `
         }
@@ -62,7 +65,7 @@ class OutgoingPaymentHelper extends dbClass {
         }
     }
 
-    async getTotalPaid( start_date='', end_date=''){
+    async getTotalPaid(recipient='', start_date='', end_date=''){
         let sql = `select sum(amount) as total from ${this.table_name} where
          type = 'Credit Purchase Payment' `;
         if(start_date != ''){
@@ -71,6 +74,9 @@ class OutgoingPaymentHelper extends dbClass {
 
         if(end_date != ''){
             sql += ` and date <= '${end_date}' `
+        }
+        if(recipient != ''){
+            sql += ` and recipient >= ${recipient} `
         }
 
         try {

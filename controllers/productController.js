@@ -15,8 +15,15 @@ router.get('/getList', async (req, res) => {
     let offset = req.query.offset == undefined ? 0 : req.query.offset;
     let limit = req.query.limit == undefined ? null : req.query.limit;
     try {
+        const DetailsHelper = require('../helpers/salesDetailsHelper.js');
+        const salesDetailsHelper = new DetailsHelper();
         // let objects = await helper.getAll(helper.table_name, limit, offset);
-
+        // let this_month = helper.setDates("this_month")
+        // let last_month = helper.setDates("last_month")
+        // let q1 = helper.setDates("first_quarter")
+        // let q2 = helper.setDates("second_quarter")
+        // let q3 = helper.setDates("third_quarter")
+        // let q4 = helper.setDates("fourth_quarter")
         let conditions = helper.prep_data(req.query);
         let objects = null;
         let total = null;
@@ -35,9 +42,34 @@ router.get('/getList', async (req, res) => {
         }
 
 
-        objects.map(obj => {
-            obj.stock = obj.current_stock
-        })
+        for (var i = 0; i < objects.length; i++) {
+            let obj = objects[i]
+            obj.stock = obj.current_stock;
+
+            try {
+                let avg = await salesDetailsHelper.getAverageMonthlyQuantities(obj.id);
+                let avg_sum = 0;
+                let count = 0;
+                if (avg != null) {
+                    avg.map(a => {
+                        avg_sum += a.average;
+                        count++;
+                    });
+                    obj.average_monthly = (avg_sum / count).toFixed(2);
+
+                }
+            } catch (error) {
+                console.log(error)
+                obj.average_monthly = 0;
+            }
+            // obj.this_month_quantity = await salesDetailsHelper.getTotalQuantity(obj.id, this_month.start_date, this_month.end_date)
+            // obj.last_month_quantity = await salesDetailsHelper.getTotalQuantity(obj.id, last_month.start_date, last_month.end_date)
+            // obj.q1_quantity = await salesDetailsHelper.getTotalQuantity(obj.id, q1.start_date, q1.end_date)
+            // obj.q2_quantity = await salesDetailsHelper.getTotalQuantity(obj.id, q2.start_date, q2.end_date)
+            // obj.q3_quantity = await salesDetailsHelper.getTotalQuantity(obj.id, q3.start_date, q3.end_date)
+            // obj.q4_quantity = await salesDetailsHelper.getTotalQuantity(obj.id, q4.start_date, q4.end_date)
+
+        }
         res.json({ status: '1', data: objects, total: total })
     } catch (error) {
         await helper.closeConnection();
@@ -124,26 +156,19 @@ router.get('/getUpdatedProducts', async (req, res) => {
 });
 
 router.get('/search', async (req, res) => {
+    const DetailsHelper = require('../helpers/salesDetailsHelper.js');
+    const salesDetailsHelper = new DetailsHelper();
     let param = req.query.param;
     let offset = req.query.offset == undefined ? 0 : req.query.offset;
     let limit = req.query.limit == undefined ? null : req.query.limit;
     try {
         let objects = await helper.search(param, limit, offset);
-        // console.log(objects)
-        // var t = param.toLowerCase().trim();
-        // objects.sort(function(a, b) {
-        //     let nameA = a.name.toLowerCase(); // ignore upper and lowercase
-        //     let nameB = b.name.toLowerCase(); // ignore upper and lowercase
-        //     if (nameA.indexOf(t) < nameB.indexOf(t)) {
-        //       return -1;
-        //     }
-        //     if (nameA > nameB) {
-        //       return 1;
-        //     }
-
-        //     // names must be equal
-        //     return 0;
-        //   });
+        // let this_month = helper.setDates("this_month")
+        // let last_month = helper.setDates("last_month")
+        // let q1 = helper.setDates("first_quarter")
+        // let q2 = helper.setDates("second_quarter")
+        // let q3 = helper.setDates("third_quarter")
+        // let q4 = helper.setDates("fourth_quarter")
         for (var i = 0; i < objects.length; i++) {
             var obj = objects[i];
             var stock = obj.current_stock;
@@ -154,7 +179,35 @@ router.get('/search', async (req, res) => {
             obj.out_of_stock = stock < 1;
             obj.near_min = stock > 0 && stock <= min;
             obj.near_max = stock >= max;
-            obj.stock = obj.current_stock
+            obj.stock = obj.current_stock;
+            obj.active_ingredients = [];
+            //average per month over last 3 months
+            //average per month over last 6 months
+            try {
+                let avg = await salesDetailsHelper.getAverageMonthlyQuantities(obj.id);
+                let avg_sum = 0;
+                let count = 0;
+                if (avg != null) {
+                    avg.map(a => {
+                        avg_sum += a.average;
+                        count++;
+                    });
+                    obj.average_monthly = (avg_sum / count).toFixed(2);
+
+                }
+            } catch (error) {
+                console.log(error)
+                obj.average_monthly = 0;
+            }
+
+            // obj.this_month_quantity = await salesDetailsHelper.getTotalQuantity(obj.id, this_month.start_date, this_month.end_date)
+            // obj.last_month_quantity = await salesDetailsHelper.getTotalQuantity(obj.id, last_month.start_date, last_month.end_date)
+            // obj.q1_quantity = await salesDetailsHelper.getTotalQuantity(obj.id, q1.start_date, q1.end_date)
+            // obj.q2_quantity = await salesDetailsHelper.getTotalQuantity(obj.id, q2.start_date, q2.end_date)
+            // obj.q3_quantity = await salesDetailsHelper.getTotalQuantity(obj.id, q3.start_date, q3.end_date)
+            // obj.q4_quantity = await salesDetailsHelper.getTotalQuantity(obj.id, q4.start_date, q4.end_date)
+
+
         }
         res.json({ status: '1', data: objects })
     } catch (error) {
@@ -177,12 +230,13 @@ router.post('/saveBranchDetails', async (req, res) => {
     let id = req.body.id;
     //extract all the values for the necessary fields from the input
     let data = helper.prep_data(req.body);
+    console.log(req.body)
     data.last_modified = `'${helper.getToday('timestamp')}'`
     let name = req.body.name;
     let change_stock = req.body.change_stock;
     try {
         if (id == undefined) {
-           
+
 
             let productid = await helper.insert(data, helper.table_name);
             let date = helper.getToday()
@@ -196,29 +250,47 @@ router.post('/saveBranchDetails', async (req, res) => {
             await helper.refreshCurrentStock(productid)
             await stockValueHelper.updateStockValue();
 
-
+            id = productid
             await activities.log(req.query.userid, `"created a product: ${name}"`, `'Products'`)
         }
         else {
-            if(change_stock == 'yes'){
+            if (change_stock == 'yes') {
 
-           
-            let date = helper.getToday()
-            let stock_data = {
-                created_by: `'${req.query.userid}'`, date: `'${date}'`, product: id,
-                quantity_counted: req.body.stock, quantity_expected: 0,
-                current_price: req.body.price, cost_price: req.body.cost_price
-            };
-            await stockHelper.insert(stock_data, stockHelper.table_name);
 
-            await helper.refreshCurrentStock(id)
-            await stockValueHelper.updateStockValue();
-        }
+                let date = helper.getToday()
+                let stock_data = {
+                    created_by: `'${req.query.userid}'`, date: `'${date}'`, product: id,
+                    quantity_counted: req.body.stock, quantity_expected: 0,
+                    current_price: req.body.price, cost_price: req.body.cost_price
+                };
+                await stockHelper.insert(stock_data, stockHelper.table_name);
+
+                await helper.refreshCurrentStock(id)
+                await stockValueHelper.updateStockValue();
+            }
 
             await helper.update(data, ` id = ${id}`, helper.table_name);
             await activities.log(req.query.userid, `"updated a product: ${name}"`, `'Products'`)
 
         }
+
+        //delete the active ingredietns and re-insert them
+        try {
+
+            let ItemAiHelperClass = require("../helpers/ProductIngredientHelper");
+            let itemAiHelper = new ItemAiHelperClass();
+            let ais = req.body.new_active_ingredients.split("|||");
+            console.log(ais)
+            await itemAiHelper.delete(`product = ${id}`, itemAiHelper.table_name)
+            for (var x = 0; x < ais.length; x++) {
+                await itemAiHelper.insert({ ingredient: ais[x], product: id }, itemAiHelper.table_name)
+            }
+        } catch (error) {
+            console.log(error)
+
+        }
+
+
         res.json({ status: '1' })
     } catch (error) {
         await helper.closeConnection();
@@ -279,7 +351,7 @@ router.post('/erase', async (req, res) => {
 
 
     try {
-        
+
         //lazy shortcut taken to avoid creating objects for each table
         await helper.delete(` product in (${id})`, 'sales_details')
         await helper.delete(` product in (${id})`, 'stock_adjustment')
@@ -295,7 +367,7 @@ router.post('/erase', async (req, res) => {
         res.json({ status: '1' })
     } catch (error) {
         await helper.closeConnection();
-    log.error(error)
+        log.error(error)
         res.json({ status: '-1' })
     }
 
@@ -341,12 +413,52 @@ router.post('/restore', async (req, res) => {
 
 router.get('/findById', async (req, res) => {
     let id = req.query.id;
+    const DetailsHelper = require('../helpers/salesDetailsHelper.js');
+        const salesDetailsHelper = new DetailsHelper();
     try {
 
         let where = ` id = ${id} `;
         let item = await helper.getItem(where, helper.table_name)
         item.stock = item.current_stock;
         item.out_of_stock = item.stock < 1;
+        let ItemAiHelperClass = require("../helpers/ProductIngredientHelper");
+        let itemAiHelper = new ItemAiHelperClass();
+
+        let aiHelperClass = require("../helpers/activeIngredientHelper");
+        let aiHelper = new aiHelperClass()
+
+        let ais = await itemAiHelper.getMany(` product = ${id}`, itemAiHelper.table_name);
+        if (ais != null) {
+            for (var i = 0; i < ais.length; i++) {
+                let det = await aiHelper.getItem(` id = ${ais[i].ingredient}`, aiHelper.table_name);
+                ais[i].name = det == null ? "N/A" : det.name;
+                ais[i].side_effect = det == null ? "N/A" : det.side_effect;
+                ais[i].caution = det == null ? "N/A" : det.caution;
+                ais[i].pregnancy = det == null ? "N/A" : det.pregnancy;
+                ais[i].indication = det == null ? "N/A" : det.indication;
+            }
+        }
+        let this_month = helper.setDates("this_month")
+        let last_month = helper.setDates("last_month")
+        let q1 = helper.setDates("first_quarter")
+        let q2 = helper.setDates("second_quarter")
+        let q3 = helper.setDates("third_quarter")
+        let q4 = helper.setDates("fourth_quarter")
+
+        item.active_ingredients = ais == null ? [] : ais;
+        let this_month_quantity = await salesDetailsHelper.getTotalQuantityAndAmount(id, this_month.start_date, this_month.end_date)
+        let last_month_quantity = await salesDetailsHelper.getTotalQuantityAndAmount(id, last_month.start_date, last_month.end_date)
+        item.this_month_quantity = this_month_quantity.total;
+        item.this_month_amount = this_month_quantity.amount;
+        item.last_month_quantity = last_month_quantity.total;
+        item.last_month_amount = last_month_quantity.amount;
+
+        // item.q1_quantity = await salesDetailsHelper.getTotalQuantity(id, q1.start_date, q1.end_date)
+        // item.q2_quantity = await salesDetailsHelper.getTotalQuantity(id, q2.start_date, q2.end_date)
+        // item.q3_quantity = await salesDetailsHelper.getTotalQuantity(id, q3.start_date, q3.end_date)
+        // item.q4_quantity = await salesDetailsHelper.getTotalQuantity(id, q4.start_date, q4.end_date)
+
+
         res.json({ status: '1', data: item })
     } catch (error) {
         await helper.closeConnection();
@@ -365,6 +477,38 @@ router.get('/getStock', async (req, res) => {
         await helper.closeConnection();
         console.log(error)
         res.json({ status: '-1' })
+    }
+});
+
+router.get('/getActiveIngredients', async (req, res) => {
+    let id = req.query.id;
+    try {
+        let ItemAiHelperClass = require("../helpers/ProductIngredientHelper");
+        let itemAiHelper = new ItemAiHelperClass();
+
+        let aiHelperClass = require("../helpers/activeIngredientHelper");
+        let aiHelper = new aiHelperClass()
+
+        let ais = await itemAiHelper.getMany(` product = ${id}`, itemAiHelper.table_name);
+        if (ais != null) {
+            for (var i = 0; i < ais.length; i++) {
+                let det = await aiHelper.getItem(` id = ${ais[i].ingredient}`, aiHelper.table_name);
+                ais[i].name = det == null ? "N/A" : det.name;
+                ais[i].indication = det == null ? "N/A" : det.indication;
+                ais[i].side_effect = det == null ? "N/A" : det.side_effect;
+                ais[i].pregnancy = det == null ? "N/A" : det.pregnancy;
+                ais[i].caution = det == null ? "N/A" : det.caution;
+
+            }
+        }
+        let active_ingredients = ais == null ? [] : ais;
+
+
+        res.json({ status: '1', data: active_ingredients, id: id })
+    } catch (error) {
+        await helper.closeConnection();
+        console.log(error)
+        res.json({ status: '-1', data: [] })
     }
 });
 
@@ -406,7 +550,7 @@ router.get('/createStockAdjustmentSession', async (req, res) => {
 ///get the code that's still open. if there's none, create one
 router.get('/getLatestSession', async (req, res) => {
     try {
-        
+
         let stockClass = require('../helpers/stockAdjustmentHelper');
 
         let stockHelper = new stockClass();
@@ -420,13 +564,13 @@ router.get('/getLatestSession', async (req, res) => {
         else {
             let date = helper.getToday();
             let created_on = helper.getToday('timestamp');
-          
+
             let data = { created_by: `'${req.query.userid}'`, created_on: `'${created_on}'`, date: `'${date}'` };
             let id = await stockHelper.insert(data, stockHelper.sessions_table_name);
             let code = id.toString().padStart(5, '0');
             await stockHelper.updateField('code', `'${code}'`, ` id = ${id} `, stockHelper.sessions_table_name)
             data.code = code;
-            
+
             res.json({ status: '1', data: data })
         }
     } catch (error) {
@@ -463,7 +607,7 @@ router.post('/saveStockAdjustment', async (req, res) => {
         let shelves = req.body.shelves.split("||")
 
         let code = req.body.code;
-        
+
         //delete existing with the code and replace with incoming
         // await stockHelper.delete(` code = '${code}' `, stockHelper.table_name);
         let sql = "BEGIN TRANSACTION; ";
@@ -524,7 +668,7 @@ router.post('/saveStockAdjustment', async (req, res) => {
                     current_stock: data.quantity_counted,
                     size: data.size,
                     unit: `"${units[i]}"`,
-                        shelf: `"${shelves[i]}"`
+                    shelf: `"${shelves[i]}"`
                 }
                 sql += stockHelper.generateUpdateQuery(product_update_data, ` id = ${products[i]} `, helper.table_name);
 
@@ -619,8 +763,8 @@ router.post('/saveStockAdjustmentToPending', async (req, res) => {
             data.current_price = prices[i];
             data.quantity_expired = expired[i] == undefined || expired[i] == null || expired[i] == '' ? 0 : expired[i];
             data.quantity_damaged = damaged[i] == undefined || damaged[i] == null || damaged[i] == '' ? 0 : damaged[i];
-            data.unit = units[i] == undefined || units[i] == null  ? `''` : `"${units[i]}"`;
-            data.shelf = shelves[i] == undefined || shelves[i] == null  ? `''` : `"${shelves[i]}"`;
+            data.unit = units[i] == undefined || units[i] == null ? `''` : `"${units[i]}"`;
+            data.shelf = shelves[i] == undefined || shelves[i] == null ? `''` : `"${shelves[i]}"`;
 
             //check if the item exists first
             var exists = await helper.getItem(`id = ${products[i]}`, helper.table_name);
@@ -1254,9 +1398,8 @@ router.get('/getStockChanges', async (req, res) => {
         for (m = 0; m < purchases.length; m++) {
             var obj = {};
             var p = purchases[m];
-            console.log(p)
+
             var purchase = await mainPurchaseHelper.getItem(` code = '${p.code}'`, mainPurchaseHelper.table_name)
-            console.log('purchaess: ' + purchase)
             obj.date = p.created_on;
             obj.timestamp = Date.parse(p.created_on);
             obj.quantity = p.quantity;
@@ -1459,8 +1602,8 @@ router.get('/getStockValues', async (req, res) => {
     try {
         let cost_value = await stockValueHelper.getCostValue();
         let selling_value = await stockValueHelper.getSellingValue();
-        
-        res.json({ status: '1', data: {cost_value: cost_value.toFixed(2), selling_value: selling_value.toFixed(2)} })
+
+        res.json({ status: '1', data: { cost_value: cost_value.toFixed(2), selling_value: selling_value.toFixed(2) } })
     } catch (error) {
         await helper.closeConnection();
         res.json({ status: '-1', data: null })
@@ -1528,7 +1671,7 @@ router.post('/merge', async (req, res) => {
     }
 
 });
- 
+
 
 
 
@@ -1586,5 +1729,52 @@ router.post('/upload', (req, res, next) => {
 
 
 });
+
+//add/remove an active ingredient
+//get all active ingredients
+router.get('/searchActiveIngredients', async (req, res) => {
+    let aiHelperClass = require("../helpers/activeIngredientHelper");
+    let aiHelper = new aiHelperClass();
+    let param = req.query.param;
+    let offset = req.query.offset == undefined ? 0 : req.query.offset;
+    let limit = req.query.limit == undefined ? null : req.query.limit;
+    try {
+        let objects = await aiHelper.search(param, limit, offset);
+
+        res.json({ status: '1', data: objects })
+    } catch (error) {
+        await helper.closeConnection();
+        console.log(error)
+        log.error(error)
+        res.json({ status: '-1', data: null })
+    }
+
+});
+
+router.post('/addItemActiveIngredient', async (req, res) => {
+    let ItemAiHelperClass = require("../helpers/ProductIngredientHelper");
+    let itemAiHelper = new ItemAiHelperClass();
+    let ai_name = req.body.ai_name;
+    let product_name = req.body.name;
+
+    let data = itemAiHelper.prep_data(req.body)
+    try {
+        await helper.itemAiHelper(data, helper.table_name);
+
+
+
+        await activities.log(req.query.userid, `"added an active ingredient ${ai_name} to a product: ${product_name}"`, `'Products'`)
+
+
+        res.json({ status: '1' })
+    } catch (error) {
+        await helper.closeConnection();
+        console.log(error)
+        log.error(error)
+        res.json({ status: '-1' })
+    }
+
+});
+
 //export the whole thingy
 module.exports = router;

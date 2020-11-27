@@ -28,7 +28,7 @@ let internal_backup_folder = constants.internal_backups_path
 
 if (!gotTheLock) {
   app.quit()
-
+ 
   
 } else {
   app.on('second-instance', (event, commandLine, workingDirectory) => {
@@ -46,6 +46,7 @@ if (!gotTheLock) {
     let server = require('./server');
 
   } catch (error) {
+    console.log(error)
     aboutWindow = new BrowserWindow({
       height: 250,
       width: 300,
@@ -60,7 +61,7 @@ if (!gotTheLock) {
   }
 
 
-  //create folder for backups
+  //create folder for backups 
   console.log('creating folder')
   if (!fs.existsSync(backup_folder)) fs.mkdir(backup_folder, function (err) {
     if (err) {
@@ -638,7 +639,7 @@ if (!gotTheLock) {
   }
 
   function restoreBackup(filename) {
-    let DecompressZip = require('decompress-zip');
+    let DecompressZip = require('decompress-zip'); 
     var unzipper = new DecompressZip(filename);
     console.log(filename)
     // Add the error event listener
