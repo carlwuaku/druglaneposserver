@@ -2,47 +2,49 @@
 <section class="content bg">
         <div class="container">
                 <h3 class="text-white text-shadow"><%= name%> - DruglanePOS Server</h3>
+                <b class="text-white"> <span id="version"></span> </b>
                 <div class="alert alert-info">
                         <i class="fa fa-info"> </i> The server address is : http://<%= host%>:<%= port%>
                 </div>
                 <div class="alert alert-info">
                         <i class="fa fa-info"> </i> Automatic backups are done once everyday.
-                        <b>Select the time for the backups: </b> 
+                        <b>Select the time for the backups: </b>
                         <select id="backup_time" name="backup_time">
                                 <option <%= backup_time == 0 ? 'selected' : '' %> value="0">12 AM</option>
                                 <option <%= backup_time == 1 ? 'selected' : '' %> value="1">1 AM</option>
-                                <option <%= backup_time == 2 ? 'selected' : '' %>  value="2">2 AM</option>
-                                <option <%= backup_time == 3 ? 'selected' : '' %>  value="3">3 AM</option>
-                                <option  <%= backup_time == 4 ? 'selected' : '' %> value="4">4 AM</option>
-                                <option <%= backup_time == 5 ? 'selected' : '' %>  value="5">5 AM</option>
-                                <option <%= backup_time == 6 ? 'selected' : '' %>  value="6">6 AM</option>
-                                <option <%= backup_time == 7 ? 'selected' : '' %>  value="7">7 AM</option>
-                                <option <%= backup_time == 8 ? 'selected' : '' %>  value="8">8 AM</option>
-                                <option <%= backup_time == 9 ? 'selected' : '' %>  value="9">9 AM</option>
-                                <option <%= backup_time == 10 ? 'selected' : '' %>  value="10">10 AM</option>
-                                <option <%= backup_time == 11 ? 'selected' : '' %>  value="11">11 AM</option>
-                                <option <%= backup_time == 12 ? 'selected' : '' %>  value="12">12 PM</option>
-                                <option <%= backup_time == 13 ? 'selected' : '' %>  value="13">1 PM</option>
-                                <option <%= backup_time == 14 ? 'selected' : '' %>  value="14">2 PM</option>
-                                <option <%= backup_time == 15 ? 'selected' : '' %>  value="15">3 PM</option>
-                                <option <%= backup_time == 16 ? 'selected' : '' %>  value="16">4 PM</option>
-                                <option <%= backup_time == 17 ? 'selected' : '' %>  value="17">5 PM</option>
+                                <option <%= backup_time == 2 ? 'selected' : '' %> value="2">2 AM</option>
+                                <option <%= backup_time == 3 ? 'selected' : '' %> value="3">3 AM</option>
+                                <option <%= backup_time == 4 ? 'selected' : '' %> value="4">4 AM</option>
+                                <option <%= backup_time == 5 ? 'selected' : '' %> value="5">5 AM</option>
+                                <option <%= backup_time == 6 ? 'selected' : '' %> value="6">6 AM</option>
+                                <option <%= backup_time == 7 ? 'selected' : '' %> value="7">7 AM</option>
+                                <option <%= backup_time == 8 ? 'selected' : '' %> value="8">8 AM</option>
+                                <option <%= backup_time == 9 ? 'selected' : '' %> value="9">9 AM</option>
+                                <option <%= backup_time == 10 ? 'selected' : '' %> value="10">10 AM</option>
+                                <option <%= backup_time == 11 ? 'selected' : '' %> value="11">11 AM</option>
+                                <option <%= backup_time == 12 ? 'selected' : '' %> value="12">12 PM</option>
+                                <option <%= backup_time == 13 ? 'selected' : '' %> value="13">1 PM</option>
+                                <option <%= backup_time == 14 ? 'selected' : '' %> value="14">2 PM</option>
+                                <option <%= backup_time == 15 ? 'selected' : '' %> value="15">3 PM</option>
+                                <option <%= backup_time == 16 ? 'selected' : '' %> value="16">4 PM</option>
+                                <option <%= backup_time == 17 ? 'selected' : '' %> value="17">5 PM</option>
                                 <option <%= backup_time == 18 ? 'selected' : '' %> value="18">6 PM</option>
                                 <option <%= backup_time == 19 ? 'selected' : '' %> value="19">7 PM</option>
-                                <option <%= backup_time == 20 ? 'selected' : '' %>  value="20">8 PM</option>
-                                <option <%= backup_time == 21 ? 'selected' : '' %>  value="21">9 PM</option>
-                                <option <%= backup_time == 22 ? 'selected' : '' %>  value="22">10 PM</option>
-                                <option <%= backup_time == 23 ? 'selected' : '' %>  value="23">11 PM</option>
-                            </select>
-                             <button id="save_auto_backup_time_btn" class="btn btn-sm btn-primary">Save</button>
-                            <br>
+                                <option <%= backup_time == 20 ? 'selected' : '' %> value="20">8 PM</option>
+                                <option <%= backup_time == 21 ? 'selected' : '' %> value="21">9 PM</option>
+                                <option <%= backup_time == 22 ? 'selected' : '' %> value="22">10 PM</option>
+                                <option <%= backup_time == 23 ? 'selected' : '' %> value="23">11 PM</option>
+                        </select>
+                        <button id="save_auto_backup_time_btn" class="btn btn-sm btn-primary">Save</button>
+                        <br>
 
-                         You can also manually 
-                        create a backup any time you want by using the tabs below. 
+                        You can also manually
+                        create a backup any time you want by using the tabs below.
                 </div>
                 <div class="alert alert-info">
-                        <i class="fa fa-info"> </i> To open the client (main POS) on another device, open a 
-                        browser on that device, and in the address bar, type  http://<%= host%>:<%= port%>/client and press 'Enter'.
+                        <i class="fa fa-info"> </i> To open the client (main POS) on another device, open a
+                        browser on that device, and in the address bar, type http://<%= host%>:<%= port%>/client and
+                        press 'Enter'.
                         You would need a username and password created on this server to be able to login on that device
                 </div>
                 <%
@@ -54,16 +56,17 @@
                 <% } 
         if(logged_in){ %>
 
-                Logged in as Administrator. <a href="logout"  class="btn btn-danger">Log Out</a> 
+                Logged in as Administrator. <a href="logout" class="btn btn-danger">Log Out</a>
                 <%  }
       else{ %>
 
-        <a href="login"  class="btn btn-white">Login As Administrator</a> 
+                <a href="login" class="btn btn-white">Login As Administrator</a>
                 <% }
       %>
 
-      <a href="http://<%= host%>:<%= port%>/client" target="_blank"  class="btn btn-white">Go To Main System</a> 
-<hr>
+                <a href="http://<%= host%>:<%= port%>/client" target="_blank" class="btn btn-white">Go To Main
+                        System</a>
+                <hr>
 
 
                 <!-- <div class="alert alert-success starthidden" id="backup_alert">
@@ -128,9 +131,9 @@
                                                         <div class="dashboard-text">
                                                                 Edit/View System Settings
                                                                 <% if(!logged_in){ %>
-                                                                        <br>
-                                                                        <i class="fa fa-lock"></i> Login Required
-                                                                        <%  }     %>
+                                                                <br>
+                                                                <i class="fa fa-lock"></i> Login Required
+                                                                <%  }     %>
                                                         </div>
 
                                                 </div>
@@ -149,9 +152,9 @@
                                                         <div class="dashboard-text">
                                                                 Add/Edit/View Users
                                                                 <% if(!logged_in){ %>
-                                                                        <br>
-                                                                        <i class="fa fa-lock"></i> Login Required
-                                                                        <%  }     %>
+                                                                <br>
+                                                                <i class="fa fa-lock"></i> Login Required
+                                                                <%  }     %>
                                                         </div>
 
                                                 </div>
@@ -170,9 +173,9 @@
                                                         <div class="dashboard-text">
                                                                 Add/Edit/View User Permissions
                                                                 <% if(!logged_in){ %>
-                                                                        <br>
-                                                                        <i class="fa fa-lock"></i> Login Required
-                                                                        <%  }     %>
+                                                                <br>
+                                                                <i class="fa fa-lock"></i> Login Required
+                                                                <%  }     %>
                                                         </div>
 
                                                 </div>
@@ -190,7 +193,7 @@
                                                         <img src="images/003-backup-1.png" height="75" alt="png">
                                                         <div class="dashboard-text">
                                                                 Refresh Database
-                                                                
+
                                                         </div>
 
                                                 </div>
@@ -199,6 +202,16 @@
                         </div>
 
                 </div>
+        </div>
+
+        <div id="notification" class="hidden">
+                <p id="message"></p>
+                <button id="close-button" onClick="closeNotification()">
+                        Close
+                </button>
+                <button id="restart-button" onClick="restartApp()" class="hidden">
+                        Restart
+                </button>
         </div>
 </section>
 
@@ -211,6 +224,14 @@
 <script>
         //code for sending archive command to main
         const { ipcRenderer } = require('electron');
+        const version = document.getElementById('version');
+        ipcRenderer.send('app_version');
+        ipcRenderer.on('app_version', (event, arg) => {
+                ipcRenderer.removeAllListeners('app_version');
+                version.innerText = 'Version ' + arg.version;
+        });
+
+
         ipcRenderer.on('backup_done', (e, data) => {
                 $("#backup_alert").html(`Backup done successfully. Locate the file at ${data.directory}.
      Please copy it to a safe location 
@@ -220,16 +241,38 @@
                         `);
                 $("#backup_alert").fadeIn('fast')
 
-                
+
 
         })
 
         ipcRenderer.on('backup_time_changed', (e, data) => {
-               
-                        alert("Automatic backup time changed successfully")
-                
+
+                alert("Automatic backup time changed successfully")
+
 
         })
+
+        const notification = document.getElementById('notification');
+        const message = document.getElementById('message');
+        const restartButton = document.getElementById('restart-button');
+        ipcRenderer.on('update_available', () => {
+                ipcRenderer.removeAllListeners('update_available');
+                message.innerText = 'A new update is available. Downloading now...';
+                notification.classList.remove('hidden');
+        });
+        ipcRenderer.on('update_downloaded', () => {
+                ipcRenderer.removeAllListeners('update_downloaded');
+                message.innerText = 'Update Downloaded. It will be installed on restart. Restart now?';
+                restartButton.classList.remove('hidden');
+                notification.classList.remove('hidden');
+        });
+
+        function closeNotification() {
+                notification.classList.add('hidden');
+        }
+        function restartApp() {
+                ipcRenderer.send('restart_app');
+        }
 
         $(document).ready(function () {
                 $(document).on("click", "#start_backup", function () {
@@ -238,7 +281,7 @@
 
                 $(document).on("click", "#save_auto_backup_time_btn", function () {
                         let time = $("#backup_time").val()
-                        ipcRenderer.send('change_backup_time', {new_time: time})
+                        ipcRenderer.send('change_backup_time', { new_time: time })
                 })
         })
 

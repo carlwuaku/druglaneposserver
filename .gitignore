@@ -44,6 +44,9 @@ release-builds
 node_modules/
 jspm_packages/
 
+#electron-builder
+electron-builder.yml
+
 # TypeScript v1 declaration files
 typings/
 
