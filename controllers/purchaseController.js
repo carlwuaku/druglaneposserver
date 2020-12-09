@@ -456,13 +456,21 @@ router.get('/findReceiptsBetweenDates', async (req, res) => {
         let start = req.query.start_date == undefined ? helper.getToday() : req.query.start_date;
         let end = req.query.end_date == undefined ? helper.getToday() : req.query.end_date;
         let code = req.query.code;
+        let vendor = req.query.vendor == undefined ? null : req.query.vendor;
 
         let objects = null;
         if (code != undefined) {
             objects = await helper.search(code)
         }
         else {
-            objects = await helper.getMany(` date >= '${start}' and date <= '${end}' `, helper.table_name);
+            if(vendor == null){
+                objects = await helper.getMany(` date >= '${start}' and date <= '${end}' `, helper.table_name);
+
+            }
+            else{
+                objects = await helper.getMany(` date >= '${start}' and date <= '${end}' and vendor = ${vendor}`, helper.table_name);
+
+            }
 
         }
 

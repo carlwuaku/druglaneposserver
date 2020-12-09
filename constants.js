@@ -2,13 +2,14 @@
 const PORT = process.env.PORT || 5000;
 //exports.base_url = "http://localhost:"+PORT+"/";
 exports.base_url = "https://revolfoods.herokuapp.com/";
-exports.server_url = "https://druglanepms.calgadsoftwares.com/";
+exports.server_url = "https://druglanepms.calgadsoftwares.com";
+// exports.server_url = "http://localhost/stock";
 exports.customer_image_url = "assets/customer_images/";
 exports.customer_image_thumbnail_url = "assets/customer_images/thumbnails/";
-
+   
 exports.product_image_url = "assets/product_images/";
 exports.product_image_thumbnail_url = "assets/product_images/thumbnails/";
-exports.port = PORT;
+exports.port = PORT; 
 const electron = require('electron');
 exports.settings_location = (electron.app || electron.remote.app).getPath('userData');
 const path = require('path')
@@ -27,7 +28,8 @@ exports.default_config = {
   dbversion: 0,
   admin_set: 'no',
   company_set: 'no',
-  auto_backup_time: 19
+  auto_backup_time: 19,
+  last_sync: 0
 }
 const drug_info = require('./drug_info')
  
@@ -1450,8 +1452,89 @@ const migrations = [
     version: 90
   },
   {
-    query: drug_info.drug_info,
+    query: "",
     version: 91
+  },
+  {
+    query: ` 
+
+    PRAGMA foreign_keys=off;
+
+    BEGIN TRANSACTION;
+
+    CREATE TABLE if not exists drug_info (
+      id integer primary key autoincrement,
+      name text  NOT NULL,
+      pregnancy text default null,
+      pharmacodynamics text default null,
+      mechanism_of_action text default null,
+      pharmacokinetics text default null,
+      indications_and_usage text default null,
+      contraindications text default null,
+      drug_interactions_table text default null,
+      warnings_and_cautions text default null,
+      dosage_and_administration text default null,
+      adverse_reactions text default null,
+      information_for_patients text default null,
+      clinical_pharmacology text default null,
+      drug_abuse_and_dependence text default null,
+      teratogenic_effects text default null,
+      geriatric_use text default null,
+      overdosage text default null,
+      
+      created_on date default current_timestamp
+      
+          );
+          
+          COMMIT;
+    
+          PRAGMA foreign_keys=on;
+          
+    
+          `,
+    version: 92
+  },
+  {
+
+    query: `INSERT INTO permissions (permission_id, name, description) values 
+    (84, 'View Accounts', 'view accounts details/reports');`,
+    version: 93
+  },
+  {
+    query: `INSERT INTO role_permissions (role_id, permission_id) values 
+    (1, 84);`,
+    version: 94
+  },
+  {
+
+    query: `INSERT INTO permissions (permission_id, name, description) values 
+    (85, 'Manage Accounts', 'delete/add expenses/accounts details/reports');`,
+    version: 95
+  },
+  {
+    query: `INSERT INTO role_permissions (role_id, permission_id) values 
+    (1, 85);`,
+    version: 96
+  },
+  {
+    query: `
+    BEGIN TRANSACTION;
+    create table if not exists db_sync (
+      id integer primary key autoincrement,
+      type text  NOT NULL,
+      action text default null,
+      data text default null,
+      created_on text  default current_timestamp
+    );
+    COMMIT;
+    `,
+    version: 97
+  },
+  {
+    query: `
+     INSERT OR IGNORE INTO settings (name, value, module) values ('company_id', 0, 'System');
+    `,
+    version: 98
   }
  //
 ];

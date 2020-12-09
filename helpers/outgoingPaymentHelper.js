@@ -89,6 +89,29 @@ class OutgoingPaymentHelper extends dbClass {
         }
     }
 
+    async getAllTotalPaid(recipient='', start_date='', end_date=''){
+        let sql = `select sum(amount) as total from ${this.table_name} where 1
+          `;
+        if(start_date != ''){
+            sql += ` and date >= '${start_date}' `
+        }
+
+        if(end_date != ''){
+            sql += ` and date <= '${end_date}' `
+        }
+        if(recipient != ''){
+            sql += ` and recipient >= ${recipient} `
+        }
+
+        try {
+            await this.getConnection();
+            let q = await this.connection.get(sql);
+            return q.total == null ? 0 : q.total;;
+        } catch (error) {
+            log.error(error);
+            throw new Error(error)
+        }
+    }
 
  }
 

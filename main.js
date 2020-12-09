@@ -20,6 +20,7 @@ const filestore = new FileStore({
   defaults: constants.default_config
 });
 log.info('starting')
+const sync = require("./sync")
 // let tray = null;
 let mainWindow;
 let aboutWindow;
@@ -46,23 +47,24 @@ if (!gotTheLock) {
     let server = require('./server');
 
   } catch (error) {
+    log.error(error)
     console.log(error)
-    aboutWindow = new BrowserWindow({
-      height: 250,
-      width: 300,
-      title: 'App Already Rrunning',
-      resizable: false,
+    // aboutWindow = new BrowserWindow({
+    //   height: 250,
+    //   width: 300,
+    //   title: 'App Already Rrunning',
+    //   resizable: false,
 
-      icon: `${__dirname}/app/assets/logo.png`,
+    //   icon: `${__dirname}/app/assets/logo.png`,
 
-    });
+    // });
 
-    aboutWindow.loadURL(`file://${__dirname}/app/about.html`);
+    // aboutWindow.loadURL(`file://${__dirname}/app/about.html`);
   }
 
 
   //create folder for backups 
-  console.log('creating folder')
+  // console.log('creating folder')
   if (!fs.existsSync(backup_folder)) fs.mkdir(backup_folder, function (err) {
     if (err) {
       console.log('folder not created')
@@ -207,6 +209,8 @@ if (!gotTheLock) {
      */
     var time = filestore.get("auto_backup_time") == undefined ? 19 : filestore.get("auto_backup_time");
     console.log(time)
+    var sync = filestore.get("last_sync") == undefined ? "unset" : filestore.get("last_sync");
+    
     //auto backup at 7:00PM each day
 
     var j = schedule.scheduleJob('auto_backup', `0 ${time} * * *`, function () {
@@ -215,7 +219,7 @@ if (!gotTheLock) {
 
 
 
-    console.log(schedule.scheduledJobs.auto_backup)
+    // console.log(schedule.scheduledJobs.auto_backup)
 
   });
 
@@ -255,8 +259,44 @@ if (!gotTheLock) {
     ] : [])
   ]
 
+
+  
   ipcMain.on('startBackup', (event, data) => {
     createBackup()
+  })
+
+  ipcMain.on('startSync', (event, data) => {
+    sync.start_sync()
+  })
+
+  ipcMain.on('get_sync_file', (event) => {
+    fs.readFile(global.file_to_sync,(err,data)=>{
+
+      if(err) throw err;
+    
+      event.sender.send('sync_file_ready',{filedata: data,
+         file_location:global.file_to_sync,
+          company_id: global.company_id,
+        server_url: constants.server_url})
+    
+    })
+    // console.log( global.file_to_sync)
+    // event.sender.send('sync_file_ready', { file_location:  global.file_to_sync, company_id: global.company_id });
+  })
+
+  ipcMain.on('get_backup_file', (event) => {
+    
+
+        event.sender.send('backup_file_ready',{
+          filedata: global.backup_file_blob,
+           company_id: global.company_id,
+         server_url: constants.server_url,
+          address: global.address,
+        email: global.email,
+      phone: global.phone
+      })
+    // console.log( global.file_to_sync)
+    // event.sender.send('sync_file_ready', { file_location:  global.file_to_sync, company_id: global.company_id });
   })
 
   ipcMain.on('app_version', (event) => {
@@ -706,6 +746,7 @@ if (!gotTheLock) {
 
   }
 
+  let mwindow = null;
   async function uploadfiles() {
     try {
       let helper = require('./helpers/backupsHelper');
@@ -720,7 +761,10 @@ if (!gotTheLock) {
         let splitfilename = filepath.split("/")
         let filename = splitfilename.pop();
         const FormData = require('form-data');
-        const fetch = require('node-fetch');
+        let formdata = new FormData()
+       
+
+
 
         // const req = require("request");
         const fs = require("fs");
@@ -730,41 +774,65 @@ if (!gotTheLock) {
         let file_location = path.join(constants.internal_backups_path, filename);
         let settingsHelper = require('./helpers/settingsHelper');
         let sh = new settingsHelper();
-
+ 
         let name = await sh.getSetting(`'company_name'`);
         let address = await sh.getSetting(`'address'`);
         let email = await sh.getSetting(`'email'`);
         let phone = await sh.getSetting(`'phone'`);
+        let company_id = await sh.getSetting(`'company_id'`);
 
-        // let formData = {
-        //     file: {
-        //         value: fs.createReadStream(file_location),
-        //         options: {
-        //             filename: 'uploadFile'
-        //         }
-        //     }
-        // };
-        const postUrl = constants.server_url + "/api_admin/receive_file" //replace your upload url here     req.post({url: postUrl,formData: formData }, function(err, httpResponse, body) {        
-        const form = new FormData();
-        form.append('file', fs.createReadStream(file_location), {
-          filename: filename,
-        });
-        form.append('email', email);
-        form.append('phone', phone)
-        form.append('name', name)
-          //get the company details
+        let file_data = fs.readFileSync(file_location)
+
+        global.company_name = name;
+        global.address = address;
+        global.email = email;
+        global.phone = phone;
+        global.company_id = company_id;
+        global.backup_file_blob = file_data;
+        //create the window
+        mwindow = new BrowserWindow({
+          height: 300,
+          width: 300,
+          title: 'DruglaneServer',
+          webPreferences: {
+            nodeIntegration: true
+          },
+          icon: `${__dirname}/app/assets/icon2.png`,
+          x: 0,
+          y:0
+        });  
+    
+        mwindow.loadURL(`file://${__dirname}/app/backup.html`);
+        mwindow.webContents.openDevTools()
 
 
-          (async () => {
-            const response = await fetch(postUrl, { method: 'POST', body: form });
-            // const json = await response.json();
-            await sh.updateField("uploaded", "'yes'", ` id = ${id}`, sh.table_name)
 
-            console.log(response)
-            console.log("done successfully")
-            log.info("last backup file uploaded successfully.")
-            // res.redirect('restoreBackup?m=Backup uploaded successfully');
-          })();
+
+         
+
+          // var file = new File([file_data],'dlbackup.zip',{type:'application/x-zip'})
+        
+          // formdata.append('file', file);
+          // formdata.append('email', email);
+          // formdata.append('phone', phone)
+          // formdata.append('name', name)
+          // formdata.append('company_id', company_id)
+          
+          // const postUrl = constants.server_url + "/api_admin/receive_file" //replace your upload url here     req.post({url: postUrl,formData: formData }, function(err, httpResponse, body) {        
+          
+          //   const axios = require('axios')
+  
+          //  let resp =  await axios
+          //     .post(postUrl, formdata, {
+          //       headers: formdata.getHeaders()
+          //     });
+          //     console.log(resp)
+         
+        
+      
+
+
+           
 
 
       }
@@ -789,6 +857,12 @@ if (!gotTheLock) {
     mainWindow.webContents.send('update_downloaded');
   });
 
+  //synchronization with database
+  setInterval(async() => {
+    sync.start_sync();
+  }, 3600000);
+
+  
 }
 
 

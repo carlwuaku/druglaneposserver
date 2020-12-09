@@ -45,7 +45,7 @@ router.get('/getList', async (req, res) => {
         for (var i = 0; i < objects.length; i++) {
             let obj = objects[i]
             obj.stock = obj.current_stock;
-
+            obj.stock_value = (obj.current_stock * obj.price).toLocaleString()
             try {
                 let avg = await salesDetailsHelper.getAverageMonthlyQuantities(obj.id);
                 let avg_sum = 0;
@@ -55,7 +55,7 @@ router.get('/getList', async (req, res) => {
                         avg_sum += a.average;
                         count++;
                     });
-                    obj.average_monthly = (avg_sum / count).toFixed(2);
+                    obj.average_monthly = (avg_sum / count).toLocaleString();
 
                 }
             } catch (error) {
@@ -192,7 +192,7 @@ router.get('/search', async (req, res) => {
                         avg_sum += a.average;
                         count++;
                     });
-                    obj.average_monthly = (avg_sum / count).toFixed(2);
+                    obj.average_monthly = (avg_sum / count).toLocaleString();
 
                 }
             } catch (error) {
@@ -275,20 +275,20 @@ router.post('/saveBranchDetails', async (req, res) => {
         }
 
         //delete the active ingredietns and re-insert them
-        try {
+        // try {
 
-            let ItemAiHelperClass = require("../helpers/ProductIngredientHelper");
-            let itemAiHelper = new ItemAiHelperClass();
-            let ais = req.body.new_active_ingredients.split("|||");
-            console.log(ais)
-            await itemAiHelper.delete(`product = ${id}`, itemAiHelper.table_name)
-            for (var x = 0; x < ais.length; x++) {
-                await itemAiHelper.insert({ ingredient: ais[x], product: id }, itemAiHelper.table_name)
-            }
-        } catch (error) {
-            console.log(error)
+        //     let ItemAiHelperClass = require("../helpers/ProductIngredientHelper");
+        //     let itemAiHelper = new ItemAiHelperClass();
+        //     let ais = req.body.new_active_ingredients.split("|||");
+        //     // console.log(ais)
+        //     await itemAiHelper.delete(`product = ${id}`, itemAiHelper.table_name)
+        //     for (var x = 0; x < ais.length; x++) {
+        //         await itemAiHelper.insert({ ingredient: ais[x], product: id }, itemAiHelper.table_name)
+        //     }
+        // } catch (error) {
+        //     log.error(error)
 
-        }
+        // }
 
 
         res.json({ status: '1' })
@@ -414,13 +414,14 @@ router.post('/restore', async (req, res) => {
 router.get('/findById', async (req, res) => {
     let id = req.query.id;
     const DetailsHelper = require('../helpers/salesDetailsHelper.js');
-        const salesDetailsHelper = new DetailsHelper();
+    const salesDetailsHelper = new DetailsHelper();
     try {
 
         let where = ` id = ${id} `;
         let item = await helper.getItem(where, helper.table_name)
         item.stock = item.current_stock;
         item.out_of_stock = item.stock < 1;
+        item.stock_value = (item.stock * item.price).toLocaleString()
         let ItemAiHelperClass = require("../helpers/ProductIngredientHelper");
         let itemAiHelper = new ItemAiHelperClass();
 
@@ -440,10 +441,10 @@ router.get('/findById', async (req, res) => {
         }
         let this_month = helper.setDates("this_month")
         let last_month = helper.setDates("last_month")
-        let q1 = helper.setDates("first_quarter")
-        let q2 = helper.setDates("second_quarter")
-        let q3 = helper.setDates("third_quarter")
-        let q4 = helper.setDates("fourth_quarter")
+        // let q1 = helper.setDates("first_quarter")
+        // let q2 = helper.setDates("second_quarter")
+        // let q3 = helper.setDates("third_quarter")
+        // let q4 = helper.setDates("fourth_quarter")
 
         item.active_ingredients = ais == null ? [] : ais;
         let this_month_quantity = await salesDetailsHelper.getTotalQuantityAndAmount(id, this_month.start_date, this_month.end_date)
@@ -471,11 +472,11 @@ router.get('/getStock', async (req, res) => {
     let id = req.query.id;
     try {
         let count = await helper.calculateCurrentStock(id);
-        console.log(count)
+        // console.log(count)
         res.json({ status: '1', data: count })
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        log.error(error)
         res.json({ status: '-1' })
     }
 });
@@ -507,7 +508,7 @@ router.get('/getActiveIngredients', async (req, res) => {
         res.json({ status: '1', data: active_ingredients, id: id })
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        log.error(error)
         res.json({ status: '-1', data: [] })
     }
 });
@@ -520,7 +521,7 @@ router.get('/getCategoryCounts', async (req, res) => {
         res.json({ status: '1', data: data })
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        log.error(error)
         res.json({ status: '-1' })
     }
 });
@@ -541,7 +542,7 @@ router.get('/createStockAdjustmentSession', async (req, res) => {
         res.json({ status: '1', data: code })
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        log.error(error)
         res.json({ status: '-1' })
     }
 });
@@ -575,7 +576,7 @@ router.get('/getLatestSession', async (req, res) => {
         }
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        log.error(error)
         res.json({ status: '-1' })
     }
 });
@@ -1054,10 +1055,10 @@ router.get('/getStockAdjustmentsByCode', async (req, res) => {
             obj.name = product.name;
             obj.difference = difference;
             obj.total_cost = difference * cost_price;
-            obj.total_damaged = (price * obj.quantity_damaged).toFixed(2)
-            obj.total_expired = (price * obj.quantity_expired).toFixed(2)
+            obj.total_damaged = (price * obj.quantity_damaged).toLocaleString()
+            obj.total_expired = (price * obj.quantity_expired).toLocaleString()
 
-            obj.total = (difference * price).toFixed(2);
+            obj.total = (difference * price).toLocaleString();
 
         }
         let num_excess = await stockHelper.getNumberPositive(code);
@@ -1075,11 +1076,11 @@ router.get('/getStockAdjustmentsByCode', async (req, res) => {
             number_excess: num_excess,
             number_loss: num_loss,
             number_neutral: num_neutral,
-            total_excess: total_excess == null ? 0.00 : total_excess.toFixed(2),
-            total_loss: total_loss == null ? 0.00 : total_loss.toFixed(2),
-            total_difference: total_difference == null ? 0.00 : total_difference.toFixed(2),
-            total_expired: total_expired == null ? 0.00 : total_expired.toFixed(2),
-            total_damaged: total_damaged == null ? 0.00 : total_damaged.toFixed(2),
+            total_excess: total_excess == null ? 0.00 : total_excess.toLocaleString(),
+            total_loss: total_loss == null ? 0.00 : total_loss.toLocaleString(),
+            total_difference: total_difference == null ? 0.00 : total_difference.toLocaleString(),
+            total_expired: total_expired == null ? 0.00 : total_expired.toLocaleString(),
+            total_damaged: total_damaged == null ? 0.00 : total_damaged.toLocaleString(),
             data: objects
         })
     } catch (error) {
@@ -1106,12 +1107,12 @@ router.get('/getPendingStockAdjustmentsByCode', async (req, res) => {
             let price = obj.current_price;
             let cost_price = obj.cost_price;
             let product = await helper.getItem(` id = ${obj.product} `, helper.table_name);
-            obj.total_damaged = (price * obj.quantity_damaged).toFixed(2)
-            obj.total_expired = (price * obj.quantity_expired).toFixed(2)
+            obj.total_damaged = (price * obj.quantity_damaged).toLocaleString()
+            obj.total_expired = (price * obj.quantity_expired).toLocaleString()
             obj.name = product.name;
             obj.difference = difference;
             obj.total_cost = difference * cost_price;
-            obj.total = (difference * price).toFixed(2);
+            obj.total = (difference * price).toLocaleString();
 
         }
         let num_excess = await stockHelper.getNumberPositive(code);
@@ -1128,11 +1129,11 @@ router.get('/getPendingStockAdjustmentsByCode', async (req, res) => {
             number_excess: num_excess,
             number_loss: num_loss,
             number_neutral: num_neutral,
-            total_excess: total_excess == null ? 0.00 : total_excess.toFixed(2),
-            total_loss: total_loss == null ? 0.00 : total_loss.toFixed(2),
-            total_difference: total_difference == null ? 0.00 : total_difference.toFixed(2),
-            total_expired: total_expired == null ? 0.00 : total_expired.toFixed(2),
-            total_damaged: total_damaged == null ? 0.00 : total_damaged.toFixed(2),
+            total_excess: total_excess == null ? 0.00 : total_excess.toLocaleString(),
+            total_loss: total_loss == null ? 0.00 : total_loss.toLocaleString(),
+            total_difference: total_difference == null ? 0.00 : total_difference.toLocaleString(),
+            total_expired: total_expired == null ? 0.00 : total_expired.toLocaleString(),
+            total_damaged: total_damaged == null ? 0.00 : total_damaged.toLocaleString(),
             data: objects
         })
     } catch (error) {
@@ -1198,7 +1199,7 @@ router.get('/getStockOutList', async (req, res) => {
 
 router.get('/getStockNearMinCount', async (req, res) => {
     try {
-        let data = await helper.count('id', helper.table_name, ` current_stock <= min_stock `)
+        let data = await helper.count('id', helper.table_name, ` current_stock <= min_stock and current_stock > 0`)
 
         res.json({ status: '1', data: data })
     } catch (error) {
@@ -1212,7 +1213,7 @@ router.get('/getStockNearMinCount', async (req, res) => {
 
 router.get('/hasStockNearMin', async (req, res) => {
     try {
-        let q = await helper.count('id', helper.table_name, ` current_stock  <= min_stock  `)
+        let q = await helper.count('id', helper.table_name, ` current_stock  <= min_stock  and current_stock > 0 `)
         let data = q > 0;
         res.json({ status: '1', data: data })
     } catch (error) {
@@ -1225,7 +1226,7 @@ router.get('/hasStockNearMin', async (req, res) => {
 
 router.get('/getStockNearMinList', async (req, res) => {
     try {
-        let objects = await helper.getMany(` current_stock  <= min_stock `, helper.table_name)
+        let objects = await helper.getMany(` current_stock  <= min_stock  and current_stock > 0 `, helper.table_name)
         for (var i = 0; i < objects.length; i++) {
             var obj = objects[i];
             var stock = obj.current_stock;
@@ -1453,7 +1454,7 @@ router.get('/hasExpiry', async (req, res) => {
 
         let q = await helper.count('id', helper.table_name, ` expiry >= '${start}' and expiry <= '${end}'  and current_stock > 0 `)
         let data = q > 0;
-        res.json({ status: '1', data: data })
+        res.json({ status: '1', data: data, count: q })
     } catch (error) {
         await helper.closeConnection();
         console.log(error)
@@ -1466,10 +1467,17 @@ router.get('/getExpiryList', async (req, res) => {
     try {
         let defs = helper.setDates('this_month')
         let start = req.query.start_date == undefined ? defs.start_date : req.query.start_date;
+
         let end = req.query.end_date == undefined ? defs.end_date : req.query.end_date;
+        let objects = null;
+        if (start == 'all') {
+            objects = await helper.getMany(`   expiry <= '${end}'  and current_stock > 0  `, helper.table_name)
 
+        }
+        else {
+            objects = await helper.getMany(`  expiry >= '${start}' and expiry <= '${end}'  and current_stock > 0  `, helper.table_name)
 
-        let objects = await helper.getMany(`  expiry >= '${start}' and expiry <= '${end}'  and current_stock > 0  `, helper.table_name)
+        }
         for (var i = 0; i < objects.length; i++) {
             var obj = objects[i];
             var stock = obj.current_stock;
@@ -1496,20 +1504,51 @@ router.get('/getStockValueList', async (req, res) => {
         let defs = helper.setDates('this_month')
         let start = req.query.start_date == undefined ? defs.start_date : req.query.start_date;
         let end = req.query.end_date == undefined ? defs.end_date : req.query.end_date;
+        let range = helper.getDatesBetween(start, end);
+        let last_value = 0;
+        let objects = []
+
+        const SalesDetailsHelper = require('../helpers/salesDetailsHelper.js');
+        const salesDetailsHelper = new SalesDetailsHelper();
+
+        const purchaseDetailsHelper = require("../helpers/purchaseDetailsHelper")
+        const pDetailsHelper = new purchaseDetailsHelper()
+
+        const tDetailsClass = require('../helpers/transferDetailsHelper.js');
+        const tdetailsHelper = new tDetailsClass();
+        const rDetailsClass = require('../helpers/receivedTransferDetailsHelper.js');
+        const rdetailsHelper = new rDetailsClass();
 
 
-        let objects = await stockValueHelper.getMany(`  date >= '${start}' and date <= '${end}' `, stockValueHelper.table_name)
-        for (var i = 0; i < objects.length; i++) {
-            var obj = objects[i];
-            var sv = obj.selling_value;
-            var cv = obj.cost_value;
-            //loss, profit, ...
+        for (var i = 0; i < range.length; i++) {
+            var curr = {}
+            var date = range[i];
+            curr.date = date;
+            var closing_stock = await stockValueHelper.getStockValueByDate(date);
+            curr.closing_stock = closing_stock.toLocaleString();
+            var opening_stock = 0;
 
-            obj.selling_value = helper.dateDifference(obj.expiry) == 'before';
-            obj.out_of_stock = stock < 1;
-            obj.near_min = stock > 0 && stock <= min;
-            obj.near_max = stock >= max;
-            obj.stock = obj.current_stock
+            if (i == 0) {
+                let yestee = helper.getYesterday(date)
+                let yesterday_value = await stockValueHelper.getStockValueByDate(yestee);
+                opening_stock = yesterday_value;
+            }
+            else {
+                opening_stock = last_value;
+            }
+            last_value = closing_stock;
+            curr.opening_stock = opening_stock.toLocaleString()
+            curr.difference = (opening_stock - closing_stock).toLocaleString()
+            let sales = await salesDetailsHelper.getTotalSales(date, date);
+            let purchases = await pDetailsHelper.getTotalPurchase(date, date)
+            let transfers_out = await tdetailsHelper.getTotal(date, date)
+            let transfers = await rdetailsHelper.getTotal(date, date)
+
+            curr.sales = sales.toLocaleString()
+            curr.purchases = purchases.toLocaleString()
+            curr.transfers_out = transfers_out.toLocaleString()
+            curr.transfers = transfers.toLocaleString()
+            objects.push(curr)
         }
         res.json({ status: '1', data: objects })
     } catch (error) {
@@ -1543,7 +1582,7 @@ router.get('/hasExpired', async (req, res) => {
 
         let q = await helper.count('id', helper.table_name, ` expiry <= '${start}'   and current_stock > 0 `)
         let data = q > 0;
-        res.json({ status: '1', data: data })
+        res.json({ status: '1', data: data, count: q })
     } catch (error) {
         await helper.closeConnection();
         console.log(error)
@@ -1603,7 +1642,7 @@ router.get('/getStockValues', async (req, res) => {
         let cost_value = await stockValueHelper.getCostValue();
         let selling_value = await stockValueHelper.getSellingValue();
 
-        res.json({ status: '1', data: { cost_value: cost_value.toFixed(2), selling_value: selling_value.toFixed(2) } })
+        res.json({ status: '1', data: { cost_value: cost_value.toLocaleString(), selling_value: selling_value.toLocaleString() } })
     } catch (error) {
         await helper.closeConnection();
         res.json({ status: '-1', data: null })

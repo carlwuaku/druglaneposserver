@@ -311,6 +311,17 @@ class Db {
         return yyyy + '-' + mm_string + '-' + dd_string;
     }
 
+    getYesterday(date){
+        let start_date = this.formatDate(new Date(date));
+      return  this.formatDate(this.addDaystoDate(-1, start_date));
+    }
+
+    addDaystoDate(days, date) {
+        var dat = new Date(date);
+        dat.setDate(dat.getDate() + days);
+        return dat;
+      }
+
     /**
      *   get the start and end dates
      * @param {String} quick_option 
@@ -327,7 +338,7 @@ class Db {
         var end_date;
         switch (quick_option) {
             case "all":
-                start_date = this.formatDate(new Date("2015-" + "01-01"));
+                start_date = this.formatDate(new Date("1900-" + "01-01"));
                 end_date = this.getToday();
                 break;
             case "today":
@@ -819,6 +830,28 @@ class Db {
             //this.connection.close().then(succ => { }, err => { })
             throw new Error(err)
         }
+    }
+
+    async getManyFieldGroup(fields,conditions, group_by, table, limit = null, offset = 0) {
+        //use placeholders for the variables
+        let sql = `select ${fields} from ${table} where ${conditions}`;
+        if (limit != null) {
+            sql += ` limit ${limit} offset ${offset}`
+        }
+        sql += ` group by ${group_by} offset ${offset}`
+        try {
+            await this.getConnection();
+            let query = await this.connection.all(sql);
+
+            return query;//an array of objects
+        } catch (err) {
+            log.error(sql);
+            console.log(sql)
+            log.error(err);
+            //this.connection.close().then(succ => { }, err => { })
+            throw new Error(err)
+        }
+
     }
 
     /**

@@ -1,0 +1,495 @@
+/* You can add global styles to this file, and also import other style files */
+
+.col-pink {
+  color: #E91E63 !important;
+}
+
+.bg-pink {
+  background-color: #E91E63 !important;
+  color: #fff;
+}
+
+.bg-pink .content .text, .bg-pink .content .number {
+  color: #fff !important;
+}
+
+.bg-pink-hover:hover {
+  background-color: rgb(231, 104, 104) !important;
+  color: #fff !important;
+}
+
+.starthidden {
+  display: none;
+}
+
+.btn-dark {
+  background-color: #033661 !important;
+  color: white;
+}
+
+.thin-border {
+  border: solid thin;
+}
+
+.infobox {
+  position: fixed;
+  z-index: 3999;
+  bottom: 0px;
+  left: 0px;
+}
+
+.upinfobox {
+  position: fixed;
+  z-index: 3999;
+  top: 75px;
+  right: 0px;
+}
+
+.upinfobox {
+  position: fixed;
+  z-index: 3999;
+  top: 125px;
+  right: 0px;
+}
+
+.centerinfobox {
+  position: fixed;
+  z-index: 3999;
+  top: 50%;
+  right: 46%;
+  box-shadow: 1px 5px 17px 12px #97c0f3;
+}
+
+.fill_box {
+  height: 100%;
+  width: 100%;
+}
+
+.capitalize {
+  text-transform: capitalize
+}
+
+.fixed_card {
+  overflow: auto
+}
+
+@media print {
+  .no-print {
+    display: none;
+  }
+  section {
+    padding: 0px;
+    margin: 0px !important;
+    top: 0px;
+    left: 0px;
+  }
+  .card {
+    all: unset;
+  }
+}
+
+.div-500 {
+  max-height: 500px;
+  overflow: auto;
+}
+
+.black_bg {
+  background-color: black
+}
+
+.float {
+  position: fixed;
+  width: 50px;
+  height: 50px;
+  bottom: 30px;
+  right: 30px;
+  background-color: #0C9;
+  color: #FFF;
+  border-radius: 50px;
+  text-align: center;
+  box-shadow: 2px 2px 3px #999;
+}
+
+.my-float {
+  margin-top: 22px;
+}
+
+.sticky_top {
+  position: sticky;
+  position: -webkit-sticky;
+  position: -moz-sticky;
+  position: -ms-sticky;
+  position: -o-sticky;
+  top: 75px;
+  z-index: 15;
+}
+
+.sticky_bottom {
+  position: sticky;
+  position: -webkit-sticky;
+  position: -moz-sticky;
+  position: -ms-sticky;
+  position: -o-sticky;
+  z-index: 15;
+  bottom: 5px;
+  padding: 0px 0px 5px;
+  background-color: white;
+}
+
+.link {
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.pointer {
+  cursor: pointer;
+}
+
+.passport_image {
+  height: 75px;
+  margin: 5px;
+}
+
+.white_bg {
+  background-color: white;
+  padding: 5px 5px 5px;
+  background-color: white;
+  /* border: thin solid; */
+  border-radius: 5px;
+  margin-bottom: 5px;
+  box-shadow: 1px 1px 5px lightgrey;
+}
+
+.btn-white {
+  color: #333;
+  background-color: #fff;
+  border-color: #ccc;
+}
+
+.text-white {
+  color: white;
+}
+
+footer {
+  padding-top: 10px;
+  border-top: thin solid black;
+}
+
+.big-text {
+  font-size: 20px;
+  line-height: 31px;
+}
+
+/* h1, h2, h3, h4, h5 {
+  font-family: 'Merriweather', sans-serif;
+  margin-top: 0px;
+  font-weight: 700;
+} */
+
+body {
+  font-family: 'Muli', 'Trebuchet MS', Montserrat, Calibri, sans-serif;
+  /* font-size: 17px; */
+  background-color: #f4f3ef;
+}
+
+.footer {
+  max-height: 30px;
+  padding: 0px !important;
+}
+
+.footer-text {
+  font-size: 12px !important;
+}
+
+.dashboard-card {
+  /* background-color: #1a3014; */
+  color: 1a3014;
+  transition: 0.5s;
+  border-radius: 0px;
+  border: 1px solid transparent;
+  box-shadow: 0 1px 15px 1px rgba(69, 65, 78, .08);
+  transition: all .2s ease;
+  margin-bottom: 20px !important;
+}
+
+.dashboard-card:hover {
+  transform: scale(1.03);
+}
+
+.container-fluid {
+  padding-left: 0px;
+  padding-right: 0px;
+}
+
+.large-icon {
+  font-size: 50px;
+}
+
+.padded {
+  padding-top: 45px;
+  padding-bottom: 45px;
+}
+
+.bd-navbar {
+  min-height: 4rem;
+  background-color: #2196f3;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, .05), inset 0 -1px 0 rgba(0, 0, 0, .1);
+}
+
+.margins {
+  margin-bottom: 35px;
+}
+
+.light-bg {
+  background-color: #ebe2f9;
+}
+
+.right-border {
+  border-right: thin solid black
+}
+
+.transparent_div {
+  background-color: #563d7c;
+  opacity: 0.8;
+}
+
+.text-shadow {
+  text-shadow: 2px 2px 3px black
+}
+
+.filters {
+  background-color: #fbead5;
+  padding: 5px;
+}
+
+.link {
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+label {
+  font-weight: bold;
+}
+
+@media print {
+  .no-print {
+    visibility: visible
+  }
+  body {
+    font-size: 20px;
+  }
+}
+
+.navbar-dark .navbar-nav .nav-link {
+  color: white;
+  /* color: rgba(255,255,255,.5); */
+}
+
+.btn, .badge {
+  margin: 2px;
+}
+
+@media screen {
+  #print_space {
+    display: none;
+  }
+}
+
+@media print {
+  #print_space {
+    display: block;
+  }
+}
+
+.fixed {
+  position: fixed;
+}
+
+.sales_items {
+  height: 350px;
+  overflow: auto
+}
+
+#sales_search {
+  padding-left: 20px;
+}
+
+.fixed_height, .fixed-length {
+  max-height: 450px;
+  overflow: auto;
+}
+
+.search_results {
+  max-height: 350px;
+  overflow: auto;
+}
+
+#invoice {
+  page-break-after: always;
+}
+
+#invoice:last-child {
+  page-break-after: avoid;
+}
+
+#invoice {
+  display: none
+}
+
+.bg-royal {
+  background-image: linear-gradient(to top, #141e30, #243b55) !important;
+}
+
+.btn-default {
+  background-image: linear-gradient(to top, #141e30, #243b55) !important;
+  color: wheat;
+}
+
+.paper-card {
+  border-radius: 6px;
+  box-shadow: 0 2px 2px rgba(204, 197, 185, 0.5);
+  background-color: #FFFFFF;
+  color: #252422;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.pad-20 {
+  padding-top: 20px;
+  padding-bottom: 20px;
+}
+
+.fixed-bottom {
+  position: fixed;
+  bottom: 0px;
+  margin-bottom: 0px !important;
+}
+
+.sales-fixed-bottom {
+  position: fixed;
+  bottom: 0px;
+  margin-bottom: 0px !important;
+  width: 100%;
+}
+
+.navbar-dark .navbar-nav .nav-link {
+  color: wheat;
+  /* color: rgba(255,255,255,.5); */
+}
+
+.dropdown-item:hover {
+  background-color: wheat;
+}
+
+.container {
+  padding-left: 0px !important;
+  padding-right: 0px !important;
+}
+
+.card {
+  margin-bottom: 10px;
+}
+
+.animate-me {
+  -webkit-animation: bgcolorchange 4s infinite;
+  /* Chrome, Safari, Opera */
+  animation: 4s infinite bgcolorchange;
+  transition: ease all;
+}
+
+@keyframes bgcolorchange {
+  0% {
+    background: #e98585;
+    color: #660909;
+  }
+  50% {
+    background: whitesmoke;
+    color: #664f09;
+  }
+  100% {
+    background: #e98585;
+    color: #660909;
+  }
+}
+
+/* Chrome, Safari, Opera */
+
+@-webkit-keyframes bgcolorchange {
+  0% {
+    background: #e98585;
+    color: #660909;
+  }
+  50% {
+    background: whitesmoke;
+    color: #664f09;
+  }
+  100% {
+    background: #e98585;
+    color: #660909;
+  }
+}
+
+#sidebar {
+  position: fixed;
+  top: 65px;
+  left: 0px;
+  /* padding: 5px; */
+  border-right: thin solid greenyellow;
+  width: 45px;
+  /* padding-bottom: 10px; */
+  background-color: whitesmoke;
+  padding-bottom: 10px;
+  padding-top: 10px;
+}
+
+.sidebar_item {
+  border-bottom: thin solid black;
+  /* background-color: #241616; */
+  padding: 5px 10px 5px 10px;
+}
+
+.sidebar_item:hover {
+  color: #5f3c3c;
+}
+
+.flex-container {
+  display: flex;
+  background-color: rgb(243, 243, 243);
+  border: thin solid rgb(151, 151, 151);
+}
+
+.flex-container>div {
+  padding: 20px;
+}
+
+.small-margins {
+  margin: 10px;
+}
+
+
+.bg{
+  background-blend-mode: overlay;
+  background-image: url(../images/geometric-bg-overlay-01-1024x427.jpg),
+  linear-gradient(135deg,#53a0fd 0%,#4161d4 100%)!important;
+  background-attachment: fixed;
+  background-size: cover;
+}
+
+.title{
+  font-size: 60px;
+  font-weight: 600;
+}
+
+#notification {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  width: 200px;
+  padding: 20px;
+  border-radius: 5px;
+  background-color: white;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+}
+.hidden {
+  display: none;
+}

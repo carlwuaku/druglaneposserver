@@ -101,12 +101,14 @@ $(document).ready(function () {
                 $("#digital_address").html(js.data.digital_address);
                 $("#phone").html(js.data.phone);
                 $("#email").html(js.data.email);
+                $("#company_id").html(js.data.company_id);
 
                 $("#act_name_input").val(js.data.name);
                 $("#act_address_input").val(js.data.address);
                 $("#act_digital_address_input").val(js.data.digital_address);
                 $("#act_phone_input").val(js.data.phone);
                 $("#act_email_input").val(js.data.email);
+                $("#act_company_id").val(js.data.company_id);
             }
             else{
               

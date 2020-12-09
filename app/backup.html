@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Druglane POS Server Sync</title>
+    <meta http-equiv="Content-security-Policy" content="script-src 'self' 'unsafe-inline'">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="font-awesome/css/font-awesome.min.css">
+    <style>
+        .hidden{
+            display: none;
+        }
+    </style>
+</head>
+
+<body class="text-center">
+    <span id="loading_icon">
+        <h3>Uploading backup to cloud server. Please wait...</h3>
+    <i  class="fa fa-refresh fa-spin fa-3x"></i>
+    </span>
+    <span id="success_icon" class="hidden text-success">
+        <h5>Synchronizing completed successfully!</h5>
+        <i  class="hidden  fa fa-check-circle fa-3x"></i>
+    </span>
+    <span id="error_icon" class="hidden text-danger">
+        <h5>An error occured. We'll try again in about an hour. If this occurs again please 
+            contact us.
+        </h5>
+        <i  class=" fa fa-exclamation-triangle fa-3x"></i>
+    </span>
+
+
+    <script>if (typeof module === 'object') { window.module = module; module = undefined; }</script>
+
+    <script src="js/jquery.min.js"></script>
+
+    <script src="js/popper.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+
+
+    <script >
+
+        const { ipcRenderer } = require('electron');
+        const fs = require('fs');
+        const version = document.getElementById('version'); 
+        ipcRenderer.send('get_backup_file');
+        
+
+
+        ipcRenderer.on('backup_file_ready', (e, data) => {
+                // alert(data.file_location);
+                var fd = new FormData();
+                // var files = $('#file')[0].files;
+                
+               var file = new File([data.filedata],'dlbackup.zip',{type:'application/x-zip'})
+                fd.append('upload_file', file);
+                fd.append('company_id', data.company_id)
+                fd.append('email', data.email);
+                fd.append('phone',  data.phone)
+                fd.append('name',  data.name)
+
+
+                console.log(data)
+
+                    $.ajax({
+                        url: data.server_url+'/api_admin/receive_file',
+                        type: 'post',
+                        data: fd,
+                        contentType: false,
+                        processData: false,
+                        success: function (response) {
+                            $("#loading_icon").fadeOut("fast")
+                            $("#error_icon").fadeOut("fast")
+                            $("#success_icon").fadeIn("fast")
+                            setTimeout(() => {
+                                window.close();  
+                            }, 3000);
+                            
+                            // if (response != 0) {
+                            //     $("#img").attr("src", response);
+                            //     $(".preview img").show(); // Display image element
+                            // } else {
+                            //     alert('file not uploaded');
+                            // }
+                        },
+                        error: function(err){
+                            console.log(err);
+                            $("#loading_icon").fadeOut("fast")
+                            $("#error_icon").fadeIn("fast")
+                            $("#success_icon").fadeOut("fast")
+                            setTimeout(() => {
+                                window.close();  
+                            }, 3000);
+                        }
+                    });
+          
+
+
+
+        })
+
+        
+
+
+        $(document).ready(function () {
+            // $(document).on("click", "#start_backup", function () {
+            //     ipcRenderer.send('startBackup')
+            // })
+
+            // $(document).on("click", "#save_auto_backup_time_btn", function () {
+            //     let time = $("#backup_time").val()
+            //     ipcRenderer.send('change_backup_time', { new_time: time })
+            // })
+        })
+
+    </script>
+</body>
+
+</html>

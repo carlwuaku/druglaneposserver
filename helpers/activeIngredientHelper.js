@@ -8,7 +8,7 @@ const log = require('electron-log');
 
 class ActiveIngredientHelper extends dbClass {
 
-    constructor() {
+    constructor() { 
         super();
     }
     fields = ["name", "indication", "side_effect", "caution",

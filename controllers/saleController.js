@@ -114,7 +114,7 @@ router.post('/saveBulk', async (req, res) => {
         //last id
         if(code == undefined || code == null){
             let last_id = await helper.getField('max(id) as max_id', helper.table_name);
-            console.log(last_id)
+            // console.log(last_id)
     
         code = last_id.max_id == null ? '00001' : `${(last_id.max_id + 1).toString().padStart(5, '0')}`;
     
@@ -146,20 +146,20 @@ router.post('/saveBulk', async (req, res) => {
                 data.code = `'${code}'`;
                 objects.push(data);
             }
-            console.log(objects)
+            // console.log(objects)
 
             let sales_data = helper.prep_data(req.body);
             sales_data.date = `'${date}'`;
             sales_data.created_on = `'${created_on}'`;
             sales_data.created_by = req.userid;
             sales_data.code = `'${code}'`;
-            console.log(sales_data)
+            // console.log(sales_data)
 
             let sql = "BEGIN TRANSACTION; ";
             sql += helper.generateInsertQuery(sales_data, helper.table_name);
             sql += detailsHelper.generateInsertManyQuery(detailsHelper.fields, objects, detailsHelper.table_name);
             sql += "COMMIT;"
-            console.log(sql)
+            // console.log(sql)
             await helper.connection.exec(sql);
 
             for (var x = 0; x < products.length; x++) {
@@ -301,19 +301,22 @@ router.get('/findReceiptsBetweenDates', async (req, res) => {
         else {
             objects = await helper.getMany(` date >= '${start}' and date <= '${end}' `, helper.table_name);
 
-        }
-
+        } 
+        let overall_total = 0;
         for (var i = 0; i < objects.length; i++) {
             var obj = objects[i];
-            obj.total_amount = await detailsHelper.getSaleTotal(obj.code);
-            obj.num_of_items = await detailsHelper.getNumItems(obj.code);
+            let total =  await detailsHelper.getSaleTotal(obj.code);
+            overall_total += total;
+            obj.total_amount = total.toLocaleString()
+            // obj.num_of_items = await detailsHelper.getNumItems(obj.code);
             obj.display_name = await adminHelper.getUserName(obj.created_by)
         }
 
 
         res.json({
             status: '1',
-            data: objects
+            data: objects,
+            total: overall_total.toLocaleString()
         })
     } catch (error) {
         await helper.closeConnection();
@@ -333,7 +336,7 @@ router.get('/findReceiptsByProduct', async (req, res) => {
         let product = req.query.product;//if user searches with product name
         let payment_method = req.query.payment_method;
         let search_results = await productHelper.search(product);
-        console.log(search_results)
+        // console.log(search_results)
         let product_ids = [];
         for (var i = 0; i < search_results.length; i++) {
             var obj = search_results[i];

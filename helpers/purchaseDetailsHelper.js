@@ -274,6 +274,21 @@ class PurchaseDetailsHelper extends dbClass {
         }
     }
 
+    async getTotalPurchase(start, end){
+        let sql = `select sum(quantity * price) as total from ${this.table_name}  `;
+        if(start != ''){
+            sql += ` where date >= '${start}' and date <= '${end}' `
+        }
+
+        try {
+            await this.getConnection();
+            let q = await this.connection.get(sql);
+            return q.total == null ? 0 : q.total;
+        } catch (error) {
+            log.error(error);
+            throw new Error(error)
+        }
+    }
  }
 
 module.exports = PurchaseDetailsHelper

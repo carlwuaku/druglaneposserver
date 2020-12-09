@@ -357,6 +357,12 @@ app.post('/saveActivation', async (req, res) => {
             value: `'${req.body.digital_address}'`,
             module: `'System'`
         }
+        ,
+        {
+            name: `'company_id'`,
+            value: `'${req.body.company_id}'`,
+            module: `'System'`
+        }
     ]
     let success = await sh.insertMany(sh.insert_fields, data, sh.table_name);
     if (success) {
@@ -949,6 +955,66 @@ app.get('/uploadBackupToServer', checkSignIn, async (req, res) => {
 
     }
 
+
+
+
+});
+
+app.get('/upload_drug_info',  async (req, res) => {
+    
+
+    res.render('drug_info');
+    // res.sendFile(__dirname + '/app/index.html');
+});
+
+
+app.post('/uploadDrugInfo', async (req, res) => {
+    try {
+        let aiClass = require("./helpers/activeIngredientHelper");
+        let ai = new aiClass();
+        var file = req.body.data
+        //turn the whole thing to json
+        let filecontent = JSON.parse(file);
+        let data = {}
+        for(var i = 0; i < filecontent.length; i++){
+            let fc = filecontent[i]
+            var name;
+            
+            
+            try {
+                
+                data ={pharmacodynamics:  `"${fc.pharmacodynamics}"`,
+                mechanism_of_action: `"${fc.mechanism_of_action}"`,
+            pharmacokinetics: `"${fc.pharmacokinetics}"`,
+            indications_and_usage: `"${fc.indications_and_usage}"`,
+            contraindications: `"${fc.contraindications}"`,
+            drug_interactions_table: `"${fc.drug_interactions_table}"`,
+            pregnancy: `"${fc.pregnancy}"`,
+            warnings_and_cautions: `"${fc.warnings_and_cautions}"`,
+            dosage_and_administration: `"${fc.dosage_and_administration}"`,
+            adverse_reactions: `"${fc.adverse_reactions}"`,
+            information_for_patients: `"${fc.information_for_patients}"`,
+            clinical_pharmacology: `"${fc.clinical_pharmacology}"`,
+            drug_abuse_and_dependence: `"${fc.drug_abuse_and_dependence}"`,
+            teratogenic_effects: `"${fc.teratogenic_effects}"`,
+            geriatric_use: `"${fc.geriatric_use}"`,
+            overdosage: `"${fc.overdosage}"`}
+               data.name = `"${fc.openfda.generic_name[0]}"`
+               await ai.insert(data,"drug_info")
+            } catch (error) {
+                console.log(error);
+                
+            }
+            
+        }
+        
+        
+        
+        res.json({ status: '1'})
+    } catch (error) {
+        console.log(error)
+        res.json({ status: '-1' })
+    }
 
 
 
