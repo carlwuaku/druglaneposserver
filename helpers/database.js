@@ -741,6 +741,37 @@ class Db {
             throw new Error(err)
         }
 
+
+
+    }
+
+    /**
+     * 
+        @param {string} fields a comma-separated set of field names to be selected
+     * @param {string} table the table name
+     * @param {Number} limit 
+     * @param {Number} offset
+     * @returns {Array}
+     */
+    async getAllFields(fields,table, limit = null, offset = 0) {
+        //use placeholders for the variables
+        let sql = `select ${fields} from ${table}`;
+        if (limit != null) {
+            sql += ` limit ${limit} offset ${offset}`
+        }
+        try {
+            await this.getConnection();
+            let query = await this.connection.all(sql);
+
+            return query;//an array of objects
+        } catch (err) {
+            log.error(sql);
+            console.log(sql)
+            log.error(err);
+            //this.connection.close().then(succ => { }, err => { })
+            throw new Error(err)
+        }
+
     }
 
     /**

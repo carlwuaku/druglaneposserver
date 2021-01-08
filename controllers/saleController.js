@@ -112,15 +112,14 @@ router.post('/saveBulk', async (req, res) => {
         //if code is not set, generate it
         await helper.getConnection();
         //last id
-        if(code == undefined || code == null){
+        if (code == undefined || code == null) {
             let last_id = await helper.getField('max(id) as max_id', helper.table_name);
             // console.log(last_id)
-    
-        code = last_id.max_id == null ? '00001' : `${(last_id.max_id + 1).toString().padStart(5, '0')}`;
-    
+            code = last_id.max_id == null ? '00001' : `${(last_id.max_id + 1).toString().padStart(5, '0')}`;
+
         }
-        
-        
+
+
 
 
 
@@ -132,7 +131,7 @@ router.post('/saveBulk', async (req, res) => {
         //check if the code already exists
         let exists = await helper.getItem(` code = '${code}'`, helper.table_name)
         if (exists == undefined) {
-            
+
             let objects = [];
             for (let i = 0; i < products.length; i++) {
                 let data = detailsHelper.prep_data(req.body);
@@ -147,12 +146,32 @@ router.post('/saveBulk', async (req, res) => {
                 objects.push(data);
             }
             // console.log(objects)
-
+            
             let sales_data = helper.prep_data(req.body);
             sales_data.date = `'${date}'`;
             sales_data.created_on = `'${created_on}'`;
             sales_data.created_by = req.userid;
             sales_data.code = `'${code}'`;
+
+            try {
+                let customer_phone = req.body.customer_phone;
+                //get the customer who matches the name
+                let cust_details = await helper.getItem(` phone = "${customer_phone}" `, helper.table_name);
+                if (cust_details == null) {
+                    //save the person
+                    sales_data.customer_id = await helper.insert({
+                        name: `"${req.body.customer_name}"`,
+                        phone: `"${req.body.customer_phone}"`
+                    }, helper.table_name)
+                }
+                else {
+                    sales_data.customer_id = cust_details.id;
+                }   
+            } catch (error) {
+                
+            }
+
+
             // console.log(sales_data)
 
             let sql = "BEGIN TRANSACTION; ";
@@ -172,14 +191,14 @@ router.post('/saveBulk', async (req, res) => {
             // helper.connection.close().then(succ => { }, err => { })
 
 
-            res.json({ status: '1', code: code})
-        
+            res.json({ status: '1', code: code })
+
         }
-        else{
+        else {
             res.json({ status: '-1' })
         }
 
-        
+
     } catch (error) {
         await helper.closeConnection();
 
@@ -222,7 +241,7 @@ router.post('/deleteByCode', async (req, res) => {
     try {
         let codes = req.body.code.split(",");//comma-separated
         let code_quotes = []
-        for(var i = 0; i < codes.length; i++){
+        for (var i = 0; i < codes.length; i++) {
             code_quotes.push(`'${codes[i]}'`)
         }
         let products = []
@@ -301,11 +320,11 @@ router.get('/findReceiptsBetweenDates', async (req, res) => {
         else {
             objects = await helper.getMany(` date >= '${start}' and date <= '${end}' `, helper.table_name);
 
-        } 
+        }
         let overall_total = 0;
         for (var i = 0; i < objects.length; i++) {
             var obj = objects[i];
-            let total =  await detailsHelper.getSaleTotal(obj.code);
+            let total = await detailsHelper.getSaleTotal(obj.code);
             overall_total += total;
             obj.total_amount = total.toLocaleString()
             // obj.num_of_items = await detailsHelper.getNumItems(obj.code);
@@ -340,8 +359,8 @@ router.get('/findReceiptsByProduct', async (req, res) => {
         let product_ids = [];
         for (var i = 0; i < search_results.length; i++) {
             var obj = search_results[i];
-            product_ids.push(obj.id) 
-            
+            product_ids.push(obj.id)
+
         }
         let product_id_string = product_ids.join(",")
         let objects = await helper.getMany(` date >= '${start}' and date <= '${end}' and code in (select code from ${detailsHelper.table_name} 
@@ -642,10 +661,10 @@ router.get('/getBranchDailySalesSummary', async (req, res) => {
         res.json({
             status: '1',
             data: objects,
-            best_sellers : best_sellers,
+            best_sellers: best_sellers,
             worst_sellers: worst_sellers,
-            total : total,
-            average : avg,
+            total: total,
+            average: avg,
             profit: overall_profit.toFixed(2),
             cost: cost
         })
@@ -664,7 +683,7 @@ router.get('/getCategorySales', async (req, res) => {
         let start_date = req.query.start_date == undefined ? helper.getToday() : req.query.start_date;
         let end_date = req.query.end_date == undefined ? helper.getToday() : req.query.end_date;
 
-        
+
         let data = await detailsHelper.getCategorySales(start_date, end_date);
         res.json({
             status: '1',

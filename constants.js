@@ -21,7 +21,29 @@ exports.backup_folder = path.join((electron.app || electron.remote.app).getPath(
 exports.settings_filename = 'system-settings.json';
 exports.db_filename = 'druglane.db';
 exports.internal_backups_path =path.join( this.settings_location,'backups');
+exports.default_functional_groups = [
+  "Adult Analgesics Tablets",
+  "Adult Analgesics Suppositories",
+  "Paediatric Analgesics Syrups",
+  "Paediatric Analgesics Suppositories",
+  "Adult Dry Cough Syrups",
+  "Adult Expectorant Syups",
+  "Adult Cough & Cold Syrups",
+  "Adult Dry Cough Tablets",
+  "Adult Expectorant Tablets",
+  "Adult Cough & Cold Tablets",
+  "Baby Cough Syrups (0-1 years)",
+  "Child Cough Syrups (up to 6 years)",
+  "Child Cough Syrups (up to 12 years)",
+  "Adult Catarrh Syrups",
+  "Adult Catarrh Tablets",
+  "Paediatric Catarrh Syrups",
+  "Adult Blood Tonics",
+  "Adult Multivitamins",
+  "Paediatric Blood Tonics",
+  "Paediatric Multivitamins"
 
+]
 exports.default_config = {
   port: PORT,
   host: "localhost",
@@ -32,7 +54,6 @@ exports.default_config = {
   last_sync: 0
 }
 const drug_info = require('./drug_info')
- 
 //database migrations
 const migrations = [
   {

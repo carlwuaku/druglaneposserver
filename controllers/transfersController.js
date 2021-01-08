@@ -64,13 +64,6 @@ router.post('/saveBulk', async (req, res) => {
 
         let receiver = adminHelper.getItem(`id = ${req.body.receiver}`, adminHelper.branches_table_name);
 
-
-
-
-
-
-
-
         let products = req.body.products.split("||");
         let cost_prices = req.body.cost_prices.split("||");
         let quantities = req.body.quantities.split("||");
@@ -81,7 +74,7 @@ router.post('/saveBulk', async (req, res) => {
         await helper.getConnection();
         //last id
         let last_id = await helper.getField('max(id) as max_id', helper.table_name);
-        console.log(last_id)
+        // console.log(last_id)
         let code = last_id.max_id == null ? `'00001'` : `'${(last_id.max_id + 1).toString().padStart(5, '0')}'`;
 
         let objects = [];
@@ -99,20 +92,20 @@ router.post('/saveBulk', async (req, res) => {
             objects.push(data);
 
         }
-        console.log(objects)
+        // console.log(objects)
 
         let purchase_data = helper.prep_data(req.body);
         purchase_data.date = `'${date}'`;
         purchase_data.created_on = `'${created_on}'`;
         purchase_data.created_by = req.userid;
         purchase_data.code = code;
-        console.log(purchase_data)
+        // console.log(purchase_data)
 
         let sql = "BEGIN TRANSACTION; ";
         sql += helper.generateInsertQuery(purchase_data, helper.table_name);
         sql += detailsHelper.generateInsertManyQuery(detailsHelper.fields, objects, detailsHelper.table_name);
         sql += "COMMIT;"
-        console.log(sql)
+        // console.log(sql)
         await helper.connection.exec(sql);
 
         for (var x = 0; x < products.length; x++) {
@@ -384,7 +377,7 @@ router.get('/findReceiptsBetweenDates', async (req, res) => {
 
         for (var i = 0; i < objects.length; i++) {
             var obj = objects[i];
-            console.log(obj)
+            // console.log(obj)
             obj.total_amount = await receivedDetailsHelper.getTotal(obj.code);
             obj.num_of_items = await receivedDetailsHelper.getNumItems(obj.code);
             obj.display_name = await adminHelper.getUserName(obj.created_by)
@@ -544,7 +537,7 @@ router.post('/saveBulkReceive', async (req, res) => {
         await receivedHelper.getConnection();
         //last id
         let last_id = await receivedHelper.getField('max(id) as max_id', receivedHelper.table_name);
-        console.log(last_id)
+        // console.log(last_id)
         let code = last_id.max_id == null ? `'00001'` : `'${(last_id.max_id + 1).toString().padStart(5, '0')}'`;
 
         let objects = [];
@@ -570,7 +563,7 @@ router.post('/saveBulkReceive', async (req, res) => {
             let p = productHelper.generateUpdateQuery(product_data, ` id = ${products[i]} `, productHelper.table_name)
             product_updates.push(p);
         }
-        console.log(objects)
+        // console.log(objects)
 
         let purchase_data = receivedHelper.prep_data(req.body);
         purchase_data.date = `'${date}'`;
@@ -578,14 +571,14 @@ router.post('/saveBulkReceive', async (req, res) => {
         purchase_data.created_by = req.userid;
         purchase_data.code = code;
         purchase_data.sender = sender;
-        console.log(purchase_data)
+        // console.log(purchase_data)
 
         let sql = "BEGIN TRANSACTION; ";
         sql += helper.generateInsertQuery(purchase_data, receivedHelper.table_name);
         sql += receivedDetailsHelper.generateInsertManyQuery(receivedDetailsHelper.fields, objects, receivedDetailsHelper.table_name);
         sql += product_updates.join(" ")
         sql += "COMMIT;"
-        console.log(sql)
+        // console.log(sql)
         await receivedHelper.connection.exec(sql);
 
         for (var x = 0; x < products.length; x++) {

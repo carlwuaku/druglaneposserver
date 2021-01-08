@@ -25,7 +25,7 @@ class StockValueHelper extends dbClass {
     }
 
     /**
-     * recalculate the stock value of all productss
+     * get the stock x price of all items
      * 
      */
     async getSellingValue() {

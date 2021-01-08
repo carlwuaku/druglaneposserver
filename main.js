@@ -803,7 +803,7 @@ if (!gotTheLock) {
         });  
     
         mwindow.loadURL(`file://${__dirname}/app/backup.html`);
-        mwindow.webContents.openDevTools()
+        // mwindow.webContents.openDevTools()
 
 
 

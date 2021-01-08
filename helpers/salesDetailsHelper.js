@@ -227,7 +227,7 @@ class SalesDetailsHelper extends dbClass {
         try {
             await this.getConnection();
             let q = await this.connection.get(sql);
-            return q.total == null ? 0 : (q.total).toFixed(2);
+            return q.total == null ? 0 : q.total;
         } catch (error) {
             log.error(error);
             throw new Error(error)

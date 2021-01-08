@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const log = require('electron-log');
+let constants = require('../constants')
 
 
 
@@ -220,6 +221,50 @@ router.get('/search', async (req, res) => {
 });
 
 
+router.get('/getRelatedProducts', async (req, res) => {
+    const DetailsHelper = require('../helpers/salesDetailsHelper.js');
+    const salesDetailsHelper = new DetailsHelper();
+    let id = req.query.id;
+    //get the description of the product
+    let item = await helper.getItem(`id = ${id}`, helper.table_name);
+    if( item.description == null || item.description == undefined || item.description == ''){
+        res.json({ status: '1', data: [] });
+        return false;
+    }
+    let offset = 0;
+    let limit = 5;
+    let description = item.description.toLowerCase();
+    try {
+        let objects = await helper.getMany(`lower(description) like '${description}' and current_stock > 0 order by expiry`,helper.table_name, limit, offset);
+        let selected = []
+        for (var i = 0; i < objects.length; i++) {
+            var obj = objects[i];
+            var stock = obj.current_stock;
+            var min = obj.min_stock;
+            var max = obj.max_stock;
+
+            obj.expired = helper.dateDifference(obj.expiry) == 'before';
+            obj.expiring_earlier = helper.dateDifference(obj.expiry, item.expiry) == 'before';
+            obj.out_of_stock = stock < 1;
+            obj.near_min = stock > 0 && stock <= min;
+            obj.near_max = stock >= max;
+            obj.stock = obj.current_stock;
+            obj.active_ingredients = [];
+            if(!obj.out_of_stock && obj.expiring_earlier){
+                selected.push(obj)
+            }
+        }
+        res.json({ status: '1', data: selected })
+    } catch (error) {
+        await helper.closeConnection();
+        console.log(error)
+        log.error(error)
+        res.json({ status: '-1', data: null })
+    }
+
+});
+
+
 
 router.post('/saveBranchDetails', async (req, res) => {
     let stockClass = require('../helpers/stockAdjustmentHelper');
@@ -309,7 +354,10 @@ router.post('/saveBranchDetails', async (req, res) => {
 router.post('/massEdit', async (req, res) => {
     let id = req.body.id;//comma-separated
     let field = req.body.field;
-    let value = req.body.field == 'category' || req.body.field == 'expiry_date' ? `'${req.body.value}'` : req.body.value;
+    let value = req.body.field == 'category' || 
+    req.body.field == 'description' || 
+    req.body.field == 'unit' || 
+    req.body.field == 'expiry_date' ? `'${req.body.value}'` : req.body.value;
 
 
     try {
@@ -1636,6 +1684,30 @@ router.get('/getCategories', async (req, res) => {
 
 });
 
+router.get('/getFunctionalGroups', async (req, res) => {
+    try {
+        let objects = await helper.getDistinct('description', helper.table_name);
+        let arr = [];
+        objects.map(item => {
+            arr.push(item.description)
+        })
+        //give some default values
+        for(var x = 0; x < constants.default_functional_groups.length; x++){
+            if(arr.indexOf(constants.default_functional_groups[x]) == -1){
+                arr.push(constants.default_functional_groups[x])
+            }
+        }
+        
+        res.json({ status: '1', data: arr })
+    } catch (error) {
+        console.log(error)
+        await helper.closeConnection();
+        res.json({ status: '-1', data: null })
+    }
+
+
+});
+
 router.get('/getStockValues', async (req, res) => {
 
     try {
@@ -1813,6 +1885,189 @@ router.post('/addItemActiveIngredient', async (req, res) => {
         res.json({ status: '-1' })
     }
 
+});
+
+router.get('/getChangedStock', async (req, res) => {
+    try {
+        let stockPendingClass = require('../helpers/stockAdjustmentPendingHelper');
+        let stockPendingHelper = new stockPendingClass();
+
+        let offset = req.query.offset == undefined ? 0 : req.query.offset;
+        let limit = req.query.limit == undefined ? null : req.query.limit;
+
+        //get all items in pending..., then check if they have been sold, purchased, transferred in or out
+        const SalesDetailsHelper = require('../helpers/salesDetailsHelper.js');
+        const salesDetailsHelper = new SalesDetailsHelper();
+
+        const PurchaseDetailsHelper = require('../helpers/purchaseDetailsHelper.js');
+        const purchaseDetailsHelper = new PurchaseDetailsHelper();
+
+        const TransferDetailsHelper = require('../helpers/transferDetailsHelper.js');
+        const transferDetailsHelper = new TransferDetailsHelper();
+
+        const ReceivedTransferDetailsHelper = require('../helpers/receivedTransferDetailsHelper.js');
+        const receivedTransferDetailsHelper = new ReceivedTransferDetailsHelper();
+
+
+
+        let pending = await stockPendingHelper.getAll( stockPendingHelper.table_name, limit, offset)
+        let total = await stockPendingHelper.count('id', stockPendingHelper.table_name);
+        // console.log(total)
+        let objects = []
+        for (var i = 0; i < pending.length; i++) {
+            var product_id = pending[i].product
+            let product = await helper.getItem(`id = ${product_id}`,helper.table_name)
+            var date = pending[i].created_on
+            pending[i].message = "";
+            pending[i].name = product.name
+            var overall_change = 0;
+            //get the quantity sold since the stock was saved
+            try {
+                let quantity_sold = await salesDetailsHelper.getTotalQuantity(product_id, date);
+                pending[i].sold = quantity_sold;
+                overall_change -= quantity_sold
+            } catch (error) {
+                pending[i].sold = 0
+                pending[i].message += "Error in sales quantity: " + error + "\n"
+            }
+
+            //get the quantity transferred out since the stock was saved
+            try {
+                let quantity_out = await transferDetailsHelper.getTotalQuantity(product_id, date);
+                pending[i].out = quantity_out;
+                overall_change -= quantity_out
+            } catch (error) {
+                pending[i].out = 0
+                pending[i].message += "Error in transfer out quantity: " + error + "\n"
+            }
+
+            //get the quantity purchased since the stock was saved
+            try {
+                let quantity_purchased = await purchaseDetailsHelper.getTotalQuantity(product_id, date);
+                pending[i].purchased = quantity_purchased
+                overall_change += quantity_purchased
+
+            } catch (error) {
+                pending[i].purchased = 0
+                pending[i].message += "Error in purchases quantity: " + error + "\n"
+            }
+
+            //get the quantity transfered in since the stock was saved
+            try {
+                let quantity_in = await receivedTransferDetailsHelper.getTotalQuantity(product_id, date);
+                pending[i].in = quantity_in;
+                overall_change += quantity_in
+
+            } catch (error) { 
+                pending[i].in = 0
+                pending[i].message += "Error in transfer in quantity: " + error + "\n"
+            }
+
+            pending[i].overall_change = overall_change
+            if(overall_change != 0){
+                objects.push(pending[i])
+            }
+        }
+
+
+
+        res.json({ status: '1', data: objects, total: total })
+    } catch (error) {
+        await helper.closeConnection();
+        console.log(error)
+        log.error(error)
+        res.json({ status: '-1' })
+    }
+
+});
+
+
+router.post('/saveStockAdjustmentUpdatedQuantities', async (req, res) => {
+    let stockClass = require('../helpers/stockAdjustmentPendingHelper');
+    let stockHelper = new stockClass();
+    try {
+
+        let date = req.body.date == undefined ? helper.getToday() : req.body.date;
+        let created_on = req.body.created_on == undefined ? helper.getToday('timestamp') : req.body.created_on;
+
+
+        let products = req.body.products.split("||");
+        let product_names = req.body.product_names.split("||");
+        let cost_prices = req.body.cost_prices.split("||");
+        let quantities_expected = req.body.quantities_expected.split("||");
+        let quantities_counted = req.body.quantities_counted.split("||");
+        let sizes = req.body.sizes.split("||");
+        let expiries = req.body.expiries.split("||");
+        let categories = req.body.categories.split("||");
+        let prices = req.body.prices.split("||");
+        let code = req.body.code;
+        let damaged = req.body.quantities_damaged.split("||")
+        let expired = req.body.quantities_expired.split("||")
+        let units = req.body.units.split("||")
+        let shelves = req.body.shelves.split("||")
+        //delete existing with the code and replace with incoming
+        // await stockHelper.delete(` code = '${code}' `, stockHelper.table_name);
+        let sql = "BEGIN TRANSACTION; ";
+
+        await stockHelper.getConnection();
+        // stockHelper.connection.run("BEGIN TRANSACTION");
+        let objects = [];
+        for (let i = 0; i < products.length; i++) {
+            let data = stockHelper.prep_data(req.body);
+            // console.log(data.code)
+
+            data.created_by = req.userid
+            data.created_on = `'${created_on}'`;
+            data.date = `'${date}'`;
+            data.product = products[i];
+            // console.log('i=' + i + 'product ' + products[i])
+            data.cost_price = cost_prices[i] == undefined || cost_prices[i] == null || cost_prices[i] == '' ? `''` : cost_prices[i];
+            data.quantity_expected = quantities_expected[i];
+            data.quantity_counted = quantities_counted[i];
+            data.size = sizes[i] == undefined ? `''` : `"${sizes[i]}"`;
+            data.expiry = expiries[i] == undefined ? `''` : `"${expiries[i]}"`;
+            data.category = categories[i] == undefined ? `''` : `"${categories[i]}"`;
+            data.current_price = prices[i];
+            data.quantity_expired = expired[i] == undefined || expired[i] == null || expired[i] == '' ? 0 : expired[i];
+            data.quantity_damaged = damaged[i] == undefined || damaged[i] == null || damaged[i] == '' ? 0 : damaged[i];
+            data.unit = units[i] == undefined || units[i] == null ? `''` : `"${units[i]}"`;
+            data.shelf = shelves[i] == undefined || shelves[i] == null ? `''` : `"${shelves[i]}"`;
+            objects.push(data);
+           
+        }
+        // console.log(objects)
+
+
+        sql += `delete from ${stockHelper.table_name} where code = '${code}' and product in (${products.join(",")}); `;
+        sql += stockHelper.generateInsertManyQuery(stockHelper.fields, objects, stockHelper.table_name);
+        sql += "COMMIT;"
+        console.log(sql)
+        await stockHelper.connection.exec(sql);
+
+        // for (var x = 0; x < products.length; x++) {
+
+        //     let pid = products[x];
+        //     await helper.refreshCurrentStock(pid)
+        // }
+        await stockValueHelper.updateStockValue();
+        activities.log(req.query.userid, `'added new stock adjustment pending authorization'`, `'Products'`)
+        // stockHelper.connection.run("COMMIT");
+        // stockHelper.connection.close().then(succ => { }, err => { })
+        res.json({ status: '1' })
+    } catch (error) {
+        await helper.closeConnection();
+        //   try {
+        //     await stockHelper.connection.run("ROLL BACK;");
+        //     stockHelper.connection.close().then(succ => {}, err => {})
+        //   } catch (error) { await helper.closeConnection();
+        //       console.log(error)
+        //   }
+
+
+
+        console.log(error)
+        res.json({ status: '-1' })
+    }
 });
 
 //export the whole thingy

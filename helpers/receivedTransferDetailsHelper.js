@@ -34,7 +34,7 @@ class ReceivedTransferDetailsHelper extends dbClass {
     }
 
      /**
-     * get the total quantity of an item sold between some dates
+     * get the total quantity of an item received between some dates
      * @param {Number} id the product id
      * @param {String} start_date optional
      * @param {String} end_date optional
