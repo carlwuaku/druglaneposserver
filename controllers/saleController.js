@@ -733,9 +733,9 @@ router.get('/getArrears', async (req, res) => {
 		let incomingHelper = new incomingClass();
     try {
         let objects = await helper.getCreditSales(start_date, end_date);
-        let overall_credit = 0;
-        let overall_paid = 0;
-        let overall_balance = 0;
+        // let overall_credit = 0;
+        // let overall_paid = 0;
+        // let overall_balance = 0;
         for(var i = 0; i < objects.length; i++){
             let curr = objects[i]
             try {
@@ -743,25 +743,30 @@ router.get('/getArrears', async (req, res) => {
                 let total_paid = await incomingHelper.getTotalPaid(curr.customer)
                 curr.name = customer.name
                 curr.phone = customer.phone
-                overall_paid += total_paid
-                overall_credit += curr.total;
+                // overall_paid += total_paid
+                // overall_credit += curr.total;
                 
                 curr.paid = total_paid.toLocaleString()
                 curr.balance = (curr.total - total_paid).toLocaleString()
-                overall_balance += curr.total - total_paid
+                // overall_balance += curr.total - total_paid
                 curr.total = curr.total.toLocaleString()
             } catch (error) {
                 curr.name = curr.customer
                 curr.phone = 'n/a'
                 curr.paid = 'n/a'
                 curr.balance = 'n/a'
-                overall_credit += curr.total;
-
+                // overall_credit += curr.total;
+                
                 curr.total = curr.total.toLocaleString()
                 // console.log(error)
             }
             
         }
+        
+        let overall_credit = await helper.getTotalCreditSales(start_date, end_date);
+
+        let overall_paid = await incomingHelper.getTotalPaid('',start_date, end_date);
+        let overall_balance = overall_credit - overall_paid;
         
 
         res.json({ status: '1', data: objects, 
@@ -779,36 +784,18 @@ router.get('/getArrears', async (req, res) => {
 
 
 router.get('/getArrearsCount', async (req, res) => {
-    let start_date = req.query.start_date == undefined ? '' : req.query.start_date;
-        let end_date = req.query.end_date == undefined ? '' : req.query.end_date;
+    
         let incomingClass = require('../helpers/incomingPaymentHelper')
 		let incomingHelper = new incomingClass();
     try {
-        let objects = await helper.getCreditSales(start_date, end_date);
+        let overall_credit = await helper.getTotalCreditSales();
 
-        for(var i = 0; i < objects.length; i++){
-            let curr = objects[i]
-            try {
-                let customer = await customerHelper.getItem(`id = ${curr.customer}`, customerHelper.table_name)
-                let total_paid = await incomingHelper.getTotalPaid(curr.customer)
-                curr.name = customer.name
-                curr.phone = customer.phone
-                curr.paid = total_paid.toLocaleString()
-                curr.balance = (curr.total - total_paid).toLocaleString()
-                curr.total = curr.total.toLocaleString()
-            } catch (error) {
-                curr.name = curr.customer
-                curr.phone = 'n/a'
-                curr.paid = 'n/a'
-                curr.balance = 'n/a'
-                curr.total = curr.total.toLocaleString()
-                console.log(error)
-            }
-            
-        }
+        let overall_paid = await incomingHelper.getTotalPaid();
+        let overall_balance = overall_credit - overall_paid;
         
 
-        res.json({ status: '1', data: objects })
+        res.json({ status: '1', overall_credit: overall_credit.toLocaleString(),
+        overall_paid: overall_paid.toLocaleString(), overall_balance:overall_balance.toLocaleString()})
     } catch (error) {
         await helper.closeConnection();
         console.log(error)
