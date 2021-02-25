@@ -11,9 +11,25 @@ class ActiveIngredientHelper extends dbClass {
     constructor() { 
         super();
     }
-    fields = ["name", "indication", "side_effect", "caution",
+    fields = [
+        "name", 
+    "pharmacodynamics",
+     "mechanism_of_action", 
+     "pharmacokinetics",
+     "indications_and_usage",
+     "contradictions",
+     "drug_interactions_table",
+     "warnings_and_cautions",
+     "dosage_and_administration",
+     "adverse_reactions",
+     "information_for_patients",
+     "clinical_pharmacology",
+     "drug_abuse_and_dependence",
+     "teratogenic_effects",
+     "geriatric_use",
+     "overdosage",
         "pregnancy"]
-    table_name = "active_ingredients";
+    table_name = "drug_info";
 
     not_string_fields = ["id"];
     //the fields which are not strings. used in prep_data

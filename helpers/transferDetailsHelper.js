@@ -145,13 +145,12 @@ class TransferDetailsHelper extends dbClass {
 
     
     /**
-     * get the total difference in stockadjustment
+     * get the total amount
      * @param {String} code 
      * @returns {Number} 
      */
-    async getTotal(code){
+    async getReceiptTotal(code){
         let sql = `select sum(quantity * price) as total from ${this.table_name} where code = '${code}' `;
-        
 
         try {
             await this.getConnection();
@@ -198,6 +197,34 @@ class TransferDetailsHelper extends dbClass {
         }
     }
 
+     /**
+     * get the monthly quantities transferred for the product
+     * @param {String} id the product id
+     * @param {string} start_date the start date
+     * @param {string} end_date the end_date
+     */
+    async getProductMonthlyQuantity(id, start_date='', end_date=''){
+        let sql = `select sum(quantity) as total, strftime("%m-%Y", date) as 'month_year' from ${this.table_name} where product = ${id} 
+        `;
+        if(start_date != ''){
+            sql += ` and date >= '${start_date}' `
+        }
+
+        if(end_date != ''){
+            sql += ` and date <= '${end_date}' `
+        }
+        sql += ` group by strftime("%m-%Y", date) `
+        try {
+            // console.log(sql)
+            await this.getConnection();
+            let q = await this.connection.all(sql);
+            
+            return q;
+        } catch (error) {
+            log.error(error);
+            throw new Error(error)
+        }
+    }
  
  }
 

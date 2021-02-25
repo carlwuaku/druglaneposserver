@@ -7,7 +7,8 @@ let adminHelper = new adminClass();
 let customerClass = require('../helpers/customerHelper');
 let helper = new customerClass();
 
-
+const SaleClass = require('../helpers/saleHelper.js');
+const saleHelper = new SaleClass();
 
 const ActivitiesHelper = require('../helpers/activitiesHelper');
 const activities = new ActivitiesHelper();
@@ -18,12 +19,24 @@ router.get('/getList', async (req, res) => {
     let limit = req.query.limit == undefined ? null : req.query.limit;
     try {
         let objects = await helper.getAll(helper.table_name, limit, offset);
+        const IncomingPaymentClass = require('../helpers/incomingPaymentHelper');
+        const incomingHelper = new IncomingPaymentClass();
+        for(var i = 0; i < objects.length; i++){
+            let object = objects[i];
+            let total_credit = await saleHelper.getTotalCreditSales('','', object.id);
+            object.total_credit = total_credit.toLocaleString()
+           
+            let paid = await incomingHelper.getTotalPaid(object.id);
+            object.total_paid = paid.toLocaleString();
 
-
+            let  balance = total_credit - paid;
+            object.balance = balance.toLocaleString()
+        }
+        
         res.json({ status: '1', data: objects })
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        //console.l.log(error)
         log.error(error)
         res.json({ status: '-1', data: null })
     }
@@ -34,12 +47,24 @@ router.get('/search', async (req, res) => {
     let param = req.query.param;
     try {
         let objects = await helper.search(param);
+        const IncomingPaymentClass = require('../helpers/incomingPaymentHelper');
+        const incomingHelper = new IncomingPaymentClass();
+        for(var i = 0; i < objects.length; i++){
+            let object = objects[i];
+            let total_credit = await saleHelper.getTotalCreditSales('','', object.id);
+            object.total_credit = total_credit.toLocaleString()
+           
+            let paid = await incomingHelper.getTotalPaid(object.id);
+            object.total_paid = paid.toLocaleString();
 
+            let  balance = total_credit - paid;
+            object.balance = balance.toLocaleString()
+        }
 
         res.json({ status: '1', data: objects })
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        //console.l.log(error)
         log.error(error)
         res.json({ status: '-1', data: null })
     }
@@ -64,7 +89,7 @@ router.post('/save', async (req, res) => {
         res.json({ status: id, data: null })
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        //console.l.log(error)
         log.error(error)
         res.json({ status: '-1', data: null })
     }
@@ -84,7 +109,7 @@ router.post('/delete', async (req, res) => {
         res.json({ status: '1', data: null })
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        //console.l.log(error)
         log.error(error)
         res.json({ status: '-1', data: null })
     }
@@ -98,9 +123,16 @@ router.get('/findById', async (req, res) => {
         let id = req.query.id;
 
         let object = await helper.getItem(`id = ${id} `, helper.table_name);
-
-
-
+        //get the total sales on credit
+        //get the total paid
+        let total_credit = await saleHelper.getTotalCreditSales('', '', id);
+        object.total_credit = total_credit.toLocaleString()
+        const IncomingPaymentClass = require('../helpers/incomingPaymentHelper');
+        const incomingHelper = new IncomingPaymentClass();
+        let paid = await incomingHelper.getTotalPaid(id);
+        object.total_paid = paid.toLocaleString();
+        let balance = total_credit - paid;
+        object.balance = balance.toLocaleString()
         res.json({
             status: '1',
             data: object
@@ -150,7 +182,7 @@ router.post('/saveDiagnostics', async (req, res) => {
         res.json({ status: id, data: null })
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        //console.l.log(error)
         log.error(error)
         res.json({ status: '-1', data: null })
     }
@@ -189,7 +221,7 @@ router.post('/deleteDiagnostics', async (req, res) => {
         res.json({ status: '1', data: null })
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        //console.l.log(error)
         log.error(error)
         res.json({ status: '-1', data: null })
     }
@@ -207,7 +239,7 @@ router.get('/getCustomerDiagnosticsList', async (req, res) => {
         res.json({ status: '1', data: objects })
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        //console.l.log(error)
         log.error(error)
         res.json({ status: '-1', data: null })
     }
@@ -222,7 +254,7 @@ router.get('/getDiagnosticsList', async (req, res) => {
         res.json({ status: '1', data: objects })
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        //console.l.log(error)
         log.error(error)
         res.json({ status: '-1', data: null })
     }
@@ -273,23 +305,25 @@ router.post('/addRefill', async (req, res) => {
         let customer_phone = req.body.customer_phone;
         //get the customer who matches the name
         let cust_details = await helper.getItem(` phone = "${customer_phone}" `, helper.table_name);
-        if(cust_details == null){
+        if (cust_details == null) {
             //save the person
-            data.customer_id = await helper.insert({name: `"${req.body.customer_name}"`, 
-            phone: `"${req.body.customer_phone}"`}, helper.table_name)
+            data.customer_id = await helper.insert({
+                name: `"${req.body.customer_name}"`,
+                phone: `"${req.body.customer_phone}"`
+            }, helper.table_name)
         }
-        else{
+        else {
             data.customer_id = cust_details.id;
         }
-        
+
         await helper.insert(data, refill_helper.table_name);
-            await activities.log(req.userid, `"added a new customer refill: ${req.body.customer_name}"`, "'Customers'")
+        await activities.log(req.userid, `"added a new customer refill: ${req.body.customer_name}"`, "'Customers'")
 
 
         res.json({ status: '1', data: null })
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        //console.l.log(error)
         log.error(error)
         res.json({ status: '-1', data: null })
     }
@@ -311,7 +345,7 @@ router.post('/deleteRefill', async (req, res) => {
         res.json({ status: '1', data: null })
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        //console.l.log(error)
         log.error(error)
         res.json({ status: '-1', data: null })
     }
@@ -320,13 +354,13 @@ router.post('/deleteRefill', async (req, res) => {
 
 router.get('/getCustomerRefillList', async (req, res) => {
     let refillClass = require('../helpers/refillsHelper');
-        let refill_helper = new refillClass();
+    let refill_helper = new refillClass();
     let offset = req.query.offset == undefined ? 0 : req.query.offset;
     let limit = req.query.limit == undefined ? null : req.query.limit;
     let customer = req.query.customer;
     try {
-        let objects = await refill_helper.getMany(` customer_id = ${customer} `, 
-        refill_helper.table_name, limit, offset);
+        let objects = await refill_helper.getMany(` customer_id = ${customer} `,
+            refill_helper.table_name, limit, offset);
         for (var i = 0; i < objects.length; i++) {
             let customer = await helper.getItem(`id = ${objects[i].customer_id}`, helper.table_name);
             objects[i].customer_name = customer.name;
@@ -337,7 +371,7 @@ router.get('/getCustomerRefillList', async (req, res) => {
         res.json({ status: '1', data: objects })
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        //console.l.log(error)
         log.error(error)
         res.json({ status: '-1', data: null })
     }
@@ -346,13 +380,13 @@ router.get('/getCustomerRefillList', async (req, res) => {
 
 router.get('/getRefillList', async (req, res) => {
     let refillClass = require('../helpers/refillsHelper');
-        let today = helper.getToday()
-        let refill_helper = new refillClass();
+    let today = helper.getToday()
+    let refill_helper = new refillClass();
     try {
         let only_active = req.query.only_active == undefined ? null : req.query.only_active;
         let objects = await helper.getAll(refill_helper.table_name);
 
-        if(only_active == "yes"){
+        if (only_active == "yes") {
             objects = await helper.getMany(` end_date >= '${today}' `, refill_helper.table_name);
         }
         for (var i = 0; i < objects.length; i++) {
@@ -365,7 +399,7 @@ router.get('/getRefillList', async (req, res) => {
         res.json({ status: '1', data: objects })
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        //console.l.log(error)
         log.error(error)
         res.json({ status: '-1', data: null })
     }
@@ -383,7 +417,7 @@ router.get('/findRefillBetweenDates', async (req, res) => {
         let objects = null;
         let where = [` end_date >= '${start} ' and end_date <= '${end} ' `]
         if (customer != undefined) {
-             where.push(` customer_id = ${customer} `)
+            where.push(` customer_id = ${customer} `)
         }
         // if (customer != undefined) {
         //     objects = where.push(` test = '${test}' `)
@@ -420,7 +454,7 @@ router.get('/countRefillBetweenDates', async (req, res) => {
         let objects = null;
         let where = [` end_date >= '${start} ' and end_date <= '${end} ' `]
         if (customer != undefined) {
-             where.push(` customer_id = ${customer} `)
+            where.push(` customer_id = ${customer} `)
         }
         // if (customer != undefined) {
         //     objects = where.push(` test = '${test}' `)
@@ -445,6 +479,7 @@ router.get('/countRefillBetweenDates', async (req, res) => {
     }
 
 });
+
 
 //export the whole thingy
 module.exports = router;

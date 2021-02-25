@@ -271,7 +271,7 @@ router.get('/getDetails', async (req, res) => {
             vendor_name: vendor.name,
             invoice: item.invoice,
             created_on: item.created_on,
-            total: total.toFixed(2),
+            total: total.toLocaleString(),
             data: objects
         })
     } catch (error) {
@@ -554,10 +554,10 @@ let paymentHelper = new paymentClass();
 
         res.json({
             status: '1',
-            total_purchase: total_purchase.toFixed(2),
-            total_credit: total_credit.toFixed(2),
-            total_paid: total_paid.toFixed(2),
-            balance: balance.toFixed(2)
+            total_purchase: total_purchase.toLocaleString(),
+            total_credit: total_credit.toLocaleString(),
+            total_paid: total_paid.toLocaleString(),
+            balance: balance.toLocaleString()
 
         })
     } catch (error) {

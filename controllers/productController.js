@@ -21,6 +21,9 @@ router.get('/getList', async (req, res) => {
         // let objects = await helper.getAll(helper.table_name, limit, offset);
         // let this_month = helper.setDates("this_month")
         // let last_month = helper.setDates("last_month")
+        let last_six_months = helper.addMonthsToDate(-6);
+        let today = helper.getToday()
+        // console.log(last_six_months)
         // let q1 = helper.setDates("first_quarter")
         // let q2 = helper.setDates("second_quarter")
         // let q3 = helper.setDates("third_quarter")
@@ -47,20 +50,37 @@ router.get('/getList', async (req, res) => {
             let obj = objects[i]
             obj.stock = obj.current_stock;
             obj.stock_value = (obj.current_stock * obj.price).toLocaleString()
-            try {
-                let avg = await salesDetailsHelper.getAverageMonthlyQuantities(obj.id);
-                let avg_sum = 0;
-                let count = 0;
-                if (avg != null) {
-                    avg.map(a => {
-                        avg_sum += a.average;
-                        count++;
-                    });
-                    obj.average_monthly = (avg_sum / count).toLocaleString();
 
-                }
+            var stock = obj.current_stock;
+            var min = obj.min_stock;
+            var max = obj.max_stock;
+
+            obj.expired = helper.dateDifference(obj.expiry) == 'before';
+            obj.out_of_stock = stock < 1;
+            obj.near_min = stock > 0 && stock <= min;
+            obj.near_max = stock >= max;
+            obj.active_ingredients = [];
+
+            try {
+                let totals =await salesDetailsHelper.getTotalQuantityAndAmount(obj.id);
+                obj.total_amount_sold = totals.amount;
+                obj.total_quantity_sold = totals.total;
+                let last_six_months_totals =await salesDetailsHelper.getTotalQuantityAndAmount(obj.id, last_six_months, today);
+                obj.six_months_amount_sold = last_six_months_totals.amount;
+                obj.six_months_quantity_sold = last_six_months_totals.total;
+                // let avg = await salesDetailsHelper.getAverageMonthlyQuantities(obj.id);
+                // let avg_sum = 0;
+                // let count = 0;
+                // if (avg != null) {
+                //     avg.map(a => {
+                //         avg_sum += a.average;
+                //         count++;
+                //     });
+                //     obj.average_monthly = (avg_sum / count).toLocaleString();
+
+                // }
             } catch (error) {
-                console.log(error)
+                //console.l.log(error)
                 obj.average_monthly = 0;
             }
             // obj.this_month_quantity = await salesDetailsHelper.getTotalQuantity(obj.id, this_month.start_date, this_month.end_date)
@@ -73,6 +93,7 @@ router.get('/getList', async (req, res) => {
         }
         res.json({ status: '1', data: objects, total: total })
     } catch (error) {
+        console.log(error)
         await helper.closeConnection();
         res.json({ status: '-1', data: null })
     }
@@ -170,6 +191,8 @@ router.get('/search', async (req, res) => {
         // let q2 = helper.setDates("second_quarter")
         // let q3 = helper.setDates("third_quarter")
         // let q4 = helper.setDates("fourth_quarter")
+        let last_six_months = helper.addMonthsToDate(-6);
+        let today = helper.getToday()
         for (var i = 0; i < objects.length; i++) {
             var obj = objects[i];
             var stock = obj.current_stock;
@@ -185,19 +208,29 @@ router.get('/search', async (req, res) => {
             //average per month over last 3 months
             //average per month over last 6 months
             try {
-                let avg = await salesDetailsHelper.getAverageMonthlyQuantities(obj.id);
-                let avg_sum = 0;
-                let count = 0;
-                if (avg != null) {
-                    avg.map(a => {
-                        avg_sum += a.average;
-                        count++;
-                    });
-                    obj.average_monthly = (avg_sum / count).toLocaleString();
 
-                }
+                let totals =await salesDetailsHelper.getTotalQuantityAndAmount(obj.id);
+                obj.total_amount_sold = totals.amount;
+                obj.total_quantity_sold = totals.total;
+                let last_six_months_totals =await salesDetailsHelper.getTotalQuantityAndAmount(obj.id, last_six_months, today);
+                obj.six_months_amount_sold = last_six_months_totals.amount;
+                obj.six_months_quantity_sold = last_six_months_totals.total;
+                
+
+
+                // let avg = await salesDetailsHelper.getAverageMonthlyQuantities(obj.id);
+                // let avg_sum = 0;
+                // let count = 0;
+                // if (avg != null) {
+                //     avg.map(a => {
+                //         avg_sum += a.average;
+                //         count++;
+                //     });
+                //     obj.average_monthly = (avg_sum / count).toLocaleString();
+
+                // }
             } catch (error) {
-                console.log(error)
+                //console.l.log(error)
                 obj.average_monthly = 0;
             }
 
@@ -213,7 +246,7 @@ router.get('/search', async (req, res) => {
         res.json({ status: '1', data: objects })
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        //console.l.log(error)
         log.error(error)
         res.json({ status: '-1', data: null })
     }
@@ -257,7 +290,7 @@ router.get('/getRelatedProducts', async (req, res) => {
         res.json({ status: '1', data: selected })
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        //console.l.log(error)
         log.error(error)
         res.json({ status: '-1', data: null })
     }
@@ -275,7 +308,7 @@ router.post('/saveBranchDetails', async (req, res) => {
     let id = req.body.id;
     //extract all the values for the necessary fields from the input
     let data = helper.prep_data(req.body);
-    console.log(req.body)
+    //console.l.log(req.body)
     data.last_modified = `'${helper.getToday('timestamp')}'`
     let name = req.body.name;
     let change_stock = req.body.change_stock;
@@ -325,7 +358,7 @@ router.post('/saveBranchDetails', async (req, res) => {
         //     let ItemAiHelperClass = require("../helpers/ProductIngredientHelper");
         //     let itemAiHelper = new ItemAiHelperClass();
         //     let ais = req.body.new_active_ingredients.split("|||");
-        //     // console.log(ais)
+        //     // //console.l.log(ais)
         //     await itemAiHelper.delete(`product = ${id}`, itemAiHelper.table_name)
         //     for (var x = 0; x < ais.length; x++) {
         //         await itemAiHelper.insert({ ingredient: ais[x], product: id }, itemAiHelper.table_name)
@@ -336,10 +369,10 @@ router.post('/saveBranchDetails', async (req, res) => {
         // }
 
 
-        res.json({ status: '1' })
+        res.json({ status: '1', id: id })
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        //console.l.log(error)
         res.json({ status: '-1', data: null })
     }
 
@@ -368,7 +401,7 @@ router.post('/massEdit', async (req, res) => {
         res.json({ status: '1' })
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        //console.l.log(error)
         res.json({ status: '-1' })
     }
 
@@ -387,7 +420,7 @@ router.post('/delete', async (req, res) => {
         res.json({ status: '1' })
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        //console.l.log(error)
         res.json({ status: '-1' })
     }
 
@@ -434,7 +467,7 @@ router.post('/softDelete', async (req, res) => {
         res.json({ status: '1' })
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        //console.l.log(error)
         res.json({ status: '-1' })
     }
 
@@ -453,7 +486,7 @@ router.post('/restore', async (req, res) => {
         res.json({ status: '1' })
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        //console.l.log(error)
         res.json({ status: '-1' })
     }
 
@@ -511,7 +544,7 @@ router.get('/findById', async (req, res) => {
         res.json({ status: '1', data: item })
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        //console.l.log(error)
         res.json({ status: '-1' })
     }
 });
@@ -520,7 +553,7 @@ router.get('/getStock', async (req, res) => {
     let id = req.query.id;
     try {
         let count = await helper.calculateCurrentStock(id);
-        // console.log(count)
+        // //console.l.log(count)
         res.json({ status: '1', data: count })
     } catch (error) {
         await helper.closeConnection();
@@ -666,13 +699,13 @@ router.post('/saveStockAdjustment', async (req, res) => {
         let objects = [];
         for (let i = 0; i < products.length; i++) {
             let data = stockHelper.prep_data(req.body);
-            // console.log(data.code)
+            // //console.l.log(data.code)
 
             data.created_by = req.userid
             data.created_on = `'${created_on}'`;
             data.date = `'${date}'`;
             data.product = products[i];
-            // console.log('i=' + i + 'product ' + products[i])
+            // //console.l.log('i=' + i + 'product ' + products[i])
             data.cost_price = cost_prices[i] == undefined || cost_prices[i] == null || cost_prices[i] == '' ? `''` : cost_prices[i];
             data.quantity_expected = quantities_expected[i];
             data.quantity_counted = quantities_counted[i];
@@ -686,9 +719,9 @@ router.post('/saveStockAdjustment', async (req, res) => {
 
             //check if the item exists first
             var exists = await helper.getItem(`id = '${products[i]}' `, helper.table_name);
-            // console.log(exists)
+            // //console.l.log(exists)
             if (exists == undefined || exists == null) {
-                // console.log(` ${product_names[i]} ${products[i]} new`)
+                // //console.l.log(` ${product_names[i]} ${products[i]} new`)
                 //not found. create new item
                 let new_product = await helper.insert(
                     {
@@ -704,7 +737,7 @@ router.post('/saveStockAdjustment', async (req, res) => {
                     },
                     helper.table_name
                 );
-                // console.log(` ${product_names[i]} ${products[i]} new - ${new_product}`)
+                // //console.l.log(` ${product_names[i]} ${products[i]} new - ${new_product}`)
                 data.product = new_product;
             }
             else {
@@ -726,7 +759,7 @@ router.post('/saveStockAdjustment', async (req, res) => {
 
             objects.push(data);
         }
-        // console.log(objects)
+        // //console.l.log(objects)
 
 
         sql += `delete from ${stockHelper.table_name} where code = '${code}'; `;
@@ -735,7 +768,7 @@ router.post('/saveStockAdjustment', async (req, res) => {
         sql += `update ${stockHelper.sessions_table_name} set status = 'closed' where code = '${code}'; `;
         sql += stockHelper.generateInsertManyQuery(stockHelper.fields, objects, stockHelper.table_name);
         sql += "COMMIT;"
-        // console.log(sql)
+        // //console.l.log(sql)
         await stockHelper.connection.exec(sql);
 
         // for (var x = 0; x < products.length; x++) {
@@ -754,12 +787,12 @@ router.post('/saveStockAdjustment', async (req, res) => {
         //     await stockHelper.connection.run("ROLL BACK;");
         //     stockHelper.connection.close().then(succ => {}, err => {})
         //   } catch (error) { await helper.closeConnection();
-        //       console.log(error)
+        //       //console.l.log(error)
         //   }
 
 
 
-        console.log(error)
+        //console.l.log(error)
         res.json({ status: '-1' })
     }
 });
@@ -796,13 +829,13 @@ router.post('/saveStockAdjustmentToPending', async (req, res) => {
         let objects = [];
         for (let i = 0; i < products.length; i++) {
             let data = stockHelper.prep_data(req.body);
-            // console.log(data.code)
+            // //console.l.log(data.code)
 
             data.created_by = req.userid
             data.created_on = `'${created_on}'`;
             data.date = `'${date}'`;
             data.product = products[i];
-            // console.log('i=' + i + 'product ' + products[i])
+            // //console.l.log('i=' + i + 'product ' + products[i])
             data.cost_price = cost_prices[i] == undefined || cost_prices[i] == null || cost_prices[i] == '' ? `''` : cost_prices[i];
             data.quantity_expected = quantities_expected[i];
             data.quantity_counted = quantities_counted[i];
@@ -817,9 +850,9 @@ router.post('/saveStockAdjustmentToPending', async (req, res) => {
 
             //check if the item exists first
             var exists = await helper.getItem(`id = ${products[i]}`, helper.table_name);
-            // console.log(exists)
+            // //console.l.log(exists)
             if (exists == undefined || exists == null) {
-                // console.log(` ${product_names[i]} ${products[i]} new`)
+                // //console.l.log(` ${product_names[i]} ${products[i]} new`)
                 //not found. create new item
                 let new_product = await helper.insert(
                     {
@@ -834,7 +867,7 @@ router.post('/saveStockAdjustmentToPending', async (req, res) => {
                     },
                     helper.table_name
                 );
-                // console.log(` ${product_names[i]} ${products[i]} new - ${new_product}`)
+                // //console.l.log(` ${product_names[i]} ${products[i]} new - ${new_product}`)
                 data.product = new_product;
             }
             else {
@@ -854,13 +887,13 @@ router.post('/saveStockAdjustmentToPending', async (req, res) => {
 
             objects.push(data);
         }
-        // console.log(objects)
+        // //console.l.log(objects)
 
 
         sql += `delete from ${stockHelper.table_name} where code = '${code}'; `;
         sql += stockHelper.generateInsertManyQuery(stockHelper.fields, objects, stockHelper.table_name);
         sql += "COMMIT;"
-        // console.log(sql)
+        // //console.l.log(sql)
         await stockHelper.connection.exec(sql);
 
         // for (var x = 0; x < products.length; x++) {
@@ -879,12 +912,12 @@ router.post('/saveStockAdjustmentToPending', async (req, res) => {
         //     await stockHelper.connection.run("ROLL BACK;");
         //     stockHelper.connection.close().then(succ => {}, err => {})
         //   } catch (error) { await helper.closeConnection();
-        //       console.log(error)
+        //       //console.l.log(error)
         //   }
 
 
 
-        console.log(error)
+        //console.l.log(error)
         res.json({ status: '-1' })
     }
 });
@@ -919,7 +952,7 @@ router.post('/saveSingleStockAdjustment', async (req, res) => {
     } catch (error) {
         await helper.closeConnection();
         // stockHelper.connection.run("ROLL BACK");
-        console.log(error)
+        //console.l.log(error)
         res.json({ status: '-1' })
     }
 
@@ -954,7 +987,7 @@ router.post('/savePendingSingleStockAdjustment', async (req, res) => {
     } catch (error) {
         await helper.closeConnection();
         // stockHelper.connection.run("ROLL BACK");
-        console.log(error)
+        //console.l.log(error)
         res.json({ status: '-1' })
     }
 
@@ -979,7 +1012,7 @@ router.get('/getPendingStockQuantity', async (req, res) => {
         }
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        //console.l.log(error)
         res.json({ status: '-1' })
     }
 });
@@ -1133,7 +1166,7 @@ router.get('/getStockAdjustmentsByCode', async (req, res) => {
         })
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        //console.l.log(error)
         res.json({ status: '-1', data: null })
     }
 
@@ -1186,7 +1219,7 @@ router.get('/getPendingStockAdjustmentsByCode', async (req, res) => {
         })
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        //console.l.log(error)
         res.json({ status: '-1', data: null })
     }
 
@@ -1202,7 +1235,7 @@ router.get('/getStockOutCount', async (req, res) => {
         res.json({ status: '1', data: data })
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        //console.l.log(error)
         res.json({ status: '-1', data: null })
     }
 
@@ -1215,7 +1248,7 @@ router.get('/hasStockOut', async (req, res) => {
         res.json({ status: '1', data: data })
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        //console.l.log(error)
         res.json({ status: '-1', data: null })
     }
 
@@ -1239,7 +1272,7 @@ router.get('/getStockOutList', async (req, res) => {
         res.json({ status: '1', data: objects })
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        //console.l.log(error)
         res.json({ status: '-1', data: null })
     }
 
@@ -1252,7 +1285,7 @@ router.get('/getStockNearMinCount', async (req, res) => {
         res.json({ status: '1', data: data })
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        //console.l.log(error)
         res.json({ status: '-1', data: null })
     }
 
@@ -1266,7 +1299,7 @@ router.get('/hasStockNearMin', async (req, res) => {
         res.json({ status: '1', data: data })
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        //console.l.log(error)
         res.json({ status: '-1', data: null })
     }
 
@@ -1290,7 +1323,7 @@ router.get('/getStockNearMinList', async (req, res) => {
         res.json({ status: '1', data: objects })
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        //console.l.log(error)
         res.json({ status: '-1', data: null })
     }
 
@@ -1303,7 +1336,7 @@ router.get('/getStockNearMaxCount', async (req, res) => {
         res.json({ status: '1', data: data })
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        //console.l.log(error)
         res.json({ status: '-1', data: null })
     }
 
@@ -1317,7 +1350,7 @@ router.get('/hasStockNearMax', async (req, res) => {
         res.json({ status: '1', data: data })
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        //console.l.log(error)
         res.json({ status: '-1', data: null })
     }
 
@@ -1341,7 +1374,7 @@ router.get('/getStockNearMaxList', async (req, res) => {
         res.json({ status: '1', data: objects })
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        //console.l.log(error)
         res.json({ status: '-1', data: null })
     }
 
@@ -1465,7 +1498,7 @@ router.get('/getStockChanges', async (req, res) => {
         res.json({ status: '1', data: results })
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        //console.l.log(error)
         res.json({ status: '-1', data: null })
     }
 
@@ -1486,7 +1519,7 @@ router.get('/getExpiryCount', async (req, res) => {
         res.json({ status: '1', data: data })
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        //console.l.log(error)
         res.json({ status: '-1', data: null })
     }
 
@@ -1505,7 +1538,7 @@ router.get('/hasExpiry', async (req, res) => {
         res.json({ status: '1', data: data, count: q })
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        //console.l.log(error)
         res.json({ status: '-1', data: null })
     }
 
@@ -1541,7 +1574,7 @@ router.get('/getExpiryList', async (req, res) => {
         res.json({ status: '1', data: objects })
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        //console.l.log(error)
         res.json({ status: '-1', data: null })
     }
 
@@ -1601,7 +1634,7 @@ router.get('/getStockValueList', async (req, res) => {
         res.json({ status: '1', data: objects })
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        //console.l.log(error)
         res.json({ status: '-1', data: null })
     }
 
@@ -1617,7 +1650,7 @@ router.get('/getExpiredCount', async (req, res) => {
         res.json({ status: '1', data: data })
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        //console.l.log(error)
         res.json({ status: '-1', data: null })
     }
 
@@ -1633,7 +1666,7 @@ router.get('/hasExpired', async (req, res) => {
         res.json({ status: '1', data: data, count: q })
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        //console.l.log(error)
         res.json({ status: '-1', data: null })
     }
 
@@ -1660,7 +1693,7 @@ router.get('/getExpiredList', async (req, res) => {
         res.json({ status: '1', data: objects })
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        //console.l.log(error)
         res.json({ status: '-1', data: null })
     }
 
@@ -1700,7 +1733,7 @@ router.get('/getFunctionalGroups', async (req, res) => {
         
         res.json({ status: '1', data: arr })
     } catch (error) {
-        console.log(error)
+        //console.l.log(error)
         await helper.closeConnection();
         res.json({ status: '-1', data: null })
     }
@@ -1737,7 +1770,7 @@ router.get('/refreshAllProducts', async (req, res) => {
         res.send(msg)
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        //console.l.log(error)
         log.error(error)
         res.json({ status: '-1', data: null })
     }
@@ -1777,7 +1810,7 @@ router.post('/merge', async (req, res) => {
     } catch (error) {
         await helper.closeConnection();
         // stockHelper.connection.run("ROLL BACK");
-        console.log(error)
+        //console.l.log(error)
         res.json({ status: '-1' })
     }
 
@@ -1799,7 +1832,7 @@ router.post('/upload', (req, res, next) => {
             var insert_array = []
             //convert each line to an array of items, by the commas
             var obj_array = arr[i];
-            //console.log(obj_array);
+            ////console.l.log(obj_array);
             var id = obj_array.id;
             var name = obj_array.name;
             var price = obj_array.price;
@@ -1833,7 +1866,7 @@ router.post('/upload', (req, res, next) => {
 
         res.json({ status: '1', data: mother_array })
     } catch (error) {
-        console.log(error)
+        //console.l.log(error)
         res.json({ status: '-1' })
     }
 
@@ -1855,7 +1888,7 @@ router.get('/searchActiveIngredients', async (req, res) => {
         res.json({ status: '1', data: objects })
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        //console.l.log(error)
         log.error(error)
         res.json({ status: '-1', data: null })
     }
@@ -1880,7 +1913,7 @@ router.post('/addItemActiveIngredient', async (req, res) => {
         res.json({ status: '1' })
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        //console.l.log(error)
         log.error(error)
         res.json({ status: '-1' })
     }
@@ -1912,7 +1945,7 @@ router.get('/getChangedStock', async (req, res) => {
 
         let pending = await stockPendingHelper.getAll( stockPendingHelper.table_name, limit, offset)
         let total = await stockPendingHelper.count('id', stockPendingHelper.table_name);
-        // console.log(total)
+        // //console.l.log(total)
         let objects = []
         for (var i = 0; i < pending.length; i++) {
             var product_id = pending[i].product
@@ -1974,7 +2007,7 @@ router.get('/getChangedStock', async (req, res) => {
         res.json({ status: '1', data: objects, total: total })
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        //console.l.log(error)
         log.error(error)
         res.json({ status: '-1' })
     }
@@ -2014,13 +2047,13 @@ router.post('/saveStockAdjustmentUpdatedQuantities', async (req, res) => {
         let objects = [];
         for (let i = 0; i < products.length; i++) {
             let data = stockHelper.prep_data(req.body);
-            // console.log(data.code)
+            // //console.l.log(data.code)
 
             data.created_by = req.userid
             data.created_on = `'${created_on}'`;
             data.date = `'${date}'`;
             data.product = products[i];
-            // console.log('i=' + i + 'product ' + products[i])
+            // //console.l.log('i=' + i + 'product ' + products[i])
             data.cost_price = cost_prices[i] == undefined || cost_prices[i] == null || cost_prices[i] == '' ? `''` : cost_prices[i];
             data.quantity_expected = quantities_expected[i];
             data.quantity_counted = quantities_counted[i];
@@ -2035,13 +2068,13 @@ router.post('/saveStockAdjustmentUpdatedQuantities', async (req, res) => {
             objects.push(data);
            
         }
-        // console.log(objects)
+        // //console.l.log(objects)
 
 
         sql += `delete from ${stockHelper.table_name} where code = '${code}' and product in (${products.join(",")}); `;
         sql += stockHelper.generateInsertManyQuery(stockHelper.fields, objects, stockHelper.table_name);
         sql += "COMMIT;"
-        console.log(sql)
+        //console.l.log(sql)
         await stockHelper.connection.exec(sql);
 
         // for (var x = 0; x < products.length; x++) {
@@ -2060,14 +2093,115 @@ router.post('/saveStockAdjustmentUpdatedQuantities', async (req, res) => {
         //     await stockHelper.connection.run("ROLL BACK;");
         //     stockHelper.connection.close().then(succ => {}, err => {})
         //   } catch (error) { await helper.closeConnection();
-        //       console.log(error)
+        //       //console.l.log(error)
         //   }
 
 
 
-        console.log(error)
+        //console.l.log(error)
         res.json({ status: '-1' })
     }
+});
+
+
+router.get('/getProductConsumption', async (req, res) => {
+    const SalesDetailsHelper = require('../helpers/salesDetailsHelper.js');
+        const salesDetailsHelper = new SalesDetailsHelper();
+
+        const PurchaseDetailsHelper = require('../helpers/purchaseDetailsHelper.js');
+        const purchaseDetailsHelper = new PurchaseDetailsHelper();
+
+        const TransferDetailsHelper = require('../helpers/transferDetailsHelper.js');
+        const transferDetailsHelper = new TransferDetailsHelper();
+
+        const ReceivedTransferDetailsHelper = require('../helpers/receivedTransferDetailsHelper.js');
+        const receivedTransferDetailsHelper = new ReceivedTransferDetailsHelper();
+
+    let id = req.query.product;
+    let start_month = req.query.start_month ;
+        let end_month = req.query.end_month ;
+        let start_year = req.query.start_year ;
+        let end_year = req.query.end_year ;
+        console.log(end_month)
+        let start_date = start_year+"-"+salesDetailsHelper.padZero(start_month)+"-01";
+        let end_day = salesDetailsHelper.getLastDayOfMonth(end_month)
+        let end_date = end_year+"-"+salesDetailsHelper.padZero(end_month)+"-"+end_day;
+        
+        
+        
+    
+    try {
+        //get the months between the start and ends
+
+        let sales = await salesDetailsHelper.getProductMonthlyQuantity(id, start_date, end_date)
+        let purchases = await purchaseDetailsHelper.getProductMonthlyQuantity(id, start_date, end_date)
+        let in_transfers = await receivedTransferDetailsHelper.getProductMonthlyQuantity(id, start_date, end_date)
+        let out_transfers = await transferDetailsHelper.getProductMonthlyQuantity(id, start_date, end_date)
+        let data= []
+        // console.log(sales)
+        //foreach year, get the months
+        for(var i = start_year; i <= end_year; i++){
+            //if first month, start from the start_month.
+            let start = 1;
+            let end = 12;
+            if(i == start_year){
+                start = start_month;
+            }
+            if(i == end_year){
+                end = end_month
+            }
+            for(var x  = start; x <= end; x++){
+                let month_name = salesDetailsHelper.getMonthName(x)+ " "+i
+                let month_year = salesDetailsHelper.padZero(x)+ "-"+i;
+                let sold = 0;
+                let purchased = 0;
+                let in_transferred = 0;
+                let out_transferred = 0;
+                for (let y = 0; y < sales.length; y++) {
+                    if(sales[y].month_year == month_year){
+                        sold = sales[y].total;
+                        break;
+                    }
+                    
+                }
+
+                for (let y = 0; y < purchases.length; y++) {
+                    if(purchases[y].month_year == month_year){
+                        purchased = purchases[y].total;
+                        break;
+                    }
+                    
+                }
+
+                for (let y = 0; y < in_transfers.length; y++) {
+                    if(in_transfers[y].month_year == month_year){
+                        in_transferred = in_transfers[y].total;
+                        break;
+                    }
+                    
+                }
+
+                for (let y = 0; y < out_transfers.length; y++) {
+                    if(out_transfers[y].month_year == month_year){
+                        out_transferred = out_transfers[y].total;
+                        break;
+                    }
+                    
+                }
+                data.push(
+                    {"period": month_name, "sold": sold, "purchased": purchased, "out_transferred": out_transferred,
+                "in_transferred": in_transferred}
+                )
+            }
+        }
+        res.json({ status: '1', data: data })
+    } catch (error) {
+        await helper.closeConnection();
+        //console.l.log(error)
+        log.error(error)
+        res.json({ status: '-1', data: null })
+    }
+
 });
 
 //export the whole thingy

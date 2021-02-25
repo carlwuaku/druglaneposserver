@@ -30,9 +30,9 @@ router.get('/getList', async (req, res) => {
         
         let total_bought = await purchaseDetailsHelper.getTotalAmountFromVendor(curr.id);
         let balance = total_bought - total_paid;
-        curr.total_paid = total_paid.toFixed(2)
-        curr.total_bought = total_bought.toFixed(2);
-        curr.balance = balance.toFixed(2)
+        curr.total_paid = total_paid.toLocaleString()
+        curr.total_bought = total_bought.toLocaleString();
+        curr.balance = balance.toLocaleString()
         }
         
 
@@ -102,9 +102,9 @@ router.get('/findById', async (req, res) => {
         
         let total_bought = await purchaseDetailsHelper.getTotalAmountFromVendor(id);
         let balance = total_bought - total_paid;
-        object.total_paid = total_paid.toFixed(2)
-        object.total_bought = total_bought.toFixed(2);
-        object.balance = balance.toFixed(2)
+        object.total_paid = total_paid.toLocaleString()
+        object.total_bought = total_bought.toLocaleString();
+        object.balance = balance.toLocaleString()
 
 
         res.json({

@@ -38,7 +38,7 @@ router.get('/getList', async (req, res) => {
         let objects = await helper.getAll(helper.table_name, limit, offset);
         for (var i = 0; i < objects.length; i++) {
             var obj = objects[i];
-            obj.total_amount = await detailsHelper.getTotal(obj.code)
+            obj.total_amount = await detailsHelper.getReceiptTotal(obj.code)
             obj.num_of_items = await detailsHelper.getNumItems(obj.code)
 
             obj.display_name = adminHelper.getUserName(obj.created_by);
@@ -74,7 +74,7 @@ router.post('/saveBulk', async (req, res) => {
         await helper.getConnection();
         //last id
         let last_id = await helper.getField('max(id) as max_id', helper.table_name);
-        // console.log(last_id)
+        // //console.l.log(last_id)
         let code = last_id.max_id == null ? `'00001'` : `'${(last_id.max_id + 1).toString().padStart(5, '0')}'`;
 
         let objects = [];
@@ -92,20 +92,20 @@ router.post('/saveBulk', async (req, res) => {
             objects.push(data);
 
         }
-        // console.log(objects)
+        // //console.l.log(objects)
 
         let purchase_data = helper.prep_data(req.body);
         purchase_data.date = `'${date}'`;
         purchase_data.created_on = `'${created_on}'`;
         purchase_data.created_by = req.userid;
         purchase_data.code = code;
-        // console.log(purchase_data)
+        // //console.l.log(purchase_data)
 
         let sql = "BEGIN TRANSACTION; ";
         sql += helper.generateInsertQuery(purchase_data, helper.table_name);
         sql += detailsHelper.generateInsertManyQuery(detailsHelper.fields, objects, detailsHelper.table_name);
         sql += "COMMIT;"
-        // console.log(sql)
+        // //console.l.log(sql)
         await helper.connection.exec(sql);
 
         for (var x = 0; x < products.length; x++) {
@@ -123,7 +123,7 @@ router.post('/saveBulk', async (req, res) => {
     } catch (error) {
         await helper.closeConnection();
         log.error(error)
-        console.log(error)
+        //console.l.log(error)
         res.json({ status: '-1' })
     }
 });
@@ -146,21 +146,23 @@ router.get('/getDetails', async (req, res) => {
         let item = await helper.getItem(` code = '${code}'`, helper.table_name)
         let receiver = await adminHelper.getItem(` id = ${item.receiver}`, adminHelper.branches_table_name)
         let display_name = await adminHelper.getUserName(item.created_by)
-        let total = await detailsHelper.getTotal(code)
+        let total = await detailsHelper.getReceiptTotal(code)
         res.json({
             status: '1',
             receiver_id: receiver.id,
             receiver_name: receiver.name,
             receiver_phone: receiver.phone,
+            receiver_address: receiver.address,
+            receiver_digital_address: receiver.digital_address,
             invoice: item.invoice,
             cashier: display_name,
             created_on: item.created_on,
-            total: total.toFixed(2),
+            total: total.toLocaleString(),
             data: objects
         })
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        //console.l.log(error)
         log.error(error)
         res.json({ status: '-1', data: null })
     }
@@ -197,7 +199,7 @@ router.get('/getReceivedDetails', async (req, res) => {
             invoice: item.invoice,
             cashier: display_name,
             created_on: item.created_on,
-            total: total.toFixed(2),
+            total: total.toLocaleString(),
             data: objects
         })
     } catch (error) {
@@ -266,7 +268,7 @@ router.post('/deleteItem', async (req, res) => {
         res.json({ status: '1', data: null })
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        //console.l.log(error)
         log.error(error)
         res.json({ status: '-1', data: null })
     }
@@ -302,7 +304,7 @@ router.post('/deleteReceivedItem', async (req, res) => {
         res.json({ status: '1', data: null })
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        //console.l.log(error)
         log.error(error)
         res.json({ status: '-1', data: null })
     }
@@ -377,7 +379,7 @@ router.get('/findReceiptsBetweenDates', async (req, res) => {
 
         for (var i = 0; i < objects.length; i++) {
             var obj = objects[i];
-            // console.log(obj)
+            // //console.l.log(obj)
             obj.total_amount = await receivedDetailsHelper.getTotal(obj.code);
             obj.num_of_items = await receivedDetailsHelper.getNumItems(obj.code);
             obj.display_name = await adminHelper.getUserName(obj.created_by)
@@ -394,7 +396,7 @@ router.get('/findReceiptsBetweenDates', async (req, res) => {
         })
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        //console.l.log(error)
         log.error(error)
         res.json({ status: '-1', data: null })
     }
@@ -420,7 +422,9 @@ router.get('/findSentReceiptsBetweenDates', async (req, res) => {
 
         for (var i = 0; i < objects.length; i++) {
             var obj = objects[i];
-            obj.total_amount = await detailsHelper.getTotal(obj.code);
+            obj.total_amount = await detailsHelper.getReceiptTotal(obj.code);
+            console.log(obj.code, obj.total_amount)
+
             obj.num_of_items = await detailsHelper.getNumItems(obj.code);
             obj.display_name = await adminHelper.getUserName(obj.created_by)
             let recipient = await adminHelper.getItem(` id = ${obj.receiver}`, adminHelper.branches_table_name)
@@ -436,7 +440,7 @@ router.get('/findSentReceiptsBetweenDates', async (req, res) => {
         })
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        //console.l.log(error)
         log.error(error)
         res.json({ status: '-1', data: null })
     }
@@ -454,7 +458,7 @@ router.get('/findReceiptsByBranch', async (req, res) => {
 
         for (var i = 0; i < objects.length; i++) {
             var obj = objects[i];
-            obj.total_amount = await detailsHelper.getTotal(obj.code);
+            obj.total_amount = await detailsHelper.getReceiptTotal(obj.code);
             obj.num_of_items = await detailsHelper.getNumItems(obj.code);
             obj.display_name = await adminHelper.getUserName(obj.created_by)
             let sender = await adminHelper.getItem(` id = ${obj.sender} `, adminHelper.table_name);
@@ -470,7 +474,7 @@ router.get('/findReceiptsByBranch', async (req, res) => {
         })
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        //console.l.log(error)
         log.error(error)
         res.json({ status: '-1', data: null })
     }
@@ -488,7 +492,7 @@ router.get('/findReceiptsByReceivingBranch', async (req, res) => {
 
         for (var i = 0; i < objects.length; i++) {
             var obj = objects[i];
-            obj.total_amount = await detailsHelper.getTotal(obj.code);
+            obj.total_amount = await detailsHelper.getReceiptTotal(obj.code);
             obj.num_of_items = await detailsHelper.getNumItems(obj.code);
             obj.display_name = await adminHelper.getUserName(obj.created_by)
             let receiver = await adminHelper.getItem(` id = ${obj.receiver} `, adminHelper.table_name);
@@ -504,7 +508,7 @@ router.get('/findReceiptsByReceivingBranch', async (req, res) => {
         })
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        //console.l.log(error)
         log.error(error)
         res.json({ status: '-1', data: null })
     }
@@ -537,7 +541,7 @@ router.post('/saveBulkReceive', async (req, res) => {
         await receivedHelper.getConnection();
         //last id
         let last_id = await receivedHelper.getField('max(id) as max_id', receivedHelper.table_name);
-        // console.log(last_id)
+        // //console.l.log(last_id)
         let code = last_id.max_id == null ? `'00001'` : `'${(last_id.max_id + 1).toString().padStart(5, '0')}'`;
 
         let objects = [];
@@ -563,7 +567,7 @@ router.post('/saveBulkReceive', async (req, res) => {
             let p = productHelper.generateUpdateQuery(product_data, ` id = ${products[i]} `, productHelper.table_name)
             product_updates.push(p);
         }
-        // console.log(objects)
+        // //console.l.log(objects)
 
         let purchase_data = receivedHelper.prep_data(req.body);
         purchase_data.date = `'${date}'`;
@@ -571,14 +575,14 @@ router.post('/saveBulkReceive', async (req, res) => {
         purchase_data.created_by = req.userid;
         purchase_data.code = code;
         purchase_data.sender = sender;
-        // console.log(purchase_data)
+        // //console.l.log(purchase_data)
 
         let sql = "BEGIN TRANSACTION; ";
         sql += helper.generateInsertQuery(purchase_data, receivedHelper.table_name);
         sql += receivedDetailsHelper.generateInsertManyQuery(receivedDetailsHelper.fields, objects, receivedDetailsHelper.table_name);
         sql += product_updates.join(" ")
         sql += "COMMIT;"
-        // console.log(sql)
+        // //console.l.log(sql)
         await receivedHelper.connection.exec(sql);
 
         for (var x = 0; x < products.length; x++) {
@@ -596,7 +600,7 @@ router.post('/saveBulkReceive', async (req, res) => {
     } catch (error) {
         await helper.closeConnection();
 
-        console.log(error)
+        //console.l.log(error)
         log.error(error)
         res.json({ status: '-1' })
     }

@@ -96,6 +96,12 @@ class Db {
         // mm_string+'/'+dd_string+'/'+yyyy;
     }
 
+    padZero(m){
+        let str= m.toString();
+        return str.padStart(2,"0");
+        
+    }
+
     getMonthName(m) {
         var monthNames = ["January", "February", "March", "April", "May", "June",
             "July", "August", "September", "October", "November", "December"
@@ -322,94 +328,190 @@ class Db {
         return dat;
       }
 
+      getWeekNumber(date) {
+        let myMoment = moment(date);
+        return myMoment.week()
+      }
+
     /**
      *   get the start and end dates
      * @param {String} quick_option 
      * @returns {Object} {start_date, end_date}
      */
     setDates(quick_option) {
+    var this_week_number = this.getWeekNumber(this.getToday());
+    var this_year = this.getThisYear();
+    var last_year = this_year - 1;
+    var this_month = this.getToday("month");
+    var last_month = this_month == "1" ? 12 : parseInt(this_month) - 1;
+    var next_month = this_month == "12" ? 1 : parseInt(this_month) + 1;
+    var start_date;
+    var end_date;
+    switch (quick_option) {
+      case "all":
+        start_date = this.formatDate(new Date("2015-" + "01-01"));
+        end_date = this.getToday();
+        break;
+      case "today":
+        start_date = this.getToday();
+        end_date = this.getToday();
+        break;
+      case "yesterday":
+        start_date = this.formatDate(this.addDaystoDate(-1, this.getToday()));
+        end_date = this.formatDate(this.addDaystoDate(-1, this.getToday()));
+        break;
+      case "this_week":
+        start_date = this.formatDate(this.getFirstDayOfWeek(this_week_number, this_year));
+        end_date = this.formatDate(this.addDaystoDate(6, start_date));
+        break;
+      case "last_week":
+        start_date = this.formatDate(this.getFirstDayOfWeek(this_week_number - 1, this_year));
+        end_date = this.formatDate(this.addDaystoDate(6, start_date));
+        break;
+        case "next_week":
+        start_date = this.formatDate(this.getFirstDayOfWeek(this_week_number + 1, this_year));
+        end_date = this.formatDate(this.addDaystoDate(6, start_date));
+        break;
+      case "this_month":
+        var last_day = this.getLastDayOfMonth(this_month);
+        start_date = this.formatDate(new Date(this_year + "-" + this_month + "-01"));
+        end_date = this.formatDate(new Date(this_year + "-" + this_month + "-" + last_day));
+        break;
+      case "last_month":
+        var last_day = this.getLastDayOfMonth(last_month);
+        start_date = this.formatDate(new Date(last_month == 12 ? last_year : this_year + "-" + last_month + "-01"));
+        end_date = this.formatDate(new Date(last_month == 12 ? last_year : this_year + "-" + last_month + "-" + last_day));
+        break;
+        case "next_month":
+        var last_day = this.getLastDayOfMonth(next_month);
+        var year = this_month == "12" ? this_year +1 : this_year
+        start_date = this.formatDate(new Date(year + "-" + next_month + "-01"));
+        end_date = this.formatDate(new Date(year + "-" + next_month + "-" + last_day));
+        break;
+      case "first_quarter":
+        start_date = this.formatDate(new Date(this_year + "-" + "01-01"));
+        end_date = this.formatDate(new Date(this_year + "-" + "03-31"));
+        break;
+      case "second_quarter":
+        start_date = this.formatDate(new Date(this_year + "-" + "04-01"));
+        end_date = this.formatDate(new Date(this_year + "-" + "06-30"));
+        break;
+      case "third_quarter":
+        start_date = this.formatDate(new Date(this_year + "-" + "07-01"));
+        end_date = this.formatDate(new Date(this_year + "-" + "09-30"));
+        break;
+      case "last_quarter":
+        start_date = this.formatDate(new Date(this_year + "-" + "10-01"));
+        end_date = this.formatDate(new Date(this_year + "-" + "12-31"));
+        break;
+      case "this_year":
+        start_date = this.formatDate(new Date(this_year + "-" + "01-01"));
+        end_date = this.formatDate(new Date(this_year + "-" + "12-31"));
+        break;
+      case "last_year":
+        start_date = this.formatDate(new Date(last_year + "-" + "01-01"));
+        end_date = this.formatDate(new Date(last_year + "-" + "12-31"));
+        break;
+      case "today":
+      default:
+
+        start_date = this.getToday();
+        end_date = this.getToday();
+        break;
+    }
+
+    return { "start_date": start_date, "end_date": end_date };
+
         // var this_week_number = this.getWeekNumber(this.getToday());
-        var this_year = this.getThisYear();
-        var last_year = this_year - 1;
-        var this_month = this.getToday("month");
-        var last_month = parseInt(this_month) - 1;
-        var next_month = parseInt(this_month) + 1;
-        var start_date;
-        var end_date;
-        switch (quick_option) {
-            case "all":
-                start_date = this.formatDate(new Date("1900-" + "01-01"));
-                end_date = this.getToday();
-                break;
-            case "today":
-                start_date = this.getToday();
-                end_date = this.getToday();
-                break;
-            case "yesterday":
-                start_date = this.formatDate(this.addDaystoDate(-1, this.getToday()));
-                end_date = this.formatDate(this.addDaystoDate(-1, this.getToday()));
-                break;
-            // case "this_week":
-            //     start_date = this.formatDate(this.getFirstDayOfWeek(this_week_number, this_year));
-            //     end_date = this.formatDate(this.addDaystoDate(6, start_date));
-            //     break;
-            // case "last_week":
-            //     start_date = this.formatDate(this.getFirstDayOfWeek(this_week_number - 1, this_year));
-            //     end_date = this.formatDate(this.addDaystoDate(6, start_date));
-            //     break;
-            // case "next_week":
-            //     start_date = this.formatDate(this.getFirstDayOfWeek(this_week_number + 1, this_year));
-            //     end_date = this.formatDate(this.addDaystoDate(6, start_date));
-            //     break;
-            case "this_month":
-                var last_day = this.getLastDayOfMonth(this_month);
-                start_date = this.formatDate(new Date(this_year + "-" + this_month + "-01"));
-                end_date = this.formatDate(new Date(this_year + "-" + this_month + "-" + last_day));
-                break;
-            case "last_month":
-                var last_day = this.getLastDayOfMonth(last_month);
-                start_date = this.formatDate(new Date(this_year + "-" + last_month + "-01"));
-                end_date = this.formatDate(new Date(this_year + "-" + last_month + "-" + last_day));
-                break;
-            case "next_month":
-                var last_day = this.getLastDayOfMonth(next_month);
-                start_date = this.formatDate(new Date(this_year + "-" + next_month + "-01"));
-                end_date = this.formatDate(new Date(this_year + "-" + next_month + "-" + last_day));
-                break;
-            case "first_quarter":
-                start_date = this.formatDate(new Date(this_year + "-" + "01-01"));
-                end_date = this.formatDate(new Date(this_year + "-" + "03-31"));
-                break;
-            case "second_quarter":
-                start_date = this.formatDate(new Date(this_year + "-" + "04-01"));
-                end_date = this.formatDate(new Date(this_year + "-" + "06-30"));
-                break;
-            case "third_quarter":
-                start_date = this.formatDate(new Date(this_year + "-" + "07-01"));
-                end_date = this.formatDate(new Date(this_year + "-" + "09-30"));
-                break;
-            case "last_quarter":
-                start_date = this.formatDate(new Date(this_year + "-" + "10-01"));
-                end_date = this.formatDate(new Date(this_year + "-" + "12-31"));
-                break;
-            case "this_year":
-                start_date = this.formatDate(new Date(this_year + "-" + "01-01"));
-                end_date = this.formatDate(new Date(this_year + "-" + "12-31"));
-                break;
-            case "last_year":
-                start_date = this.formatDate(new Date(last_year + "-" + "01-01"));
-                end_date = this.formatDate(new Date(last_year + "-" + "12-31"));
-                break;
-            case "today":
-            default:
+        // var this_year = this.getThisYear();
+        // var last_year = this_year - 1;
+        // var this_month = this.getToday("month");
+        // var last_month = parseInt(this_month) - 1;
+        // var next_month = parseInt(this_month) + 1;
+        // var start_date;
+        // var end_date;
+        // switch (quick_option) {
+        //     case "all":
+        //         start_date = this.formatDate(new Date("1900-" + "01-01"));
+        //         end_date = this.getToday();
+        //         break;
+        //     case "today":
+        //         start_date = this.getToday();
+        //         end_date = this.getToday();
+        //         break;
+        //     case "yesterday":
+        //         start_date = this.formatDate(this.addDaystoDate(-1, this.getToday()));
+        //         end_date = this.formatDate(this.addDaystoDate(-1, this.getToday()));
+        //         break;
+        //     case "this_week":
+        //         start_date = this.formatDate(this.getFirstDayOfWeek(this_week_number, this_year));
+        //         end_date = this.formatDate(this.addDaystoDate(6, start_date));
+        //         break;
+        //     case "last_week":
+        //         start_date = this.formatDate(this.getFirstDayOfWeek(this_week_number - 1, this_year));
+        //         end_date = this.formatDate(this.addDaystoDate(6, start_date));
+        //         break;
+        //     case "next_week":
+        //         start_date = this.formatDate(this.getFirstDayOfWeek(this_week_number + 1, this_year));
+        //         end_date = this.formatDate(this.addDaystoDate(6, start_date));
+        //         break;
+        //     case "this_month":
+        //         var last_day = this.getLastDayOfMonth(this_month);
+        //         start_date = this.formatDate(new Date(this_year + "-" + this_month + "-01"));
+        //         end_date = this.formatDate(new Date(this_year + "-" + this_month + "-" + last_day));
+        //         break;
+        //     case "last_month":
+        //         var last_day = this.getLastDayOfMonth(last_month);
+        //         start_date = this.formatDate(new Date(this_year + "-" + last_month + "-01"));
+        //         end_date = this.formatDate(new Date(this_year + "-" + last_month + "-" + last_day));
+        //         break;
+        //     case "next_month":
+        //         var last_day = this.getLastDayOfMonth(next_month);
+        //         start_date = this.formatDate(new Date(this_year + "-" + next_month + "-01"));
+        //         end_date = this.formatDate(new Date(this_year + "-" + next_month + "-" + last_day));
+        //         break;
+        //     case "first_quarter":
+        //         start_date = this.formatDate(new Date(this_year + "-" + "01-01"));
+        //         end_date = this.formatDate(new Date(this_year + "-" + "03-31"));
+        //         break;
+        //     case "second_quarter":
+        //         start_date = this.formatDate(new Date(this_year + "-" + "04-01"));
+        //         end_date = this.formatDate(new Date(this_year + "-" + "06-30"));
+        //         break;
+        //     case "third_quarter":
+        //         start_date = this.formatDate(new Date(this_year + "-" + "07-01"));
+        //         end_date = this.formatDate(new Date(this_year + "-" + "09-30"));
+        //         break;
+        //     case "last_quarter":
+        //         start_date = this.formatDate(new Date(this_year + "-" + "10-01"));
+        //         end_date = this.formatDate(new Date(this_year + "-" + "12-31"));
+        //         break;
+        //     case "this_year":
+        //         start_date = this.formatDate(new Date(this_year + "-" + "01-01"));
+        //         end_date = this.formatDate(new Date(this_year + "-" + "12-31"));
+        //         break;
+        //     case "last_year":
+        //         start_date = this.formatDate(new Date(last_year + "-" + "01-01"));
+        //         end_date = this.formatDate(new Date(last_year + "-" + "12-31"));
+        //         break;
+        //     case "today":
+        //     default:
 
-                start_date = this.getToday();
-                end_date = this.getToday();
-                break;
-        }
+        //         start_date = this.getToday();
+        //         end_date = this.getToday();
+        //         break;
+        // }
 
-        return { "start_date": start_date, "end_date": end_date };
+        // return { "start_date": start_date, "end_date": end_date };
 
+    }
+
+    addMonthsToDate(m){
+        return this.formatDate(new Date(
+            new Date().getFullYear(),
+            new Date().getMonth() + m, 
+            new Date().getDate())
+        );
     }
 
     async getConnection() {
@@ -457,9 +559,9 @@ class Db {
 
             return res.lastID;
         } catch (err) {
-            console.log(query)
-            log.error(err);
-            log.error(query);
+            // console.log(query)
+            // log.error(err);
+            // log.error(query);
             //this.connection.close().then(succ => { }, err => { })
             throw new Error(err)
 

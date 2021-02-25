@@ -51,10 +51,14 @@
                                 </div>
 
                                 <div class="form-group">
-                                    <label class="control-label">Number of Shifts company runs</label>
+                                    <label class="control-label">Specify the shifts your company runs. Separate with commas.</label> <br>
+                        <em class="text-muted">
+                          E.g. If you run 3 shifts, you can type Morning, Afternoon, Evening. Sales persons will be required to select 
+                          the shift they are working. If you don't have any shifts but work the full day, leave it blank.
+                        </em>
                                     <br>
-                                    <input name="number_of_shifts" value="<%= number_of_shifts %>" required type="number"
-                                        class="form-control" min="1">
+                                    <input name="number_of_shifts" value="<%= number_of_shifts %>" required 
+                                        class="form-control" >
                                 </div>
 
                                 

@@ -7,6 +7,9 @@ const helper = new Helper();
 const DetailsHelper = require('../helpers/salesDetailsHelper.js');
 const detailsHelper = new DetailsHelper();
 
+const CustomerHelper = require('../helpers/customerHelper.js');
+const customerHelper = new CustomerHelper();
+
 const ProductHelper = require('../helpers/productHelper.js');
 const productHelper = new ProductHelper();
 
@@ -83,6 +86,8 @@ router.get('/getCustomerSales', async (req, res) => {
             obj.total_amount = await detailsHelper.getSaleTotal(obj.code)
             // obj.quantity = await detailsHelper.getNumItems(obj.code)
             let product = await productHelper.getItem(` id = ${obj.product} `, productHelper.table_name);
+            let sale = await helper.getItem(` code = '${obj.code}' `, helper.table_name);
+            obj.payment_method = sale.payment_method
             obj.product = product;
         }
 
@@ -156,19 +161,22 @@ router.post('/saveBulk', async (req, res) => {
             try {
                 let customer_phone = req.body.customer_phone;
                 //get the customer who matches the name
-                let cust_details = await helper.getItem(` phone = "${customer_phone}" `, helper.table_name);
+                let cust_details = await customerHelper.getItem(` phone = "${customer_phone}" `, customerHelper.table_name);
                 if (cust_details == null) {
                     //save the person
-                    sales_data.customer_id = await helper.insert({
+                    sales_data.customer =
+                     await customerHelper.insert({
                         name: `"${req.body.customer_name}"`,
                         phone: `"${req.body.customer_phone}"`
-                    }, helper.table_name)
+                    }, customerHelper.table_name)
                 }
-                else {
-                    sales_data.customer_id = cust_details.id;
-                }   
+                else{
+                    sales_data.customer = cust_details.id
+                }
+                // sales_data.customer = `"${req.body.customer_name} - ${req.body.customer_phone}"`;
+                 
             } catch (error) {
-                
+                console.log(error)
             }
 
 
@@ -329,6 +337,16 @@ router.get('/findReceiptsBetweenDates', async (req, res) => {
             obj.total_amount = total.toLocaleString()
             // obj.num_of_items = await detailsHelper.getNumItems(obj.code);
             obj.display_name = await adminHelper.getUserName(obj.created_by)
+            //check customer. if not an id, just use the raw value
+            try {
+                let cust = await customerHelper.getItem(`id = ${obj.customer}`, customerHelper.table_name);
+            if(cust != null && cust != undefined){
+                obj.customer = cust.name+" - "+cust.phone
+            }
+            } catch (error) {
+                
+            }
+            
         }
 
 
@@ -413,17 +431,17 @@ router.get('/findUserSummaryBetweenDates', async (req, res) => {
             let other = await detailsHelper.getUserSalesByPaymentMethod(obj.created_by, 'Other', start, end)
             let discount = await helper.getUserDiscount(obj.created_by, start, end);
 
-            obj.total_amount = obj.total_amount.toFixed(2)
-            obj.cash = cash.toFixed(2)
-            obj.momo = momo.toFixed(2)
-            obj.cheque = cheque.toFixed(2)
-            obj.pos = pos.toFixed(2)
-            obj.credit = credit.toFixed(2)
-            obj.insurance = insurance.toFixed(2)
-            obj.other = other.toFixed(2)
-            obj.discount = discount.toFixed(2)
+            obj.total_amount = obj.total_amount.toLocaleString()
+            obj.cash = cash.toLocaleString()
+            obj.momo = momo.toLocaleString()
+            obj.cheque = cheque.toLocaleString()
+            obj.pos = pos.toLocaleString()
+            obj.credit = credit.toLocaleString()
+            obj.insurance = insurance.toLocaleString()
+            obj.other = other.toLocaleString()
+            obj.discount = discount.toLocaleString()
             let discounted_total = obj.total_amount - discount;
-            obj.discounted_total = discounted_total.toFixed(2)
+            obj.discounted_total = discounted_total.toLocaleString()
             obj.display_name = await adminHelper.getUserName(obj.created_by)
         }
 
@@ -431,7 +449,7 @@ router.get('/findUserSummaryBetweenDates', async (req, res) => {
         res.json({
             status: '1',
             num_sales: num_sales,
-            total: total_sales.toFixed(2),
+            total: total_sales.toLocaleString(),
             data: objects
         })
     } catch (error) {
@@ -471,24 +489,24 @@ router.get('/findShiftSummaryBetweenDates', async (req, res) => {
             let other = await detailsHelper.getShiftSalesByPaymentMethod(obj.shift, 'Other', start, end)
             let discount = await helper.getShiftDiscount(obj.shift, start, end);
 
-            obj.total_amount = obj.total_amount.toFixed(2)
-            obj.cash = cash.toFixed(2)
-            obj.momo = momo.toFixed(2)
-            obj.cheque = cheque.toFixed(2)
-            obj.pos = pos.toFixed(2)
-            obj.credit = credit.toFixed(2)
-            obj.insurance = insurance.toFixed(2)
-            obj.other = other.toFixed(2)
-            obj.discount = discount.toFixed(2)
+            obj.total_amount = obj.total_amount.toLocaleString()
+            obj.cash = cash.toLocaleString()
+            obj.momo = momo.toLocaleString()
+            obj.cheque = cheque.toLocaleString()
+            obj.pos = pos.toLocaleString()
+            obj.credit = credit.toLocaleString()
+            obj.insurance = insurance.toLocaleString()
+            obj.other = other.toLocaleString()
+            obj.discount = discount.toLocaleString()
             let discounted_total = obj.total_amount - discount;
-            obj.discounted_total = discounted_total.toFixed(2)
+            obj.discounted_total = discounted_total.toLocaleString()
         }
 
 
         res.json({
             status: '1',
             num_sales: num_sales,
-            total: total_sales.toFixed(2),
+            total: total_sales.toLocaleString(),
             data: objects
         })
     } catch (error) {
@@ -533,14 +551,14 @@ router.get('/findPaymentMethodSummaryBetweenDates', async (req, res) => {
         res.json({
             status: '1',
             num_sales: num_sales,
-            total: total_sales.toFixed(2),
-            momo: momo.toFixed(2),
-            cash: cash.toFixed(2),
-            pos: pos.toFixed(2),
-            cheque: cheque.toFixed(2),
-            credit: credit.toFixed(2),
-            insurance: insurance.toFixed(2),
-            other: other.toFixed(2),
+            total: total_sales.toLocaleString(),
+            momo: momo.toLocaleString(),
+            cash: cash.toLocaleString(),
+            pos: pos.toLocaleString(),
+            cheque: cheque.toLocaleString(),
+            credit: credit.toLocaleString(),
+            insurance: insurance.toLocaleString(),
+            other: other.toLocaleString(),
             data: objects
         })
     } catch (error) {
@@ -585,17 +603,17 @@ router.get('/getDailySales', async (req, res) => {
 
         res.json({
             status: '1',
-            total_sales: total.toFixed(2),
-            average_sale: avg.toFixed(2),
-            momo: momo.toFixed(2),
-            cash: cash.toFixed(2),
-            pos: pos.toFixed(2),
-            cheque: cheque.toFixed(2),
-            credit: credit.toFixed(2),
-            insurance: insurance.toFixed(2),
-            other: other.toFixed(2),
-            discount: discount.toFixed(2),
-            discounted_total: discounted_total.toFixed(2),
+            total_sales: total.toLocaleString(),
+            average_sale: avg.toLocaleString(),
+            momo: momo.toLocaleString(),
+            cash: cash.toLocaleString(),
+            pos: pos.toLocaleString(),
+            cheque: cheque.toLocaleString(),
+            credit: credit.toLocaleString(),
+            insurance: insurance.toLocaleString(),
+            other: other.toLocaleString(),
+            discount: discount.toLocaleString(),
+            discounted_total: discounted_total.toLocaleString(),
             data: objects
         })
     } catch (error) {
@@ -638,17 +656,17 @@ router.get('/getBranchDailySalesSummary', async (req, res) => {
 
 
             obj.date = start;
-            obj.total_sales = total == null ? 0.00 : total.toFixed(2)
-            obj.average_sale = avg == null ? 0.00 : avg.toFixed(2)
-            obj.momo = momo == null ? 0.00 : momo.toFixed(2)
-            obj.cash = cash == null ? 0.00 : cash.toFixed(2)
-            obj.pos = pos == null ? 0.00 : pos.toFixed(2)
-            obj.cheque = cheque == null ? 0.00 : cheque.toFixed(2)
-            obj.credit = credit == null ? 0.00 : credit.toFixed(2)
-            obj.insurance = insurance == null ? 0.00 : insurance.toFixed(2)
-            obj.other = other == null ? 0.00 : other.toFixed(2);
-            obj.profit = profit.toFixed(2)
-            obj.cost = total_cost.toFixed(2)
+            obj.total_sales = total == null ? 0.00 : total.toLocaleString()
+            obj.average_sale = avg == null ? 0.00 : avg.toLocaleString()
+            obj.momo = momo == null ? 0.00 : momo.toLocaleString()
+            obj.cash = cash == null ? 0.00 : cash.toLocaleString()
+            obj.pos = pos == null ? 0.00 : pos.toLocaleString()
+            obj.cheque = cheque == null ? 0.00 : cheque.toLocaleString()
+            obj.credit = credit == null ? 0.00 : credit.toLocaleString()
+            obj.insurance = insurance == null ? 0.00 : insurance.toLocaleString()
+            obj.other = other == null ? 0.00 : other.toLocaleString();
+            obj.profit = profit.toLocaleString()
+            obj.cost = total_cost.toLocaleString()
             objects.push(obj)
         }
         let best_sellers = await detailsHelper.getBestSellers(start_date, end_date);
@@ -656,17 +674,26 @@ router.get('/getBranchDailySalesSummary', async (req, res) => {
         let total = await detailsHelper.getTotalSales(start_date, end_date);
         let avg = await detailsHelper.getAverageSales(start_date, end_date)
         let total_cost = await detailsHelper.getTotalSalesCost(start_date, end_date);
-        let cost = total_cost.toFixed(2)
+        let total_credit = await detailsHelper.getSalesByPaymentMethod('Credit',start_date, end_date)
+        let incomingPaymentHelper = require('../helpers/incomingPaymentHelper')
+        let incomingHelper = new incomingPaymentHelper();
+
+        let total_credit_paid = await incomingHelper.getTotalPaid('',start_date, end_date)
+        let credit_balance = total_credit - total_credit_paid;
+        let cost = total_cost.toLocaleString()
         let overall_profit = total - total_cost
         res.json({
             status: '1',
             data: objects,
             best_sellers: best_sellers,
             worst_sellers: worst_sellers,
-            total: total,
+            total: total.toLocaleString(),
             average: avg,
-            profit: overall_profit.toFixed(2),
-            cost: cost
+            profit: overall_profit.toLocaleString(),
+            cost: cost,
+            total_credit: total_credit.toLocaleString(),
+            total_credit_paid: total_credit_paid.toLocaleString(),
+            credit_balance: credit_balance.toLocaleString(),
         })
     } catch (error) {
         await helper.closeConnection();
@@ -697,6 +724,100 @@ router.get('/getCategorySales', async (req, res) => {
     }
 
 });
+
+
+router.get('/getArrears', async (req, res) => {
+    let start_date = req.query.start_date == undefined ? '' : req.query.start_date;
+        let end_date = req.query.end_date == undefined ? '' : req.query.end_date;
+        let incomingClass = require('../helpers/incomingPaymentHelper')
+		let incomingHelper = new incomingClass();
+    try {
+        let objects = await helper.getCreditSales(start_date, end_date);
+        let overall_credit = 0;
+        let overall_paid = 0;
+        let overall_balance = 0;
+        for(var i = 0; i < objects.length; i++){
+            let curr = objects[i]
+            try {
+                let customer = await customerHelper.getItem(`id = ${curr.customer}`, customerHelper.table_name)
+                let total_paid = await incomingHelper.getTotalPaid(curr.customer)
+                curr.name = customer.name
+                curr.phone = customer.phone
+                overall_paid += total_paid
+                overall_credit += curr.total;
+                
+                curr.paid = total_paid.toLocaleString()
+                curr.balance = (curr.total - total_paid).toLocaleString()
+                overall_balance += curr.total - total_paid
+                curr.total = curr.total.toLocaleString()
+            } catch (error) {
+                curr.name = curr.customer
+                curr.phone = 'n/a'
+                curr.paid = 'n/a'
+                curr.balance = 'n/a'
+                overall_credit += curr.total;
+
+                curr.total = curr.total.toLocaleString()
+                // console.log(error)
+            }
+            
+        }
+        
+
+        res.json({ status: '1', data: objects, 
+        overall_balance : overall_balance.toLocaleString(),
+        overall_credit : overall_credit.toLocaleString(),
+        overall_paid : overall_paid.toLocaleString() })
+    } catch (error) {
+        await helper.closeConnection();
+        console.log(error)
+        log.error(error)
+        res.json({ status: '-1', data: null })
+    }
+
+});
+
+
+router.get('/getArrearsCount', async (req, res) => {
+    let start_date = req.query.start_date == undefined ? '' : req.query.start_date;
+        let end_date = req.query.end_date == undefined ? '' : req.query.end_date;
+        let incomingClass = require('../helpers/incomingPaymentHelper')
+		let incomingHelper = new incomingClass();
+    try {
+        let objects = await helper.getCreditSales(start_date, end_date);
+
+        for(var i = 0; i < objects.length; i++){
+            let curr = objects[i]
+            try {
+                let customer = await customerHelper.getItem(`id = ${curr.customer}`, customerHelper.table_name)
+                let total_paid = await incomingHelper.getTotalPaid(curr.customer)
+                curr.name = customer.name
+                curr.phone = customer.phone
+                curr.paid = total_paid.toLocaleString()
+                curr.balance = (curr.total - total_paid).toLocaleString()
+                curr.total = curr.total.toLocaleString()
+            } catch (error) {
+                curr.name = curr.customer
+                curr.phone = 'n/a'
+                curr.paid = 'n/a'
+                curr.balance = 'n/a'
+                curr.total = curr.total.toLocaleString()
+                console.log(error)
+            }
+            
+        }
+        
+
+        res.json({ status: '1', data: objects })
+    } catch (error) {
+        await helper.closeConnection();
+        console.log(error)
+        log.error(error)
+        res.json({ status: '-1', data: null })
+    }
+
+});
+
 
 //export the whole thingy
 module.exports = router;

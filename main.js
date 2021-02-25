@@ -11,7 +11,7 @@ const schedule = require('node-schedule');
 // const AppTray = require('./AppTray')
 process.env.NODE_ENV = 'production';
 let constants = require('./constants')
-const isDev = process.env.NODE_ENV !== 'production' ? true : false;
+const isDev = true //process.env.NODE_ENV !== 'production' ? true : false;
 const isMac = process.platform === 'darwin' ? true : false;
 let PORT = constants.port;
 const FileStore = require('./Store');
@@ -55,7 +55,7 @@ if (!gotTheLock) {
     //   title: 'App Already Rrunning',
     //   resizable: false,
 
-    //   icon: `${__dirname}/app/assets/logo.png`,
+    //   icon: `${__dirname}/app/assets/logo.png`, 
 
     // });
 

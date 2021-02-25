@@ -107,6 +107,8 @@ $(document).ready(function () {
                 $("#act_digital_address_input").val(js.data.digital_address);
                 $("#act_phone_input").val(js.data.phone);
                 $("#act_email_input").val(js.data.email);
+                $("#act_company_id").val(js.data.id);
+                alert(js)
             }
             else{
               

@@ -53,7 +53,6 @@ exports.default_config = {
   auto_backup_time: 19,
   last_sync: 0
 }
-const drug_info = require('./drug_info')
 //database migrations
 const migrations = [
   {
@@ -1365,7 +1364,7 @@ const migrations = [
       type text NOT NULL,
       recipient text NOT NULL,
       payment_method text default 'CASH',
-      transaction_id text not null,
+      transaction_id text default null,
       item_code text default null,
       notes text default null,
       created_by integer default null,
@@ -1553,9 +1552,42 @@ const migrations = [
   },
   {
     query: `
-     INSERT OR IGNORE INTO settings (name, value, module) values ('company_id', 0, 'System');
     `,
     version: 98
+  },
+  {
+    query: ` 
+
+    PRAGMA foreign_keys=off;
+
+    BEGIN TRANSACTION;
+
+    CREATE TABLE if not exists incoming_payments (
+      id integer primary key autoincrement,
+      date text  NOT NULL,
+      amount text not null,
+      type text NOT NULL,
+      payer text NOT NULL,
+      payment_method text default 'CASH',
+      transaction_id text default null,
+      item_code text default null,
+      notes text default null,
+      created_by integer default null,
+      
+      created_on date default current_timestamp
+      
+
+          );
+
+      
+          
+          COMMIT;
+    
+          PRAGMA foreign_keys=on;
+          
+    
+          `,
+    version: 99
   }
  //
 ];

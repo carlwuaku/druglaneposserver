@@ -211,49 +211,49 @@ app.use('/api_transfer', transferController);
 app.get('/', async (req, res) => {
 
 
-try {
+    try {
 
-    let settingsHelper = require('./helpers/settingsHelper');
-    let sh = new settingsHelper();
+        let settingsHelper = require('./helpers/settingsHelper');
+        let sh = new settingsHelper();
 
 
-    let data = {}
-    var msg = req.query.message;
+        let data = {}
+        var msg = req.query.message;
 
-    if (msg != undefined) {
-        data.message = msg
-    }
-    else {
-        data.message = ""
-    }
-    if (req.session.user) {
-        data.logged_in = true;
-    }
-    else {
-        data.logged_in = false;
-    }
-    data.name = await sh.getSetting(`'company_name'`);
-    data.address = await sh.getSetting(`'address'`);
-    data.host = filestore.get('host');
-    data.port = filestore.get('port');
-    data.backup_time = filestore.get("auto_backup_time") == undefined ? 19 : filestore.get("auto_backup_time")
+        if (msg != undefined) {
+            data.message = msg
+        }
+        else {
+            data.message = ""
+        }
+        if (req.session.user) {
+            data.logged_in = true;
+        }
+        else {
+            data.logged_in = false;
+        }
+        data.name = await sh.getSetting(`'company_name'`);
+        data.address = await sh.getSetting(`'address'`);
+        data.host = filestore.get('host');
+        data.port = filestore.get('port');
+        data.backup_time = filestore.get("auto_backup_time") == undefined ? 19 : filestore.get("auto_backup_time")
 
-    let done = filestore.get('company_set');
-    let admin_done = filestore.get('admin_set');
-    if (done !== 'yes') {
-        res.redirect('/activate')
+        let done = filestore.get('company_set');
+        let admin_done = filestore.get('admin_set');
+        if (done !== 'yes') {
+            res.redirect('/activate')
+        }
+        else if (admin_done !== 'yes') {
+            res.redirect('/setup')
+        }
+
+        else {
+            res.render('index', data);
+        }
+    } catch (error) {
+        res.redirect('/welcome')
+        //go to the welcome page. most likely the database has not yet been setup
     }
-    else if (admin_done !== 'yes') { 
-        res.redirect('/setup')
-    }
- 
-    else {
-        res.render('index', data);
-    }    
-} catch (error) {
-    res.redirect('/welcome')
-    //go to the welcome page. most likely the database has not yet been setup
-}
 
     // res.sendFile(__dirname + '/app/index.html'); 
 });
@@ -270,26 +270,26 @@ app.get('/welcome', (req, res) => {
     res.render('welcome');
     // res.sendFile(__dirname + '/app/index.html');
 });
-
+ 
 app.get('/firstrun', async (req, res) => {
     let data = {}
     try {
         let settingsHelper = require('./helpers/settingsHelper');
         let sh = new settingsHelper();
         //if the table is created, no error will be thrown.else one will be
-         await sh.getSetting(`'company_name'`);
-         data.message = "Initial setup complete. Click the button below to activate the system";
-         data.success = true;
+        await sh.getSetting(`'company_name'`);
+        data.message = "Initial setup complete. Click the button below to activate the system";
+        data.success = true;
         res.redirect("/activate")
     } catch (error) {
         //if there was an error, wait for 10 seconds for migrations to complete and try again
         setTimeout(() => {
-            res.redirect("/firstrun") 
+            res.redirect("/firstrun")
         }, 10000);
         // db.runMigrations();
-        
+
     }
-   
+
     // res.sendFile(__dirname + '/app/index.html');
 });
 
@@ -393,15 +393,15 @@ app.post('/saveSetup', async (req, res) => {
         }
     ]
     let success = await sh.insertMany(sh.insert_fields, data, sh.table_name);
-    
+
     await sh.update({
 
-        value: `'${req.body.number_of_shifts}'`,
+        value: req.body.number_of_shifts == null || req.body.number_of_shifts == undefined || req.body.number_of_shifts == '' ? 'Full Day': `'${req.body.number_of_shifts}'`,
 
     }, "name = 'number_of_shifts'", sh.table_name);
     if (success) {
         filestore.set('admin_set', 'yes')
-        //successful. go to admin setup
+        //successful. go to main page
 
         res.redirect('/');
     }
@@ -483,7 +483,7 @@ app.get('/settings', checkSignIn, async (req, res) => {
 
 app.post('/saveSettings', checkSignIn, async (req, res) => {
     let electron = require('electron');
-    
+
     let settingsHelper = require('./helpers/settingsHelper');
     let sh = new settingsHelper();
     var data = [
@@ -514,7 +514,8 @@ app.post('/saveSettings', checkSignIn, async (req, res) => {
         },
         {
             name: `'number_of_shifts'`,
-            value: `'${req.body.number_of_shifts}'`,
+            value: req.body.number_of_shifts == null || req.body.number_of_shifts == undefined || req.body.number_of_shifts == '' ? 'Full Day': `'${req.body.number_of_shifts}'`,
+           
             module: `'System'`
         }
     ]
@@ -545,31 +546,32 @@ app.post('/saveSettings', checkSignIn, async (req, res) => {
 
     }, "name = 'digital_address'", sh.table_name);
     //check if setting exists
-    let q6_exists =  await sh.getSetting(`'number_of_shifts'`);
+    let q6_exists = await sh.getSetting(`'number_of_shifts'`);
     let q6 = null;
-    if(q6_exists == null){
+    if (q6_exists == null) {
         var data = [
-           
+
             {
                 name: `'number_of_shifts'`,
-                value: `'${req.body.number_of_shifts}'`,
+                value: req.body.number_of_shifts == null || req.body.number_of_shifts == undefined || req.body.number_of_shifts == '' ? 'Full Day': `'${req.body.number_of_shifts}'`,
+
                 module: `'System'`
             }
         ]
         q6 = await sh.insertMany(sh.insert_fields, data, sh.table_name);
     }
-    else{
+    else {
         q6 = await sh.update({
 
-            value: `'${req.body.number_of_shifts}'`,
-    
+            value: req.body.number_of_shifts == null || req.body.number_of_shifts == undefined || req.body.number_of_shifts == '' ? 'Full Day': `'${req.body.number_of_shifts}'`,
+
         }, "name = 'number_of_shifts'", sh.table_name);
     }
-    
+
     //update
     let success = q1 && q2 && q3 && q4 && q5 && q6;
 
-   
+
 
     if (success) {
         //successful. go to admin setup
@@ -924,7 +926,7 @@ app.get('/uploadBackupToServer', checkSignIn, async (req, res) => {
             //         }
             //     }
             // };
-            const postUrl = constants.server_url+"/api_admin/receive_file" //replace your upload url here     req.post({url: postUrl,formData: formData }, function(err, httpResponse, body) {        
+            const postUrl = constants.server_url + "/api_admin/receive_file" //replace your upload url here     req.post({url: postUrl,formData: formData }, function(err, httpResponse, body) {        
             const form = new FormData();
             form.append('file', fs.createReadStream(file_location), {
                 filename: filename,
@@ -960,60 +962,77 @@ app.get('/uploadBackupToServer', checkSignIn, async (req, res) => {
 
 });
 
-app.get('/upload_drug_info',  async (req, res) => {
-    
+app.get('/upload_drug_info', async (req, res) => {
+
 
     res.render('drug_info');
     // res.sendFile(__dirname + '/app/index.html');
 });
 
 
-app.post('/uploadDrugInfo', async (req, res) => {
+
+app.get('/uploadDrugInfo', async (req, res) => {
+    let results = []
     try {
         let aiClass = require("./helpers/activeIngredientHelper");
+
         let ai = new aiClass();
-        var file = req.body.data
+        // var file = req.body.data
         //turn the whole thing to json
-        let filecontent = JSON.parse(file);
+         const fs = require('fs');
+
+        let rawdata = fs.readFileSync('drugs.json');
+        let filecontent = JSON.parse(rawdata);
+    //     const pathToJson = path.join(__dirname, 'drugs.json');
+    //     const jsonStream = fs.createReadStream(pathToJson);
+    // res.set({'Content-Type': 'application/json'});
+    // jsonStream.on('data',(chunk) => {
+    //     console.log("some input", chunk.toString());
+    // })
+        
         let data = {}
-        for(var i = 0; i < filecontent.length; i++){
+        for (var i = 0; i < filecontent.length; i++) {
             let fc = filecontent[i]
             var name;
-            
-            
+
+
             try {
-                
-                data ={pharmacodynamics:  `"${fc.pharmacodynamics}"`,
-                mechanism_of_action: `"${fc.mechanism_of_action}"`,
-            pharmacokinetics: `"${fc.pharmacokinetics}"`,
-            indications_and_usage: `"${fc.indications_and_usage}"`,
-            contraindications: `"${fc.contraindications}"`,
-            drug_interactions_table: `"${fc.drug_interactions_table}"`,
-            pregnancy: `"${fc.pregnancy}"`,
-            warnings_and_cautions: `"${fc.warnings_and_cautions}"`,
-            dosage_and_administration: `"${fc.dosage_and_administration}"`,
-            adverse_reactions: `"${fc.adverse_reactions}"`,
-            information_for_patients: `"${fc.information_for_patients}"`,
-            clinical_pharmacology: `"${fc.clinical_pharmacology}"`,
-            drug_abuse_and_dependence: `"${fc.drug_abuse_and_dependence}"`,
-            teratogenic_effects: `"${fc.teratogenic_effects}"`,
-            geriatric_use: `"${fc.geriatric_use}"`,
-            overdosage: `"${fc.overdosage}"`}
-               data.name = `"${fc.openfda.generic_name[0]}"`
-               await ai.insert(data,"drug_info")
+
+                data = {
+                    pharmacodynamics: `"${fc.pharmacodynamics}"`,
+                    mechanism_of_action: `"${fc.mechanism_of_action}"`,
+                    pharmacokinetics: `"${fc.pharmacokinetics}"`,
+                    indications_and_usage: `"${fc.indications_and_usage}"`,
+                    contraindications: `"${fc.contraindications}"`,
+                    drug_interactions_table: `"${fc.drug_interactions_table}"`,
+                    pregnancy: `"${fc.pregnancy}"`,
+                    warnings_and_cautions: `"${fc.warnings_and_cautions}"`,
+                    dosage_and_administration: `"${fc.dosage_and_administration}"`,
+                    adverse_reactions: `"${fc.adverse_reactions}"`,
+                    information_for_patients: `"${fc.information_for_patients}"`,
+                    clinical_pharmacology: `"${fc.clinical_pharmacology}"`,
+                    drug_abuse_and_dependence: `"${fc.drug_abuse_and_dependence}"`,
+                    teratogenic_effects: `"${fc.teratogenic_effects}"`,
+                    geriatric_use: `"${fc.geriatric_use}"`,
+                    overdosage: `"${fc.overdosage}"`
+                }
+                name = data.name = `"${fc.openfda.generic_name[0]}"`
+                await ai.insert(data, "drug_info")
+                results.push({"name: ": name, "result": "success"})
             } catch (error) {
-                console.log(error);
-                
+                // console.log(error);
+                results.push({"name: ": name, "result": error})
             }
-            
+
         }
-        
-        
-        
-        res.json({ status: '1'})
+        // console.log(results)
+
+        res.render('druginforesults',{results: results});
+        // res.json({ status: '1' })
     } catch (error) {
         console.log(error)
-        res.json({ status: '-1' })
+        // res.json({ status: '-1' })
+        res.render('druginforesults', {results: results});
     }
 
 
@@ -1050,7 +1069,8 @@ let server = app.listen(PORT, function () {
 
 
 
-let socket = require('socket.io')
+let socket = require('socket.io');
+const { raw } = require('body-parser');
 var io = socket(server);
 
 

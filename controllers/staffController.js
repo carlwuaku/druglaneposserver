@@ -10,6 +10,10 @@ const AdminHelper = require('../helpers/adminHelper');
 const helper = new AdminHelper();
 const activitiesHelper = new ActivitiesHelper()
 
+const CustomerHelper = require('../helpers/customerHelper.js');
+const customerHelper = new CustomerHelper();
+
+
 const log = require('electron-log');
 
 
@@ -59,7 +63,7 @@ router.post('/login', async (req, res) => {
 
 	} catch (error) {
 		await helper.closeConnection();
-		console.log(error)
+		//console.log(error)
 		res.json({ status: -1, user_data: null })
 	}
 
@@ -74,7 +78,7 @@ router.get('/getBranches', async (req, res) => {
 		res.json({ status: '1', data: query })
 	} catch (error) {
 		await helper.closeConnection();
-		console.log(error);
+		//console.log(error);
 		res.json({ status: '-1', data: null })
 	}
 })
@@ -90,7 +94,7 @@ router.post('/saveBranch', async (req, res) => {
 		res.json({ status: id })
 	} catch (error) {
 		await helper.closeConnection();
-		console.log(error);
+		//console.log(error);
 		res.json({ status: '-1', data: null })
 	}
 })
@@ -101,7 +105,7 @@ router.get('/getInsurers', async (req, res) => {
 		res.json({ status: '1', data: query })
 	} catch (error) {
 		await helper.closeConnection();
-		console.log(error);
+		//console.log(error);
 		res.json({ status: '-1', data: null })
 	}
 });
@@ -113,7 +117,7 @@ router.post('/addInsurer', async (req, res) => {
 		res.json({ status: '1' })
 	} catch (error) {
 		await helper.closeConnection();
-		console.log(error);
+		//console.log(error);
 		log.error(error)
 		res.json({ status: '-1', data: null })
 	}
@@ -125,7 +129,7 @@ router.post('/deleteInsurer', async (req, res) => {
 		res.json({ status: '1' })
 	} catch (error) {
 		await helper.closeConnection();
-		console.log(error);
+		//console.log(error);
 		log.error(error)
 		res.json({ status: '-1', data: null })
 	}
@@ -152,7 +156,7 @@ router.get('/getAllActivities', async (req, res) => {
 			obj.user = await helper.getItem(` id = ${obj.user_id} `, helper.table_name)
 
 		}
-		console.log(objects)
+		//console.log(objects)
 		res.json({ status: '1', data: objects })
 	} catch (error) {
 		await helper.closeConnection();
@@ -203,7 +207,7 @@ router.get('/getUserActivities/:id', async (req, res) => {
 		res.json({ status: '1', data: objects, total: total, limit: limit, user: user })
 	} catch (error) {
 		await helper.closeConnection();
-		console.log(error)
+		//console.log(error)
 		res.json({ status: '-1', data: null })
 	}
 
@@ -222,7 +226,7 @@ router.get('/getUsers', async (req, res) => {
 		res.json({ status: '1', data: objects })
 	} catch (error) {
 		await helper.closeConnection();
-		console.log(error)
+		//console.log(error)
 		res.json({ status: '-1', data: null })
 	}
 });
@@ -273,7 +277,7 @@ router.post('/saveUser', async (req, res) => {
 			let data = h.prep_data(req.body);
 			//update. else insert
 			var password = req.body.password;
-			console.log(password)
+			//console.log(password)
 			if (password !== undefined && password !== null && password != "undefined") {
 				var bcrypt = require('bcryptjs');
 				var hash = bcrypt.hashSync(password, 10);
@@ -282,7 +286,7 @@ router.post('/saveUser', async (req, res) => {
 			else {
 				delete data.password;
 			}
-			console.log(data)
+			//console.log(data)
 			let where = ` id = ${id} `;
 			await h.update(data, where, h.table_name);
 		}
@@ -298,7 +302,7 @@ router.post('/saveUser', async (req, res) => {
 		res.json({ status: '1', data: null })
 	} catch (error) {
 		await helper.closeConnection();
-		console.log(error)
+		//console.log(error)
 		res.json({ status: '-1', data: null })
 	}
 
@@ -314,7 +318,7 @@ router.post('/deleteUser', async (req, res) => {
 
 	let id = req.body.id;
 	let user = await helper.getUserName(id)
-	console.log(id)
+	//console.log(id)
 	try {
 
 		await h.delete(id, h.table_name);
@@ -395,10 +399,10 @@ router.get('/getRoleExcludedPermissions/:id', async (req, res) => {
 		for (var i = 0; i < rp.length; i++) {
 			permission_ids.push(rp[i].permission_id);
 		}
-		console.log(permission_ids)
+		//console.log(permission_ids)
 		let objects = [];
 		for (var j = 0; j < allpermissions.length; j++) {
-			console.log(allpermissions[j].permission_id)
+			//console.log(allpermissions[j].permission_id)
 			if (permission_ids.indexOf(allpermissions[j].permission_id) == -1) {
 				objects.push(allpermissions[j])
 			}
@@ -406,7 +410,7 @@ router.get('/getRoleExcludedPermissions/:id', async (req, res) => {
 		res.json({ status: '1', data: objects })
 	} catch (error) {
 		await helper.closeConnection();
-		console.log(error)
+		//console.log(error)
 		res.json({ status: '-1', data: null })
 	}
 
@@ -419,7 +423,7 @@ router.post('/activateUser', async (req, res) => {
 	let id = req.body.id;
 	let active = req.body.active;
 
-	console.log(id)
+	//console.log(id)
 	try {
 		let user = await helper.getUserName(id)
 		let data = { active: active }
@@ -429,7 +433,7 @@ router.post('/activateUser', async (req, res) => {
 		res.json({ status: '1' })
 	} catch (error) {
 		await helper.closeConnection();
-		console.log(error)
+		//console.log(error)
 		res.json({ status: '-1' })
 	}
 
@@ -488,7 +492,7 @@ router.post('/addRole', async (req, res) => {
 	let h = helper;
 	let id = req.body.id;
 	let permissions = req.body.role_permissions
-	console.log(req.body)
+	//console.log(req.body)
 	try {
 		let data = {};
 		data.role_name = `'${req.body.role_name}'`;
@@ -500,7 +504,7 @@ router.post('/addRole', async (req, res) => {
 		// await h.insertMany(['role_id, permission_id', perms, h.role_permissions_table])
 	} catch (error) {
 		await helper.closeConnection();
-		console.log(error)
+		//console.log(error)
 		res.json({ status: '-1' })
 	}
 
@@ -581,7 +585,7 @@ router.post('/deleteRolePermission', async (req, res) => {
 		res.json({ status: '1' })
 	} catch (error) {
 		await helper.closeConnection();
-		console.log(error)
+		//console.log(error)
 		res.json({ status: '-1' })
 	}
 
@@ -616,7 +620,7 @@ router.post('/changeStaffPassword', async (req, res) => {
 
 	} catch (error) {
 		await helper.closeConnection();
-		console.log(error)
+		//console.log(error)
 		res.json({ status: -1, message: 'Server error. Please contact admin' })
 	}
 
@@ -649,13 +653,13 @@ router.post('/saveOutgoingPayment', async (req, res) => {
 
 		let data = h.prep_data(req.body);
 		data.created_by = req.userid;
-		// console.log(data)
+		// //console.log(data)
 		await h.insert(data, h.table_name);
 
 		res.json({ status: '1', data: null })
 	} catch (error) {
 		await helper.closeConnection();
-		console.log(error)
+		//console.log(error)
 		log.error(error)
 		res.json({ status: '-1', data: null })
 	}
@@ -715,7 +719,34 @@ router.get('/findOutgoingPaymentsBetweenDates', async (req, res) => {
 		})
 	} catch (error) {
 		await helper.closeConnection();
-		// console.log(error)
+		// //console.log(error)
+		log.error(error)
+		res.json({ status: '-1', data: null })
+	}
+
+});
+
+router.post('/deletePayment', async (req, res) => {
+	let helperClass = require('../helpers/outgoingPaymentHelper')
+	let h = new helperClass();
+	try {
+		let codes = req.body.code.split(",");//comma-separated
+		let code_quotes = []
+		for (var i = 0; i < codes.length; i++) {
+			code_quotes.push(`${codes[i]}`)
+		}
+
+
+		await h.delete(` id in (${code_quotes.join(",")}) `, h.table_name);
+		await activitiesHelper.log(req.query.userid, `"deleted  payment receipt: ${code_quotes.join(",")}  "`, `'Accounts'`)
+
+
+
+		res.json({
+			status: '1'
+		})
+	} catch (error) {
+		await helper.closeConnection();
 		log.error(error)
 		res.json({ status: '-1', data: null })
 	}
@@ -762,7 +793,7 @@ router.get('/findVendorOutgoingPaymentsBetweenDates', async (req, res) => {
 		})
 	} catch (error) {
 		await helper.closeConnection();
-		// console.log(error)
+		// //console.log(error)
 		log.error(error)
 		res.json({ status: '-1', data: null })
 	}
@@ -770,32 +801,7 @@ router.get('/findVendorOutgoingPaymentsBetweenDates', async (req, res) => {
 });
 
 
-router.post('/deletePayment', async (req, res) => {
-	let helperClass = require('../helpers/outgoingPaymentHelper')
-	let h = new helperClass();
-	try {
-		let codes = req.body.code.split(",");//comma-separated
-		let code_quotes = []
-		for (var i = 0; i < codes.length; i++) {
-			code_quotes.push(`${codes[i]}`)
-		}
 
-
-		await h.delete(` id in (${code_quotes.join(",")}) `, h.table_name);
-		await activitiesHelper.log(req.query.userid, `"deleted  payment receipt: ${code_quotes.join(",")}  "`, `'Accounts'`)
-
-
-
-		res.json({
-			status: '1'
-		})
-	} catch (error) {
-		await helper.closeConnection();
-		log.error(error)
-		res.json({ status: '-1', data: null })
-	}
-
-});
 
 router.get('/getPaymentRecipients', async (req, res) => {
 	try {
@@ -837,7 +843,7 @@ router.get('/getPaymentRecipients', async (req, res) => {
 		})
 	} catch (error) {
 		await helper.closeConnection();
-		// console.log(error)
+		// //console.log(error)
 		log.error(error)
 		res.json({ status: '-1', data: null })
 	}
@@ -899,13 +905,146 @@ let outgoingHelperClass = require('../helpers/outgoingPaymentHelper')
 		})
 	} catch (error) {
 		await helper.closeConnection();
-		// console.log(error)
+		// //console.log(error)
 		log.error(error)
 		res.json({ status: '-1', data: null })
 	}
 
 });
 //////////////////END ACCOUNT STUFF///////////////////
+
+////////////////INCOMING PAYMENTS//////////////////////
+router.post('/saveIncomingPayment', async (req, res) => {
+	try {
+		let helperClass = require('../helpers/incomingPaymentHelper')
+		let h = new helperClass();
+
+		let data = h.prep_data(req.body);
+		data.created_by = req.userid;
+
+		try {
+			let customer_phone = req.body.customer_phone;
+			//get the customer who matches the name
+			let cust_details = await customerHelper.getItem(` phone = "${customer_phone}" `, customerHelper.table_name);
+			if (cust_details == null) {
+				//save the person
+				data.payer =
+				 await customerHelper.insert({
+					name: `"${req.body.customer_name}"`,
+					phone: `"${req.body.customer_phone}"`
+				}, customerHelper.table_name)
+			}
+			// sales_data.customer = `"${req.body.customer_name} - ${req.body.customer_phone}"`;
+			 
+		} catch (error) {
+			console.log(error)
+		}
+
+
+		// //console.log(data)
+		await h.insert(data, h.table_name);
+
+		res.json({ status: '1', data: null })
+	} catch (error) {
+		await helper.closeConnection();
+		//console.log(error)
+		log.error(error)
+		res.json({ status: '-1', data: null })
+	}
+
+
+
+
+
+});
+
+router.get('/findIncomingPaymentsBetweenDates', async (req, res) => {
+	try {
+		let helperClass = require('../helpers/incomingPaymentHelper')
+		let h = new helperClass();
+		
+		let start = req.query.start_date == undefined ? h.getToday() : req.query.start_date;
+		let end = req.query.end_date == undefined ? h.getToday() : req.query.end_date;
+		let code = req.query.code;
+		let type = req.query.type
+
+		let objects = null;
+		if (code != undefined) {
+			objects = await h.search(code)
+		}
+		else if (type != undefined) {
+			objects = await h.getMany(` date >= '${start}' and date <= '${end}' and type ='${type}'`, h.table_name);
+		}
+		else {
+			objects = await h.getMany(` date >= '${start}' and date <= '${end}' `, h.table_name);
+
+		}
+
+		
+
+
+		res.json({
+			status: '1',
+			data: objects
+		})
+	} catch (error) {
+		await helper.closeConnection();
+		// //console.log(error)
+		log.error(error)
+		res.json({ status: '-1', data: null })
+	}
+
+});
+
+router.post('/deleteIncomingPayment', async (req, res) => {
+	let helperClass = require('../helpers/incomingPaymentHelper')
+	let h = new helperClass();
+	try {
+		let codes = req.body.code.split(",");//comma-separated
+		let code_quotes = []
+		for (var i = 0; i < codes.length; i++) {
+			code_quotes.push(`${codes[i]}`)
+		}
+
+
+		await h.delete(` id in (${code_quotes.join(",")}) `, h.table_name);
+		await activitiesHelper.log(req.query.userid, `"deleted credit payment receipt: ${code_quotes.join(",")}  "`, `'Accounts'`)
+
+
+
+		res.json({
+			status: '1'
+		})
+	} catch (error) {
+		await helper.closeConnection();
+		log.error(error)
+		res.json({ status: '-1', data: null })
+	}
+
+});
+
+
+router.get('/getCustomerPayments', async (req, res) => {
+   
+	let helperClass = require('../helpers/incomingPaymentHelper')
+	let h = new helperClass();
+    try {
+        let id = req.query.customer;
+		let objects = await h.getMany(` payer = ${id}  `, h.table_name);
+		
+
+        // objects.map(obj => {
+        //     obj.stock = obj.current_stock
+        // })
+        res.json({ status: '1', data: objects })
+    } catch (error) {
+        await helper.closeConnection();
+        log.error(error)
+        res.json({ status: '-1', data: null })
+    }
+
+});
+///////////////////END INCOMING PAYMENTS///////////////
 
 //export the whole thingy
 module.exports = router;

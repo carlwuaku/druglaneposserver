@@ -12,11 +12,11 @@ class SalesHelper extends dbClass {
         super();
     }
     fields = ["customer", "code", "status", "created_by", "created_on", "date", "amount_paid",
-    "payment_method", "insurance_provider","creditor_name","insurance_member_id", 
-    "insurance_member_name","momo_reference","discount","shift"]
+        "payment_method", "insurance_provider", "creditor_name", "insurance_member_id",
+        "insurance_member_name", "momo_reference", "discount", "shift"]
     table_name = "sales";
-   
-    not_string_fields = ["id","amount_paid", "discount"];
+
+    not_string_fields = ["id", "amount_paid", "discount"];
     //the fields which are not strings. used in prep_data
 
     prep_data(data) {
@@ -30,8 +30,8 @@ class SalesHelper extends dbClass {
      * @param {Number} offset 
      * @returns {Array}
      */
-    async search(param, limit = null, offset= 0){
-        return await super.search(param, ['code'],this.table_name, limit, offset);
+    async search(param, limit = null, offset = 0) {
+        return await super.search(param, ['code'], this.table_name, limit, offset);
     }
 
     /**
@@ -39,9 +39,9 @@ class SalesHelper extends dbClass {
      * @param {String} start the start date
      * @param {String} end the end date
      */
-    async getTotalDiscount(start, end){
+    async getTotalDiscount(start, end) {
         let sql = `select sum(discount) as total from ${this.table_name}  `;
-        if(start != ''){
+        if (start != '') {
             sql += ` where date >= '${start}' and date <= '${end}' `
         }
 
@@ -55,15 +55,15 @@ class SalesHelper extends dbClass {
         }
     }
 
-     /**
-     * get total discount by a user for a period
-     * @param {String} start the start date
-     * @param {String} end the end date
-     * @param {String} user the user id
-     */
-    async getUserDiscount(user, start, end){
+    /**
+    * get total discount by a user for a period
+    * @param {String} start the start date
+    * @param {String} end the end date
+    * @param {String} user the user id
+    */
+    async getUserDiscount(user, start, end) {
         let sql = `select sum(discount) as total from ${this.table_name} where created_by = ${user} `;
-        if(start != ''){
+        if (start != '') {
             sql += ` and date >= '${start}' and date <= '${end}' `
         }
 
@@ -83,9 +83,9 @@ class SalesHelper extends dbClass {
      * @param {String} end the end date
      * @param {String} shift the shift
      */
-    async getShiftDiscount(shift, start, end){
+    async getShiftDiscount(shift, start, end) {
         let sql = `select sum(discount) as total from ${this.table_name} where shift = '${shift}' `;
-        if(start != ''){
+        if (start != '') {
             sql += ` and date >= '${start}' and date <= '${end}' `
         }
 
@@ -98,8 +98,49 @@ class SalesHelper extends dbClass {
             throw new Error(error)
         }
     }
+    //payment_method = 'Credit' and
+    /**
+         * get the credit sales for a period
+         * @param {String} start the start date
+         * @param {String} end the end date
+         * @returns {Array} [{customer: any, total: number}]
+         */
+    async getCreditSales(start = '', end = '', customer='') {
+        let sql = `SELECT customer, sum(quantity * price) as total from ${this.table_name} 
+         join sales_details on sales.code = sales_details.code where 
+        payment_method = 'Credit'  `;
+        if (start != '') {
+            sql += ` and date >= '${start}' and date <= '${end}' `
+        }
+        if (customer != '') {
+            sql += ` and customer = ${customer} `
+        }
+        sql += ` group by customer `
+        try {
+            await this.getConnection();
+            let q = await this.connection.all(sql);
+            return q;
+        } catch (error) {
+            log.error(error);
+            throw new Error(error)
+        }
+    }
 
- }
+    /**
+         * get the total amount of credit sales for a period
+         * @param {String} start the start date
+         * @param {String} end the end date
+         * @returns {Number} the total amount
+         */
+    async getTotalCreditSales(start = '', end = '', customer='') {
+        let data = await this.getCreditSales(start, end, customer);
+        let total = 0;
+        data.forEach(element => {
+            total += element.total
+        });
+        return total
+    }
+}
 
 module.exports = SalesHelper
 
