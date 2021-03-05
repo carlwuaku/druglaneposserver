@@ -74,6 +74,7 @@ router.post('/login', async (req, res) => {
 				  permissions.map(x => {
 					  perm_array.push(x.permission_name)
 				  })
+				  //get the permissions for the role
 				login.permissions = await helper.getRolePermissions(login.role_id, 'strings');
 
 				let settingsHelper = require('../helpers/settingsHelper');
