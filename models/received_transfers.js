@@ -20,5 +20,6 @@ const OnlineBackups = sequelize.define("online_backups", {
   sender: DataTypes.INTEGER
 },{
   tableName: 'online_backups',
+  timestamps: false
 });
 module.exports = OnlineBackups;

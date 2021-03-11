@@ -28,5 +28,6 @@ const StockAdjustmentPending = sequelize.define("stock_adjustment_pending", {
   unit:DataTypes.STRING
 },{
   tableName: 'stock_adjustment_pending',
+  timestamps: false
 });
 module.exports = StockAdjustmentPending;

@@ -21,5 +21,6 @@ const OutgoingPayments = sequelize.define("outgoing_payments", {
     created_on: DataTypes.DATE,
 },{
   tableName: 'outgoing_payments',
+  timestamps: false
 });
 module.exports = OutgoingPayments;

@@ -17,5 +17,6 @@ const Transfers = sequelize.define("transfers", {
   created_by: DataTypes.INTEGER
 },{
   tableName: 'transfers',
+  timestamps: false
 });
 module.exports = Transfers;

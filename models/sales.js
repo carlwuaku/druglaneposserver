@@ -27,5 +27,6 @@ const Sales = sequelize.define("sales", {
   shift: DataTypes.STRING,
 },{
   tableName: 'sales',
+  timestamps: false
 });
 module.exports = Sales;

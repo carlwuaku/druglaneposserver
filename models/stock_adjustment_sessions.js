@@ -16,6 +16,7 @@ const StockAdjustmentSessions = sequelize.define("stock_adjustment_sessions", {
   created_by: DataTypes.INTEGER
 },{
   tableName: 'stock_adjustment_sessions',
+  timestamps: false
 });
 module.exports = StockAdjustmentSessions;
 

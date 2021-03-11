@@ -26,6 +26,7 @@ const Purchases = sequelize.define("purchases", {
   last_payment_date: DataTypes.DATE,
 },{
   tableName: 'purchases',
+  timestamps: false
 });
 module.exports = Purchases;
 

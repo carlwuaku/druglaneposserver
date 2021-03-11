@@ -2,7 +2,7 @@ const { Sequelize } = require('sequelize');
 const path = require('path')
 const constants = require('../constants')
 
-const dbpath = constants.sequelize_db;
+const dbpath = constants.db_path;
 const sequelize = new Sequelize({
     dialect: 'sqlite',
     storage: dbpath

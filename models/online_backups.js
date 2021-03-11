@@ -15,5 +15,6 @@ const OnlineBackups = sequelize.define("online_backups", {
     created_on: DataTypes.DATE,
 },{
   tableName: 'online_backups',
+  timestamps: false
 });
 module.exports = OnlineBackups;

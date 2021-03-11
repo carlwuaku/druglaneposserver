@@ -19,6 +19,7 @@ const Vendors = sequelize.define("vendors", {
   legacy_id: DataTypes.STRING
 },{
   tableName: 'vendors',
+  timestamps: false
 });
 module.exports = Vendors;
 

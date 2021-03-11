@@ -30,5 +30,6 @@ const Products = sequelize.define("products", {
   shelf: DataTypes.STRING
 },{
   tableName: 'products',
+  timestamps: false
 });
 module.exports = Products;

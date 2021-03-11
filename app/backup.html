@@ -46,7 +46,6 @@
         const version = document.getElementById('version'); 
         ipcRenderer.send('get_backup_file');
         
-        document.getElementById("").innerText()
 
         ipcRenderer.on('backup_file_ready', (e, data) => {
                 // alert(data.file_location);

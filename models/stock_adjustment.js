@@ -26,5 +26,6 @@ const StockAdjustment = sequelize.define("stock_adjustment", {
   quantity_damaged: DataTypes.DOUBLE
 },{
   tableName: 'stock_adjustment',
+  timestamps: false
 });
 module.exports = StockAdjustment;

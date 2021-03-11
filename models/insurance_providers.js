@@ -13,5 +13,6 @@ const InsuranceProviders = sequelize.define("insurance_providers", {
     name: DataTypes.STRING,
 },{
   tableName: 'insurance_providers',
+  timestamps: false
 });
 module.exports = InsuranceProviders;

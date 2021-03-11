@@ -24,5 +24,6 @@ const PurchaseDetails = sequelize.define("purchase_details", {
   selling_price: DataTypes.DOUBLE
 },{
   tableName: 'purchase_details',
+  timestamps: false
 });
 module.exports = PurchaseDetails;

@@ -15,5 +15,6 @@ const DbSync = sequelize.define("db_sync", {
   created_on: DataTypes.DATE
 }, {
   tableName: 'db_sync',
+  timestamps: false
 });
 module.exports = DbSync;

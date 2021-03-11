@@ -17,5 +17,6 @@ const DbBackups = sequelize.define("db_backups", {
   created_on: DataTypes.DATE
 }, {
   tableName: 'db_backups',
+  timestamps: false
 });
 module.exports = DbBackups;

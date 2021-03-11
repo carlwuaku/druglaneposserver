@@ -22,5 +22,6 @@ const Refills = sequelize.define("refills", {
     created_on: DataTypes.DATE,
 },{
   tableName: 'refills',
+  timestamps: false
 });
 module.exports = Refills;

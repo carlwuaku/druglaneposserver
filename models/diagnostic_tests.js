@@ -15,5 +15,6 @@ const DiagnosticTests = sequelize.define("diagnostic_tests", {
     created_on: DataTypes.DATE
 }, {
   tableName: 'diagnostic_tests',
+  timestamps: false
 });
 module.exports = DiagnosticTests;

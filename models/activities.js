@@ -14,6 +14,7 @@ const Activities = sequelize.define("activities", {
     deleted: DataTypes.INTEGER
 },{
   tableName: 'activities',
+  timestamps: false
 });
 module.exports = Activities;
 

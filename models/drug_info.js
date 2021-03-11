@@ -25,5 +25,6 @@ const DrugInfo = sequelize.define("drug_info", {
     created_on: DataTypes.DATE
 },{
   tableName: 'drug_info',
+  timestamps: false
 });
 module.exports = DrugInfo;

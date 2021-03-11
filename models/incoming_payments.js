@@ -19,5 +19,6 @@ const IncomingPayments = sequelize.define("incoming_payments", {
     created_on: DataTypes.DATE
 },{
   tableName: 'incoming_payments',
+  timestamps: false
 });
 module.exports = IncomingPayments;

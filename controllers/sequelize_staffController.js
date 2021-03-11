@@ -21,6 +21,7 @@ router.post('/login', async (req, res) => {
 	var bcrypt = require('bcryptjs');
 	var username = req.body.username;
 	var password = req.body.password;
+	console.log(username)
 	try {
 
 		let person = await models.users.findOne({
@@ -65,29 +66,35 @@ router.post('/login', async (req, res) => {
 			// 	await helper.insert(session_obj, helper.sessions_table);
 				login.token = hash;
 				login.role = login.role_id;
-				var permissions = await models.permissions.findAll({
+				var permissions = await models.role_permissions.findAll({
 					where: {
 					  role_id: login.role_id
 					}
 				  });
 				  var perm_array = []
-				  permissions.map(x => {
-					  perm_array.push(x.permission_name)
+				  permissions.map(async (x) => {
+					  let perm = await models.permissions.findByPk(x.permission_id)
+					  perm_array.push(x.perm.name)
 				  })
-				  //get the permissions for the role
-				login.permissions = await helper.getRolePermissions(login.role_id, 'strings');
+				  
+			
+				let company_name =  await models.settings.findOne({where: {name: 'company_name'}});
+				let phone =  await models.settings.findOne({where: {name: 'phone'}});
+				let address =  await models.settings.findOne({where: {name: 'address'}});
+				let digital_address =  await models.settings.findOne({where: {name: 'digital_address'}});
+				let company_id =  await models.settings.findOne({where: {name: 'company_id'}});
 
-				let settingsHelper = require('../helpers/settingsHelper');
-				let sh = new settingsHelper();
-				login.company_name = await sh.getSetting(`'company_name'`);
-				login.company_phone = await sh.getSetting(`'phone'`);
-				login.company_address = await sh.getSetting(`'address'`);
-				login.digital_address = await sh.getSetting(`'digital_address'`);
+				login.company_name = company_name.value;
+				login.company_phone = phone.value;
+				login.company_address = address.value;
+				login.digital_address = digital_address.value;
+				
+
 				login.company = {
-					id: 0, name: login.company_name, address: login.company_address,
+					id: company_id.value, name: login.company_name, address: login.company_address,
 					phone: login.company_phone, digital_address: login.digital_address
 				}
-				login.company_id = 0;
+				login.company_id = company_id.value;
 				login.parent_company = { id: 0, name: 'default' };
 
 

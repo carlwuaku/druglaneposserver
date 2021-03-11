@@ -17,5 +17,6 @@ const StockValues = sequelize.define("stock_values", {
     created_on: DataTypes.DATE,
 },{
   tableName: 'stock_values',
+  timestamps: false
 });
 module.exports = StockValues;

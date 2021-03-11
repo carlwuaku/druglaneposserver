@@ -14,5 +14,6 @@ const ItemActiveIngredients = sequelize.define("item_active_ingredients", {
     ingredient: DataTypes.INTEGER
 },{
   tableName: 'item_active_ingredients',
+  timestamps: false
 });
 module.exports = ItemActiveIngredients;

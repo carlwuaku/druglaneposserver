@@ -17,5 +17,6 @@ const Branches = sequelize.define("branches", {
     created_on: DataTypes.DATE
 },{
   tableName: 'branches',
+  timestamps: false
 });
 module.exports = Branches;

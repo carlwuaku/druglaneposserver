@@ -20,5 +20,6 @@ const TransferDetails = sequelize.define("transfer_details", {
   cost_price: DataTypes.DOUBLE
 },{
   tableName: 'transfer_details',
+  timestamps: false
 });
 module.exports = TransferDetails;
