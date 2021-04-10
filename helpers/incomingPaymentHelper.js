@@ -106,7 +106,7 @@ class IncomingPaymentHelper extends dbClass {
             sql += ` and date <= '${end_date}' `
         }
         if(payer != ''){
-            sql += ` and payer >= ${payer} `
+            sql += ` and payer = ${payer} `
         }
 
         try {

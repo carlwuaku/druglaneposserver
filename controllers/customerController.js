@@ -151,6 +151,7 @@ router.post('/saveDiagnostics', async (req, res) => {
             customer: req.body.customer,
             test: `"${req.body.test}"`,
             data: `"${req.body.data}"`,
+            created_on: `"${req.body.created_on}"`,
             comments: `"${req.body.comments}"`
         };
         let customer_type = req.body.customer_type

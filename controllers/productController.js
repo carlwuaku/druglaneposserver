@@ -12,12 +12,24 @@ const activities = new ActivitiesHelper();
 let stockValueClass = require('../helpers/stockValueHelper')
 let stockValueHelper = new stockValueClass();
 
+let productBatchClass = require('../helpers/productBatchesHelper')
+let productBatchHelper = new productBatchClass();
+
+const DetailsHelper = require('../helpers/purchaseDetailsHelper.js');
+const purchaseDetailsHelper = new DetailsHelper();
+
+const SalesDetailsHelper = require('../helpers/salesDetailsHelper.js');
+        const salesDetailsHelper = new SalesDetailsHelper();
+
+let vendorClass = require('../helpers/vendorHelper');
+let vendorHelper = new vendorClass();
 router.get('/getList', async (req, res) => {
     let offset = req.query.offset == undefined ? 0 : req.query.offset;
     let limit = req.query.limit == undefined ? null : req.query.limit;
     try {
-        const DetailsHelper = require('../helpers/salesDetailsHelper.js');
-        const salesDetailsHelper = new DetailsHelper();
+        
+
+
         // let objects = await helper.getAll(helper.table_name, limit, offset);
         // let this_month = helper.setDates("this_month")
         // let last_month = helper.setDates("last_month")
@@ -61,6 +73,25 @@ router.get('/getList', async (req, res) => {
             obj.near_max = stock >= max;
             obj.active_ingredients = [];
 
+            //get preferred vendor
+            try {
+                let vendor = await vendorHelper.getItem(`id = ${obj.preferred_vendor}`, vendorHelper.table_name)
+                obj.preferred_vendor_name = vendor.name;
+            } catch (error) {
+                obj.preferred_vendor_name = "n/a";
+
+            }
+
+            //get the vendor purchaesd from most
+            try {
+                let top_vendor = await purchaseDetailsHelper.getTopVendor(obj.id)
+                obj.highest_vendor_name = top_vendor.name;
+            } catch (error) {
+                obj.highest_vendor_name = "n/a";
+
+            }
+
+
             try {
                 let totals =await salesDetailsHelper.getTotalQuantityAndAmount(obj.id);
                 obj.total_amount_sold = totals.amount;
@@ -68,6 +99,8 @@ router.get('/getList', async (req, res) => {
                 let last_six_months_totals =await salesDetailsHelper.getTotalQuantityAndAmount(obj.id, last_six_months, today);
                 obj.six_months_amount_sold = last_six_months_totals.amount;
                 obj.six_months_quantity_sold = last_six_months_totals.total;
+                //preferred vendor
+                
                 // let avg = await salesDetailsHelper.getAverageMonthlyQuantities(obj.id);
                 // let avg_sum = 0;
                 // let count = 0;
@@ -181,16 +214,85 @@ router.get('/search', async (req, res) => {
     const DetailsHelper = require('../helpers/salesDetailsHelper.js');
     const salesDetailsHelper = new DetailsHelper();
     let param = req.query.param;
+    let advanced = req.query.advanced == undefined ? "no" : req.query.advanced;
     let offset = req.query.offset == undefined ? 0 : req.query.offset;
     let limit = req.query.limit == undefined ? null : req.query.limit;
     try {
-        let objects = await helper.search(param, limit, offset);
+        let objects = null;
+        if(advanced == "yes"){
+            //replace the texts with appropriate symbols
+            let fields = req.query.fields.split("|||");
+            let values = req.query.values.split("|||");
+            let operators = req.query.operators.split("|||");
+            let conditions = [];
+            for(var x = 0; x < fields.length; x++){
+                switch (operators[x]) {
+                    case "Contains":
+                      conditions.push(`${fields[x]} like '%${values[x]}%'`);
+                      break;
+                    case "Starts with":
+                        conditions.push(`${fields[x]} like '${values[x]}%'`);
+                      break;
+                    case "Ends with":
+                      conditions.push(`${fields[x]} like '%${values[x]}'`);
+                      break;
+                    case "Is exactly":
+                      conditions.push(`${fields[x]} = '${values[x]}'`);
+                      break;
+                      case "Less Than":
+                      conditions.push(`${fields[x]} < '${values[x]}'`);
+                      break;
+                      case "Greater Than":
+                      conditions.push(`${fields[x]} > '${values[x]}'`);
+                      break;
+                      case "Less Or Equal":
+                      conditions.push(`${fields[x]} <= '${values[x]}'`);
+                      break;
+                      case "Greater or Equal":
+                      conditions.push(`${fields[x]} >= '${values[x]}'`);
+                      break;
+                      case "Not Equals": 
+                      conditions.push(`${fields[x]} != '${values[x]}'`);
+                      break;
+                      case "Equals":
+                      conditions.push(`${fields[x]} = '${values[x]}'`);
+                      break;
+                    case "Does not contain":
+                      conditions.push(`${fields[x]} not like '%${values[x]}%'`);
+                      break;
+        
+                    default:
+                      conditions.push(`${fields[x]} like '%${values[x]}%'`);
+                      break;
+                  }
+            }
+            objects = await helper.getMany(conditions.join(" and "), helper.table_name, limit, offset)
+        }
+        else{
+            objects =          await helper.search(param, limit, offset);
+
+        }
+        //also search the batches for matching records
+        // let other_batches = await productBatchHelper.getDistinct("product", `barcode like "%${param}%"`, offset);
+        
+        //check
         // let this_month = helper.setDates("this_month")
         // let last_month = helper.setDates("last_month")
         // let q1 = helper.setDates("first_quarter")
         // let q2 = helper.setDates("second_quarter")
         // let q3 = helper.setDates("third_quarter")
         // let q4 = helper.setDates("fourth_quarter")
+        let ids = []//the ids collected so far from products
+        objects.map(obj => {
+            ids.push(obj.id)
+        })
+        //gte items from the batches and if already not in the objects, add them
+        // other_batches.map(async ob => {
+        //     if(ids.indexOf(ob.id) != -1){
+        //         let pdt = await helper.getItem(`id = ${ob.id}`);
+        //         objects.push(pdt)
+        //     }
+        // })
         let last_six_months = helper.addMonthsToDate(-6);
         let today = helper.getToday()
         for (var i = 0; i < objects.length; i++) {
@@ -207,6 +309,22 @@ router.get('/search', async (req, res) => {
             obj.active_ingredients = [];
             //average per month over last 3 months
             //average per month over last 6 months
+            try {
+                let vendor = await vendorHelper.getItem(`id = ${obj.preferred_vendor}`, vendorHelper.table_name)
+                obj.preferred_vendor_name = vendor.name;
+            } catch (error) {
+                obj.preferred_vendor_name = "n/a";
+                
+            }
+
+            //get the vendor purchaesd from most
+            try {
+                let top_vendor = await purchaseDetailsHelper.getTopVendor(obj.id)
+                obj.highest_vendor_name = top_vendor.name;
+            } catch (error) {
+                obj.highest_vendor_name = "n/a";
+
+            }
             try {
 
                 let totals =await salesDetailsHelper.getTotalQuantityAndAmount(obj.id);
@@ -288,6 +406,21 @@ router.get('/getRelatedProducts', async (req, res) => {
             }
         }
         res.json({ status: '1', data: selected })
+    } catch (error) {
+        await helper.closeConnection();
+        //console.l.log(error)
+        log.error(error)
+        res.json({ status: '-1', data: null })
+    }
+
+});
+
+
+router.get('/getProductBatches', async (req, res) => {
+    try{
+        let id = req.query.id
+        let  batches = await productBatchHelper.getMany(` product = ${id} and quantity - quantity_sold > 0`, productBatchHelper.table_name);
+        res.json({ status: '1', data: batches })
     } catch (error) {
         await helper.closeConnection();
         //console.l.log(error)
@@ -534,6 +667,27 @@ router.get('/findById', async (req, res) => {
         item.this_month_amount = this_month_quantity.amount;
         item.last_month_quantity = last_month_quantity.total;
         item.last_month_amount = last_month_quantity.amount;
+        try {
+            let vendor = await vendorHelper.getItem(`id = ${item.preferred_vendor}`, vendorHelper.table_name)
+            item.preferred_vendor_name = vendor.name;
+        } catch (error) {
+            item.preferred_vendor_name = "n/a";
+            // console.log(error)
+
+        }
+
+        //get the vendor purchaesd from most
+        try {
+            let top_vendor = await purchaseDetailsHelper.getTopVendor(item.id)
+            item.highest_vendor_name = top_vendor.name;
+        } catch (error) {
+            item.highest_vendor_name = "n/a";
+            // console.log(error)
+        }
+
+
+        //get the different batches available
+        item.batches = await productBatchHelper.getMany(` product = ${id}`, productBatchHelper.table_name);
 
         // item.q1_quantity = await salesDetailsHelper.getTotalQuantity(id, q1.start_date, q1.end_date)
         // item.q2_quantity = await salesDetailsHelper.getTotalQuantity(id, q2.start_date, q2.end_date)
@@ -544,7 +698,7 @@ router.get('/findById', async (req, res) => {
         res.json({ status: '1', data: item })
     } catch (error) {
         await helper.closeConnection();
-        //console.l.log(error)
+        console.log(error)
         res.json({ status: '-1' })
     }
 });
@@ -1267,7 +1421,52 @@ router.get('/getStockOutList', async (req, res) => {
             obj.out_of_stock = stock < 1;
             obj.near_min = stock > 0 && stock <= min;
             obj.near_max = stock >= max;
-            obj.stock = obj.current_stock
+            obj.stock = obj.current_stock;
+            obj.stock_value = (obj.current_stock * obj.price).toLocaleString()
+
+
+             //get preferred vendor
+             try {
+                let vendor = await vendorHelper.getItem(`id = ${obj.preferred_vendor}`, vendorHelper.table_name)
+                obj.preferred_vendor_name = vendor.name;
+            } catch (error) {
+                obj.preferred_vendor_name = "n/a";
+
+            }
+
+            //get the vendor purchaesd from most
+            try {
+                let top_vendor = await purchaseDetailsHelper.getTopVendor(obj.id)
+                obj.highest_vendor_name = top_vendor.name;
+            } catch (error) {
+                obj.highest_vendor_name = "n/a";
+
+            }
+
+            try {
+                let totals =await salesDetailsHelper.getTotalQuantityAndAmount(obj.id);
+                obj.total_amount_sold = totals.amount;
+                obj.total_quantity_sold = totals.total;
+                let last_six_months_totals =await salesDetailsHelper.getTotalQuantityAndAmount(obj.id, last_six_months, today);
+                obj.six_months_amount_sold = last_six_months_totals.amount;
+                obj.six_months_quantity_sold = last_six_months_totals.total;
+                //preferred vendor
+                
+                // let avg = await salesDetailsHelper.getAverageMonthlyQuantities(obj.id);
+                // let avg_sum = 0;
+                // let count = 0;
+                // if (avg != null) {
+                //     avg.map(a => {
+                //         avg_sum += a.average;
+                //         count++;
+                //     });
+                //     obj.average_monthly = (avg_sum / count).toLocaleString();
+
+                // }
+            } catch (error) {
+                //console.l.log(error)
+                obj.average_monthly = 0;
+            }
         }
         res.json({ status: '1', data: objects })
     } catch (error) {
@@ -1318,7 +1517,51 @@ router.get('/getStockNearMinList', async (req, res) => {
             obj.out_of_stock = stock < 1;
             obj.near_min = stock > 0 && stock <= min;
             obj.near_max = stock >= max;
-            obj.stock = obj.current_stock
+            obj.stock = obj.current_stock;
+            obj.stock_value = (obj.current_stock * obj.price).toLocaleString()
+
+             //get preferred vendor
+             try {
+                let vendor = await vendorHelper.getItem(`id = ${obj.preferred_vendor}`, vendorHelper.table_name)
+                obj.preferred_vendor_name = vendor.name;
+            } catch (error) {
+                obj.preferred_vendor_name = "n/a";
+
+            }
+
+            //get the vendor purchaesd from most
+            try {
+                let top_vendor = await purchaseDetailsHelper.getTopVendor(obj.id)
+                obj.highest_vendor_name = top_vendor.name;
+            } catch (error) {
+                obj.highest_vendor_name = "n/a";
+
+            }
+
+            try {
+                let totals =await salesDetailsHelper.getTotalQuantityAndAmount(obj.id);
+                obj.total_amount_sold = totals.amount;
+                obj.total_quantity_sold = totals.total;
+                let last_six_months_totals =await salesDetailsHelper.getTotalQuantityAndAmount(obj.id, last_six_months, today);
+                obj.six_months_amount_sold = last_six_months_totals.amount;
+                obj.six_months_quantity_sold = last_six_months_totals.total;
+                //preferred vendor
+                
+                // let avg = await salesDetailsHelper.getAverageMonthlyQuantities(obj.id);
+                // let avg_sum = 0;
+                // let count = 0;
+                // if (avg != null) {
+                //     avg.map(a => {
+                //         avg_sum += a.average;
+                //         count++;
+                //     });
+                //     obj.average_monthly = (avg_sum / count).toLocaleString();
+
+                // }
+            } catch (error) {
+                //console.l.log(error)
+                obj.average_monthly = 0;
+            }
         }
         res.json({ status: '1', data: objects })
     } catch (error) {
@@ -1369,7 +1612,51 @@ router.get('/getStockNearMaxList', async (req, res) => {
             obj.out_of_stock = stock < 1;
             obj.near_min = stock > 0 && stock <= min;
             obj.near_max = stock >= max;
-            obj.stock = obj.current_stock
+            obj.stock = obj.current_stock;
+            obj.stock_value = (obj.current_stock * obj.price).toLocaleString()
+
+             //get preferred vendor
+             try {
+                let vendor = await vendorHelper.getItem(`id = ${obj.preferred_vendor}`, vendorHelper.table_name)
+                obj.preferred_vendor_name = vendor.name;
+            } catch (error) {
+                obj.preferred_vendor_name = "n/a";
+
+            }
+
+            //get the vendor purchaesd from most
+            try {
+                let top_vendor = await purchaseDetailsHelper.getTopVendor(obj.id)
+                obj.highest_vendor_name = top_vendor.name;
+            } catch (error) {
+                obj.highest_vendor_name = "n/a";
+
+            }
+
+            try {
+                let totals =await salesDetailsHelper.getTotalQuantityAndAmount(obj.id);
+                obj.total_amount_sold = totals.amount;
+                obj.total_quantity_sold = totals.total;
+                let last_six_months_totals =await salesDetailsHelper.getTotalQuantityAndAmount(obj.id, last_six_months, today);
+                obj.six_months_amount_sold = last_six_months_totals.amount;
+                obj.six_months_quantity_sold = last_six_months_totals.total;
+                //preferred vendor
+                
+                // let avg = await salesDetailsHelper.getAverageMonthlyQuantities(obj.id);
+                // let avg_sum = 0;
+                // let count = 0;
+                // if (avg != null) {
+                //     avg.map(a => {
+                //         avg_sum += a.average;
+                //         count++;
+                //     });
+                //     obj.average_monthly = (avg_sum / count).toLocaleString();
+
+                // }
+            } catch (error) {
+                //console.l.log(error)
+                obj.average_monthly = 0;
+            }
         }
         res.json({ status: '1', data: objects })
     } catch (error) {
@@ -1569,7 +1856,51 @@ router.get('/getExpiryList', async (req, res) => {
             obj.out_of_stock = stock < 1;
             obj.near_min = stock > 0 && stock <= min;
             obj.near_max = stock >= max;
-            obj.stock = obj.current_stock
+            obj.stock = obj.current_stock;
+            obj.stock_value = (obj.current_stock * obj.price).toLocaleString()
+
+             //get preferred vendor
+             try {
+                let vendor = await vendorHelper.getItem(`id = ${obj.preferred_vendor}`, vendorHelper.table_name)
+                obj.preferred_vendor_name = vendor.name;
+            } catch (error) {
+                obj.preferred_vendor_name = "n/a";
+
+            }
+
+            //get the vendor purchaesd from most
+            try {
+                let top_vendor = await purchaseDetailsHelper.getTopVendor(obj.id)
+                obj.highest_vendor_name = top_vendor.name;
+            } catch (error) {
+                obj.highest_vendor_name = "n/a";
+
+            }
+
+            try {
+                let totals =await salesDetailsHelper.getTotalQuantityAndAmount(obj.id);
+                obj.total_amount_sold = totals.amount;
+                obj.total_quantity_sold = totals.total;
+                let last_six_months_totals =await salesDetailsHelper.getTotalQuantityAndAmount(obj.id, last_six_months, today);
+                obj.six_months_amount_sold = last_six_months_totals.amount;
+                obj.six_months_quantity_sold = last_six_months_totals.total;
+                //preferred vendor
+                
+                // let avg = await salesDetailsHelper.getAverageMonthlyQuantities(obj.id);
+                // let avg_sum = 0;
+                // let count = 0;
+                // if (avg != null) {
+                //     avg.map(a => {
+                //         avg_sum += a.average;
+                //         count++;
+                //     });
+                //     obj.average_monthly = (avg_sum / count).toLocaleString();
+
+                // }
+            } catch (error) {
+                //console.l.log(error)
+                obj.average_monthly = 0;
+            }
         }
         res.json({ status: '1', data: objects })
     } catch (error) {
@@ -1585,6 +1916,7 @@ router.get('/getStockValueList', async (req, res) => {
         let defs = helper.setDates('this_month')
         let start = req.query.start_date == undefined ? defs.start_date : req.query.start_date;
         let end = req.query.end_date == undefined ? defs.end_date : req.query.end_date;
+        let report_field = req.query.report_field == undefined ? "cost_value" : req.query.report_field;
         let range = helper.getDatesBetween(start, end);
         let last_value = 0;
         let objects = []
@@ -1605,13 +1937,16 @@ router.get('/getStockValueList', async (req, res) => {
             var curr = {}
             var date = range[i];
             curr.date = date;
-            var closing_stock = await stockValueHelper.getStockValueByDate(date);
+            var closing_stock = 
+            report_field == "selling_value" ? await stockValueHelper.getStockValueByDate(date) : await stockValueHelper.getStockCostValueByDate(date);
             curr.closing_stock = closing_stock.toLocaleString();
             var opening_stock = 0;
 
             if (i == 0) {
                 let yestee = helper.getYesterday(date)
-                let yesterday_value = await stockValueHelper.getStockValueByDate(yestee);
+                let yesterday_value = 
+                report_field == "selling_value" ? await stockValueHelper.getStockValueByDate(yestee) : await stockValueHelper.getStockCostValueByDate(yestee);
+
                 opening_stock = yesterday_value;
             }
             else {
@@ -1620,21 +1955,26 @@ router.get('/getStockValueList', async (req, res) => {
             last_value = closing_stock;
             curr.opening_stock = opening_stock.toLocaleString()
             curr.difference = (opening_stock - closing_stock).toLocaleString()
-            let sales = await salesDetailsHelper.getTotalSales(date, date);
-            let purchases = await pDetailsHelper.getTotalPurchase(date, date)
-            let transfers_out = await tdetailsHelper.getTotal(date, date)
-            let transfers = await rdetailsHelper.getTotal(date, date)
+            let sales = report_field == "selling_value" ? await salesDetailsHelper.getTotalSales(date, date) :  await salesDetailsHelper.getTotalSalesCost(date, date);
+            let purchases =report_field == "selling_value" ? await pDetailsHelper.getTotalPurchaseSelling(date, date)
+            :await pDetailsHelper.getTotalPurchase(date, date);
+            let transfers_out = report_field == "selling_value" ? await tdetailsHelper.getTotal(date, date)
+            : await tdetailsHelper.getTotalCost(date, date);
+            let transfers = report_field == "selling_value" ? await rdetailsHelper.getTotal(date, date)
+            : await rdetailsHelper.getTotalCost(date, date);
 
-            curr.sales = sales.toLocaleString()
+            curr.sales =  sales.toLocaleString()
             curr.purchases = purchases.toLocaleString()
             curr.transfers_out = transfers_out.toLocaleString()
             curr.transfers = transfers.toLocaleString()
+
+           
             objects.push(curr)
         }
         res.json({ status: '1', data: objects })
     } catch (error) {
         await helper.closeConnection();
-        //console.l.log(error)
+        // console.log(error)
         res.json({ status: '-1', data: null })
     }
 
@@ -1689,6 +2029,50 @@ router.get('/getExpiredList', async (req, res) => {
             obj.near_min = stock > 0 && stock <= min;
             obj.near_max = stock >= max;
             obj.stock = obj.current_stock
+            obj.stock_value = (obj.current_stock * obj.price).toLocaleString()
+
+             //get preferred vendor
+             try {
+                let vendor = await vendorHelper.getItem(`id = ${obj.preferred_vendor}`, vendorHelper.table_name)
+                obj.preferred_vendor_name = vendor.name;
+            } catch (error) {
+                obj.preferred_vendor_name = "n/a";
+
+            }
+
+            //get the vendor purchaesd from most
+            try {
+                let top_vendor = await purchaseDetailsHelper.getTopVendor(obj.id)
+                obj.highest_vendor_name = top_vendor.name;
+            } catch (error) {
+                obj.highest_vendor_name = "n/a";
+
+            }
+
+            try {
+                let totals =await salesDetailsHelper.getTotalQuantityAndAmount(obj.id);
+                obj.total_amount_sold = totals.amount;
+                obj.total_quantity_sold = totals.total;
+                let last_six_months_totals =await salesDetailsHelper.getTotalQuantityAndAmount(obj.id, last_six_months, today);
+                obj.six_months_amount_sold = last_six_months_totals.amount;
+                obj.six_months_quantity_sold = last_six_months_totals.total;
+                //preferred vendor
+                
+                // let avg = await salesDetailsHelper.getAverageMonthlyQuantities(obj.id);
+                // let avg_sum = 0;
+                // let count = 0;
+                // if (avg != null) {
+                //     avg.map(a => {
+                //         avg_sum += a.average;
+                //         count++;
+                //     });
+                //     obj.average_monthly = (avg_sum / count).toLocaleString();
+
+                // }
+            } catch (error) {
+                //console.l.log(error)
+                obj.average_monthly = 0;
+            }
         }
         res.json({ status: '1', data: objects })
     } catch (error) {

@@ -6,7 +6,7 @@ exports.server_url = "https://druglanepms.calgadsoftwares.com";
 // exports.server_url = "http://localhost/stock";
 exports.customer_image_url = "assets/customer_images/";
 exports.customer_image_thumbnail_url = "assets/customer_images/thumbnails/";
-   
+    
 exports.product_image_url = "assets/product_images/";
 exports.product_image_thumbnail_url = "assets/product_images/thumbnails/";
 exports.port = PORT; 
@@ -1588,6 +1588,33 @@ const migrations = [
     
           `,
     version: 99
+  },
+  {
+
+    query: `INSERT INTO permissions (permission_id, name, description) values 
+    (86, 'Give Discount', 'offer discounts to clients during sales');`,
+    version: 100
+  },
+  {
+    query: `INSERT INTO role_permissions (role_id, permission_id) values 
+    (1, 86);`,
+    version: 101
+  },{
+    query: `
+     INSERT OR IGNORE INTO settings (name, value, module) values ('restrict_zero_stock_sales', 'no', 'System');
+    `,
+    version: 102
+  },
+  {
+
+    query: `INSERT INTO permissions (permission_id, name, description) values 
+    (87, 'Edit Sales', 'edit a sales date, payment method, amount paid, customer and shift');`,
+    version: 103
+  },
+  {
+    query: `INSERT INTO role_permissions (role_id, permission_id) values 
+    (1, 87);`,
+    version: 104
   }
  //
 ];

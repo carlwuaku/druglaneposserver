@@ -88,14 +88,18 @@
 					<li class="nav-item"><a class="nav-link scrollto" href="#item-1-2">Installation</a></li>
 					<li class="nav-item"><a class="nav-link scrollto" href="#item-1-3">Starting the server</a></li>
 					<li class="nav-item"><a class="nav-link scrollto" href="#item-1-4">Using the client</a></li>
-					<li class="nav-item"><a class="nav-link scrollto" href="#item-1-5">Adding new devices</a></li>
-					<li class="nav-item"><a class="nav-link scrollto" href="#item-1-6">Section Item 1.6</a></li>
-					<li class="nav-item section-title mt-3"><a class="nav-link scrollto" href="#section-2"><span
-								class="theme-icon-holder mr-2"><i class="fas fa-arrow-down"></i></span>Installation</a>
+					<li class="nav-item section-title mt-3">
+						<a class="nav-link scrollto" href="#section-2">
+							<span class="theme-icon-holder mr-2"><i
+									class="fas fa-arrow-down"></i></span>Sales</a>
 					</li>
-					<li class="nav-item"><a class="nav-link scrollto" href="#item-2-1">Section Item 2.1</a></li>
-					<li class="nav-item"><a class="nav-link scrollto" href="#item-2-2">Section Item 2.2</a></li>
-					<li class="nav-item"><a class="nav-link scrollto" href="#item-2-3">Section Item 2.3</a></li>
+					<li class="nav-item"><a class="nav-link scrollto" href="#item-2-1">Make a new sale</a></li>
+					<li class="nav-item"><a class="nav-link scrollto" href="#item-2-2">Sales History: Delete/View/Return</a></li>
+					<li class="nav-item"><a class="nav-link scrollto" href="#item-2-3">Sales Reports</a></li>
+					<li class="nav-item"><a class="nav-link scrollto" href="#item-2-4">End Of Day</a></li>
+					<li class="nav-item"><a class="nav-link scrollto" href="#item-2-5">Payment Reports</a></li>
+					<li class="nav-item"><a class="nav-link scrollto" href="#item-2-6">Receive Credit Payments</a></li>
+					<li class="nav-item"><a class="nav-link scrollto" href="#item-2-7">View Arrears</a></li>
 					<li class="nav-item section-title mt-3"><a class="nav-link scrollto" href="#section-3"><span
 								class="theme-icon-holder mr-2"><i class="fas fa-box"></i></span>APIs</a></li>
 					<li class="nav-item"><a class="nav-link scrollto" href="#item-3-1">Section Item 3.1</a></li>
@@ -153,7 +157,7 @@
 						</section>
 						<!--//docs-intro-->
 
-						
+
 
 						<!--//docs-code-block-->
 
@@ -162,13 +166,16 @@
 					<section class="docs-section" id="item-1-1">
 						<h2 class="section-heading">Overview</h2>
 						<p>
-							This software is a Pharmacy Management System, and is tailored to meet the needs of 
-							community pharmacies. It uses a Server-Client architecture. That means that the server is installed on 
-							a single computer, and other computers or devices can access the main interface via a network. It 
-							also uses role-based access control; which restricts user access to different functionalities based 
+							This software is a Pharmacy Management System, and is tailored to meet the needs of
+							community pharmacies. It uses a Server-Client architecture. That means that the server is
+							installed on
+							a single computer, and other computers or devices can access the main interface via a
+							network. It
+							also uses role-based access control; which restricts user access to different
+							functionalities based
 							on the permissions granted to that user by the system adminitrator.
 						</p>
-						
+
 						<!-- <div class="callout-block callout-block-info">
 
 							<div class="content">
@@ -257,50 +264,64 @@
 
 					<section class="docs-section" id="item-1-2">
 						<h2 class="section-heading">Installation</h2>
-						<p>The software will typically be installed by one our reprensentatives, 
+						<p>The software will typically be installed by one our reprensentatives,
 							so the client normally would have to do nothing. </p>
-							<p>
-								The installation process is as follows:
-								<ul>
-									<li>Unzip the application files and place the contents in any folder on your computer 
-										(we recommend placing the folder directly under drive C i.e. C:\druglaneserver) </li>
-										<li>
-											
-											Within the folder in which the application files were unzipped, 
-											locate the file named 'DruglaneServer.exe'. Right-click this file, click on the 
-											option 'Send to' in the popup, then click on 'Desktop (create shortcut)' in the second 
-											popup
-										</li>
-										<li>
-											Go to your desktop, locate the file named 'DruglaneServer', and double-click it to open 
-											the application server.
-										</li>
-										
-										<li>
-											It should open the application and give you a welcome message, asking you to click a button 
-											to begin setup. Click this button and wait for a few seconds while the configuration is automatically 
-											done. The page will change once this is complete.
-										</li>
-										<li>
-											The next page will ask you to setup the administrator password, and choose how many shifts your company 
-											runs. Please choose a secure password and keep it somewhere safe as we will not be able to retrieve it 
-											for you if you lose it. The number of shifts option will be used to setup your POS, and can be changed at 
-											any time by the administrator. Click the 'Submit' button when you are done to move to the next screen.
-										</li>
-										<li>
-											The next screen is the activation page. You will need internet connection to complete this step. You will need to enter the activation key given to you by us. Every 
-											copy of this app comes with a unique activation key which is emailed to your company email when payment is 
-											confirmed. It may look like H03TG-E980B-DIE03-VNIE3. Once you enter the activation key, click on the 'Submit' 
-											button and wait for a few seconds. The system will automatically retrieve your company's details. Click the continue 
-											button to go to the next page
-										</li>
-										<li>
-											The next screen is the Admin Setup page. You will have to enter the administrator password, and the shifts your company runs.
-											 Your users will be required to select the shift they are working before they make sales. The shift names must be separated by commas (,) if they are more than one. E.g. if you have 3 shifts, you can enter 
-											 'Morning Shift, Afternoon Shift, Evening Shift' in the shifts input. You can have as you want. Click the green button to complete the setup.
-										</li>
-								</ul>
-							</p>
+						<p>
+							The installation process is as follows:
+						<ul>
+							<li>Unzip the application files and place the contents in any folder on your computer
+								(we recommend placing the folder directly under drive C i.e. C:\druglaneserver) </li>
+							<li>
+
+								Within the folder in which the application files were unzipped,
+								locate the file named 'DruglaneServer.exe'. Right-click this file, click on the
+								option 'Send to' in the popup, then click on 'Desktop (create shortcut)' in the second
+								popup
+							</li>
+							<li>
+								Go to your desktop, locate the file named 'DruglaneServer', and double-click it to open
+								the application server.
+							</li>
+
+							<li>
+								It should open the application and give you a welcome message, asking you to click a
+								button
+								to begin setup. Click this button and wait for a few seconds while the configuration is
+								automatically
+								done. The page will change once this is complete.
+							</li>
+							<li>
+								The next page will ask you to setup the administrator password, and choose how many
+								shifts your company
+								runs. Please choose a secure password and keep it somewhere safe as we will not be able
+								to retrieve it
+								for you if you lose it. The number of shifts option will be used to setup your POS, and
+								can be changed at
+								any time by the administrator. Click the 'Submit' button when you are done to move to
+								the next screen.
+							</li>
+							<li>
+								The next screen is the activation page. You will need internet connection to complete
+								this step. You will need to enter the activation key given to you by us. Every
+								copy of this app comes with a unique activation key which is emailed to your company
+								email when payment is
+								confirmed. It may look like H03TG-E980B-DIE03-VNIE3. Once you enter the activation key,
+								click on the 'Submit'
+								button and wait for a few seconds. The system will automatically retrieve your company's
+								details. Click the continue
+								button to go to the next page
+							</li>
+							<li>
+								The next screen is the Admin Setup page. You will have to enter the administrator
+								password, and the shifts your company runs.
+								Your users will be required to select the shift they are working before they make sales.
+								The shift names must be separated by commas (,) if they are more than one. E.g. if you
+								have 3 shifts, you can enter
+								'Morning Shift, Afternoon Shift, Evening Shift' in the shifts input. You can have as you
+								want. Click the green button to complete the setup.
+							</li>
+						</ul>
+						</p>
 
 
 
@@ -310,112 +331,211 @@
 					<section class="docs-section" id="item-1-3">
 						<h2 class="section-heading">Starting The Server</h2>
 						<p>
-							Before you start using the software, you must start the server. To this, simply double click the 'DruglaneServer' app icon on 
+							Before you start using the software, you must start the server. To this, simply double click
+							the 'DruglaneServer' app icon on
 							your desktop. This will open up the server, and you can start using the software.
 						</p>
-						
+
 					</section>
 					<!--//section-->
 
 					<section class="docs-section" id="item-1-4">
 						<h2 class="section-heading">Using the Client</h2>
 						<p>
-							The client is the interface that allows you to do all the normal management stuff like sales, inventory, purchases, etc. 
+							The client is the interface that allows you to do all the normal management stuff like
+							sales, inventory, purchases, etc.
 							The client works in any web browser on any device. There are 2 ways to access the client:
-							<ol>
-								<li>
-									When you start the server, click on the white button labelled 'Go To The Main System'. This will open the 
-									client on the computer on which the server is running.
-								</li>
-								<li>
-									To open it on another computer, you'll need the server url. This is displayed in the server on the 3rd tab on the server, 
-									where it says 'To open the client (main POS) on another device, open a browser on that device, 
-									and in the address bar, 
-									type http://127.0.0.1:5000/client and press 'Enter'. 
-									You would need a username and password created on this server to be able to login on that device
-								</li>
-							</ol>
+						<ol>
+							<li>
+								When you start the server, click on the white button labelled 'Go To The Main System'.
+								This will open the
+								client on the computer on which the server is running.
+							</li>
+							<li>
+								To open it on another computer or device the device needs to be connected to the same
+								network as the server. Simply open a browser on that device and type the server url in
+								the address bar.
+								This is displayed on the 3rd tab on the server interface,
+								where it says 'To open the client (main POS) on another device, open a browser on that
+								device,
+								and in the address bar,
+								type http://127.0.0.1:5000/client and press 'Enter'.
+								You would need a username and password created on this server to be able to login on
+								that device
+							</li>
+						</ol>
 						</p>
 
 
-						<h5>Pagination Example:</h5>
-						<nav aria-label="Page navigation example">
-							<ul class="pagination pl-0">
-								<li class="page-item disabled"><a class="page-link" href="#">Previous</a></li>
-								<li class="page-item active"><a class="page-link" href="#">1</a></li>
-								<li class="page-item"><a class="page-link" href="#">2</a></li>
-								<li class="page-item"><a class="page-link" href="#">3</a></li>
-								<li class="page-item"><a class="page-link" href="#">Next</a></li>
-							</ul>
-						</nav>
 
-						<p>Vivamus efficitur fringilla ullamcorper. Cras condimentum condimentum mauris, vitae facilisis
-							leo. Aliquam sagittis purus nisi, at commodo augue convallis id. Sed interdum turpis quis
-							felis bibendum imperdiet. Mauris pellentesque urna eu leo gravida iaculis. In fringilla odio
-							in felis ultricies porttitor. Donec at purus libero. Vestibulum libero orci, commodo nec
-							arcu sit amet, commodo sollicitudin est. Vestibulum ultricies malesuada tempor.</p>
+
 
 					</section>
-					<!--//section-->
-					<section class="docs-section" id="item-1-5">
-						<h2 class="section-heading">Section Item 1.5</h2>
-						<p>Vivamus efficitur fringilla ullamcorper. Cras condimentum condimentum mauris, vitae facilisis
-							leo. Aliquam sagittis purus nisi, at commodo augue convallis id. Sed interdum turpis quis
-							felis bibendum imperdiet. Mauris pellentesque urna eu leo gravida iaculis. In fringilla odio
-							in felis ultricies porttitor. Donec at purus libero. Vestibulum libero orci, commodo nec
-							arcu sit amet, commodo sollicitudin est. Vestibulum ultricies malesuada tempor.</p>
-					</section>
-					<!--//section-->
-					<section class="docs-section" id="item-1-6">
-						<h2 class="section-heading">Section Item 1.6</h2>
-						<p>Vivamus efficitur fringilla ullamcorper. Cras condimentum condimentum mauris, vitae facilisis
-							leo. Aliquam sagittis purus nisi, at commodo augue convallis id. Sed interdum turpis quis
-							felis bibendum imperdiet. Mauris pellentesque urna eu leo gravida iaculis. In fringilla odio
-							in felis ultricies porttitor. Donec at purus libero. Vestibulum libero orci, commodo nec
-							arcu sit amet, commodo sollicitudin est. Vestibulum ultricies malesuada tempor.</p>
-					</section>
+
 					<!--//section-->
 
 				</article>
 
 				<article class="docs-article" id="section-2">
 					<header class="docs-header">
-						<h1 class="docs-heading">Installation</h1>
+						<h1 class="docs-heading">Sales Module</h1>
 						<section class="docs-intro">
-							<p>Section intro goes here. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque
-								finibus condimentum nisl id vulputate. Praesent aliquet varius eros interdum suscipit.
-								Donec eu purus sed nibh convallis bibendum quis vitae turpis. Duis vestibulum diam
-								lorem, vitae dapibus nibh facilisis a. Fusce in malesuada odio.</p>
+							<p>All about sales</p>
 						</section>
 						<!--//docs-intro-->
 					</header>
 					<section class="docs-section" id="item-2-1">
-						<h2 class="section-heading">Section Item 2.1</h2>
-						<p>Vivamus efficitur fringilla ullamcorper. Cras condimentum condimentum mauris, vitae facilisis
-							leo. Aliquam sagittis purus nisi, at commodo augue convallis id. Sed interdum turpis quis
-							felis bibendum imperdiet. Mauris pellentesque urna eu leo gravida iaculis. In fringilla odio
-							in felis ultricies porttitor. Donec at purus libero. Vestibulum libero orci, commodo nec
-							arcu sit amet, commodo sollicitudin est. Vestibulum ultricies malesuada tempor.</p>
+						<h2 class="section-heading">Make a sale/Generate an invoice</h2>
+						
+well 
+
+
+
+
+
+
+						<p>
+							<ol>
+								<li>
+									To make a sale click on the start sales button on the dashboard or 
+									you can also click the 'Start Sales' menu item in the sidebar
+								</li>
+								<li>
+									A pop up may show asking you to select your shift. 
+If it does select the shift and click on the OK button 
+								</li>
+								<li>
+									Start your sales by entering the names of the items in the fields labeled enter product names or bar code. 
+									Do this for each item you want to sell 
+								</li>
+								<li>
+									When you are done click on the dropdown labeled method and select the payment method. <br>
+									if it is cash you will have to enter the amount paid. <br> 
+If it is mobile money you will have to enter the transaction ID. <br> 
+For credit sales you will be required to enter the customer details  <br>
+								</li>
+								<li>
+									When you are done click on the save button to save and print the invoice.
+								</li>
+								<li>
+									When the print dialog opens click on the Print button to print out your receipts click on the Cancel button if you don't want to print 
+
+								</li>
+							</ol>
+						</p>
 					</section>
 					<!--//section-->
 
 					<section class="docs-section" id="item-2-2">
-						<h2 class="section-heading">Section Item 2.2</h2>
-						<p>Vivamus efficitur fringilla ullamcorper. Cras condimentum condimentum mauris, vitae facilisis
-							leo. Aliquam sagittis purus nisi, at commodo augue convallis id. Sed interdum turpis quis
-							felis bibendum imperdiet. Mauris pellentesque urna eu leo gravida iaculis. In fringilla odio
-							in felis ultricies porttitor. Donec at purus libero. Vestibulum libero orci, commodo nec
-							arcu sit amet, commodo sollicitudin est. Vestibulum ultricies malesuada tempor.</p>
+						<h2 class="section-heading">Sales History: Delete/View/Return</h2>
+						<p>The sales history page allows you to view all previous sales made. 
+							You can return sold items, reprint receipts or delete previous sales made. 
+							<ul>
+								<li>
+									To delete the receipts click on the receipt number hey click on the delete button 
+								</li>
+								<li>
+									To return sold items click on their receipts number then
+									 in the next box click on the items you wish to return and then click 
+									 on the yellow return button. <br>
+									 You will be asked to specify the quantity you are returning and then you click on the save button 
+
+								</li>
+								<li>
+									To reprint a receipt click on the receipt number and when the details open click on the print button 
+
+								</li>
+							</ul>
+							
+							
+							</p>
 					</section>
 					<!--//section-->
 
 					<section class="docs-section" id="item-2-3">
-						<h2 class="section-heading">Section Item 2.3</h2>
-						<p>Vivamus efficitur fringilla ullamcorper. Cras condimentum condimentum mauris, vitae facilisis
-							leo. Aliquam sagittis purus nisi, at commodo augue convallis id. Sed interdum turpis quis
-							felis bibendum imperdiet. Mauris pellentesque urna eu leo gravida iaculis. In fringilla odio
-							in felis ultricies porttitor. Donec at purus libero. Vestibulum libero orci, commodo nec
-							arcu sit amet, commodo sollicitudin est. Vestibulum ultricies malesuada tempor.</p>
+						<h2 class="section-heading">Sales Reports</h2>
+						<p>
+							Sales reports provides a day-by-day report on sales. For the selected period, it 
+							provides the total amount of sales made (by selling price), the total cost of goods 
+							sold, and the profit. It also gives a breakdown of how much was received from each 
+							payment channel.
+						</p>
+						<p>
+							The page also provides a list of the top selling items, and top selling categories.
+						</p>
+					</section>
+
+					<section class="docs-section" id="item-2-4">
+						<h2 class="section-heading">End of Day</h2>
+						<p>
+							This page provides a summary sales activities for a given period. The summaries are 
+							given for:
+							<ul>
+								<li>Each user</li>
+								<li>Each shift</li>
+								<li>
+									All users and shifts combined
+								</li>
+							</ul>
+							To print the summary for each, click the
+							 <button class="btn btn-info btn-sm"><i class="fa fa-print"></i> </button> next 
+							 to the user name or shift name.
+						</p>
+						<p>
+							To view all the items sold for the day, scroll to the bottom of the page and click on the 
+							'View Details' button
+						</p>
+					</section>
+
+					<section class="docs-section" id="item-2-5">
+						<h2 class="section-heading">Payment Reports</h2>
+						<p>
+							This page allows the user to generate a list of sales made based on the payment 
+							method. Thus you can for instance get a list of all insurance sales made for 
+							the month.
+						</p>
+						<p>
+							To generate the report: 
+							<ol> 
+								<li>Select the period or set the dates manually</li>
+								<li>Choose the payment method and click the 'Filter' button</li>
+							</ol>
+						</p>
+						
+					</section>
+
+					<section class="docs-section" id="item-2-6">
+						<h2 class="section-heading">Receive Credit Payment</h2>
+						<p>
+							This page allows the user to input payments for credit sales made earlier.
+						</p>
+						<p>
+							To receive payment for a previous credit sale: 
+							<ol> 
+								<li>On the sidebar click on 'Sales' and click on Receive Credit Payment</li>
+								<li>Fill the form and submit. The customer name and phone number fields will pull a 
+									dropdown of options if the name or number matches an existing customer
+								</li>
+							</ol>
+						</p>
+						
+					</section>
+					<section class="docs-section" id="item-2-7">
+						<h2 class="section-heading">View Arrears</h2>
+						<p>
+							This page displays the list of customers who have bought items on credit and not made 
+							full payment.
+						</p>
+						<p>
+							To receive payment for a previous credit sale: 
+							<ol> 
+								<li>On the sidebar click on 'Sales' and click on Receive Credit Payment</li>
+								<li>Fill the form and submit. The customer name and phone number fields will pull a 
+									dropdown of options if the name or number matches an existing customer
+								</li>
+							</ol>
+						</p>
+						
 					</section>
 					<!--//section-->
 				</article>
@@ -424,32 +544,46 @@
 
 				<article class="docs-article" id="section-3">
 					<header class="docs-header">
-						<h1 class="docs-heading">APIs</h1>
+						<h1 class="docs-heading">Inventory</h1>
 						<section class="docs-intro">
-							<p>Section intro goes here. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque
-								finibus condimentum nisl id vulputate. Praesent aliquet varius eros interdum suscipit.
-								Donec eu purus sed nibh convallis bibendum quis vitae turpis. Duis vestibulum diam
-								lorem, vitae dapibus nibh facilisis a. Fusce in malesuada odio.</p>
+							<p>This section describes how to manage your inventory. This includes adding new items, 
+								editing item details, viewing the history and consumption of items, etc.
+							</p>
 						</section>
 						<!--//docs-intro-->
 					</header>
 					<section class="docs-section" id="item-3-1">
-						<h2 class="section-heading">Section Item 3.1</h2>
-						<p>Vivamus efficitur fringilla ullamcorper. Cras condimentum condimentum mauris, vitae facilisis
-							leo. Aliquam sagittis purus nisi, at commodo augue convallis id. Sed interdum turpis quis
-							felis bibendum imperdiet. Mauris pellentesque urna eu leo gravida iaculis. In fringilla odio
-							in felis ultricies porttitor. Donec at purus libero. Vestibulum libero orci, commodo nec
-							arcu sit amet, commodo sollicitudin est. Vestibulum ultricies malesuada tempor.</p>
+						<h2 class="section-heading">View/Search Inventory</h2>
+						<p>
+							This page displays all items in your and their details. To view the inventory, click on 
+							'Inventory' in the sidebar and click on 'View/Search Inventory'. By default it displays up 
+							to 1000 items on the page. You can increase or decrease the number by clicking on the dropdown
+							 labelled 'Number of Items' and selecting the desired number.
+							<ul>
+								<li>
+									To view the items in a specific category, click the dropdown labelled 'Filter by 
+									category/department' and select the desired category. Then click the 'Get Items' button. 
+
+								</li>
+								<li>
+									To search for an item by name, type the name in the search field and 
+									click the 'Search' button. You can search for multiple items at once by separating the names 
+									with commas (,)
+								</li>
+							</ul>
+						</p>
 					</section>
 					<!--//section-->
 
 					<section class="docs-section" id="item-3-2">
-						<h2 class="section-heading">Section Item 3.2</h2>
-						<p>Vivamus efficitur fringilla ullamcorper. Cras condimentum condimentum mauris, vitae facilisis
-							leo. Aliquam sagittis purus nisi, at commodo augue convallis id. Sed interdum turpis quis
-							felis bibendum imperdiet. Mauris pellentesque urna eu leo gravida iaculis. In fringilla odio
-							in felis ultricies porttitor. Donec at purus libero. Vestibulum libero orci, commodo nec
-							arcu sit amet, commodo sollicitudin est. Vestibulum ultricies malesuada tempor.</p>
+						<h2 class="section-heading">Add a new item to the inventory</h2>
+						<p>To add a new item, click on 'Inventory' in the sidebar and click on 'Add New Product'. 
+							Fill the form that opens and submit. <br>
+							<b>Note:</b> The field labelled 'Functional Group' allows the user to put items in a group 
+							based on their use. For instance, all items that work as Adult Pain Killers can be grouped 
+							by selecting or typing 'Adult Analgesic Tablets' as their functional group. This will 
+							help the system suggest alternative items which are close to expiring when making sales.
+						</p>
 					</section>
 					<!--//section-->
 

@@ -632,7 +632,7 @@ class Db {
             vals.push(`(${values.join(',')})`)
         })
         let query = `insert into ${table} (${fields.join(',')}) values ${vals.join(',')}`;
-        console.log(query)
+        // console.log(query)
         try {
             await this.getConnection();
             await this.connection.run(query);
@@ -640,7 +640,7 @@ class Db {
             return true;
         } catch (err) {
             log.error(query);
-            console.log(query)
+            // console.log(query)
             log.error(err);
             //this.connection.close().then(succ => { }, err => { })
             throw new Error(err)
@@ -669,7 +669,7 @@ class Db {
         })
         let query = `insert into ${table} (${fields.join(',')}) values ${vals.join(',')};`;
         return query;
-    }
+    } 
 
     /**
      * Update a field or fields in a table based on the conditions
@@ -685,7 +685,7 @@ class Db {
             vals.push(`${key} = ${data[key]}`);
         }
         let query = `update  ${table} set ${vals.join(',')} where ${conditions}  `;
-        log.error(query)
+        // log.error(query)
         try {
             await this.getConnection();
             let res = await this.connection.run(query);
@@ -694,7 +694,7 @@ class Db {
 
         } catch (err) {
             log.error(query);
-            console.log(query)
+            // console.log(err)
             log.error(err);
             //this.connection.close().then(succ => { }, err => { })
             throw new Error(err)
@@ -757,7 +757,7 @@ class Db {
     */
     generateUpdateFieldQuery(field, value, conditions, table) {
 
-        let query = `update  ${table} set ${field} = ${value} where ${conditions}  `;
+        let query = `update  ${table} set ${field} = ${value} where ${conditions};  `;
         // log.error(query)
         return query;
 
@@ -1133,6 +1133,18 @@ class Db {
 
 
 
+    isEmpty(str){
+        if(str == null || str == undefined){
+          return true;
+        }
+        if(typeof(str) == "string"){
+          if( str.trim() == ""){
+            return true;
+          }
+        }
+        
+        return false;
+      }
 
     //insert: data, table
 

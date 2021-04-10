@@ -23,6 +23,9 @@ let vendorHelper = new vendorClass();
 let stockValueClass = require('../helpers/stockValueHelper')
 let stockValueHelper = new stockValueClass();
 
+let productBatchClass = require('../helpers/productBatchesHelper')
+let productBatchHelper = new productBatchClass();
+
 
 router.get('/getList', async (req, res) => {
     let offset = req.query.offset == undefined ? 0 : req.query.offset;
@@ -33,7 +36,7 @@ router.get('/getList', async (req, res) => {
             var obj = objects[i];
             obj.total_amount = await detailsHelper.getTotal(obj.code)
             obj.num_of_items = await detailsHelper.getNumItems(obj.code)
-            let vendor = vendorHelper.getItem(` id = ${obj.vendor}`)
+            let vendor = await vendorHelper.getItem(` id = ${obj.vendor}`)
             obj.vendor_name = vendor.name;
             obj.vendor_id = obj.vendor;
             obj.display_name = adminHelper.getUserName(obj.created_by);
@@ -115,13 +118,32 @@ router.post('/saveBulk', async (req, res) => {
         purchase_data.code = code;
         // console.log(purchase_data)
 
+        let batches = JSON.parse(req.body.batch_details);
+            batches.map(bat => {
+                bat.purchase_code = code;
+                bat.barcode = `'${bat.barcode}'`;
+                bat.batch_number = `'${bat.batch_number}'`;
+                bat.expiry = `'${bat.expiry}'`;
+                bat.quantity_sold = 0;
+
+            })
+
+
+
+
         let sql = "BEGIN TRANSACTION; ";
         sql += helper.generateInsertQuery(purchase_data, helper.table_name);
         sql += detailsHelper.generateInsertManyQuery(detailsHelper.fields, objects, detailsHelper.table_name);
-        sql += product_updates.join(" ")
+        sql += product_updates.join(" ");
+        if(batches.length > 0){
+            sql += productBatchHelper.generateInsertManyQuery(productBatchHelper.fields, batches, productBatchHelper.table_name);
+
+        }
+
         sql += "COMMIT;"
         // console.log(sql)
         await helper.connection.exec(sql);
+        // console.log(sql)
 
         for (var x = 0; x < products.length; x++) {
 
@@ -129,11 +151,16 @@ router.post('/saveBulk', async (req, res) => {
             await productHelper.refreshCurrentStock(pid)
         }
         await stockValueHelper.updateStockValue();
+
+        //enter the different batches
+       
+
+
         activities.log(req.query.userid, `"added new purchases: ${code} : ${payment_method}"`, `'Purchase'`)
         // helper.connection.close().then(succ => { }, err => { })
 
 
-
+ 
         res.json({ status: '1' })
     } catch (error) {
         await helper.closeConnection();
@@ -180,7 +207,7 @@ router.post('/edit', async (req, res) => {
 
 
         await helper.getConnection();
-        
+
 
         let objects = [];
         let product_updates = [];
@@ -385,11 +412,11 @@ router.get('/findById', async (req, res) => {
         let id = req.query.id;
         let details = []
         let object = await helper.getItem(`id = ${id} `, helper.table_name);
-        if(object != null && object != undefined){
+        if (object != null && object != undefined) {
             object.vendor = await vendorHelper.getItem(` id = ${object.vendor} `, vendorHelper.table_name)
             details = await detailsHelper.getMany(` code = '${object.code}' `, detailsHelper.table_name)
-            for(var i = 0; i < details.length; i++){
-                let product  = await productHelper.getItem(` id = ${details[i].product} `, productHelper.table_name)
+            for (var i = 0; i < details.length; i++) {
+                let product = await productHelper.getItem(` id = ${details[i].product} `, productHelper.table_name)
                 details[i].product_name = product.name
                 details[i].expiry = product.expiry
                 details[i].stock = 'n/a'
@@ -399,7 +426,7 @@ router.get('/findById', async (req, res) => {
 
             }
         }
-         
+
 
 
         res.json({
@@ -423,8 +450,8 @@ router.get('/findBetweenDates', async (req, res) => {
         let end = req.query.end_date == undefined ? helper.getToday() : req.query.end_date;
         let vendor = req.query.vendor == undefined ? null : req.query.vendor;
 
-        let where  = [` date >= '${start}' and date <= '${end}' `];
-        if(vendor != null){
+        let where = [` date >= '${start}' and date <= '${end}' `];
+        if (vendor != null) {
             where.push(` vendor = ${vendor} `)
         }
 
@@ -463,11 +490,11 @@ router.get('/findReceiptsBetweenDates', async (req, res) => {
             objects = await helper.search(code)
         }
         else {
-            if(vendor == null){
+            if (vendor == null) {
                 objects = await helper.getMany(` date >= '${start}' and date <= '${end}' `, helper.table_name);
 
             }
-            else{
+            else {
                 objects = await helper.getMany(` date >= '${start}' and date <= '${end}' and vendor = ${vendor}`, helper.table_name);
 
             }
@@ -536,20 +563,20 @@ router.get('/findReceiptsByVendor', async (req, res) => {
 
 router.get('/getPurchaseTotals', async (req, res) => {
 
-    
-let paymentClass = require('../helpers/outgoingPaymentHelper')
-let paymentHelper = new paymentClass();
+
+    let paymentClass = require('../helpers/outgoingPaymentHelper')
+    let paymentHelper = new paymentClass();
     try {
         //get the total purchased, total credit, total paid, total arrears
         let vendor = req.query.vendor == undefined ? '' : req.query.vendor;
         let start = req.query.start_date == undefined ? helper.getToday() : req.query.start_date;
         let end = req.query.end_date == undefined ? helper.getToday() : req.query.end_date;
         //get the total amount in purchases
-        let total_purchase = await detailsHelper.getTotalPurchasedByDates(start, end, '',vendor)
+        let total_purchase = await detailsHelper.getTotalPurchasedByDates(start, end, '', vendor)
         let total_credit = await detailsHelper.getTotalPurchasedByDates(start, end, 'Credit', vendor)
-        let total_paid = await paymentHelper.getTotalPaidToVendor(vendor,start, end)
+        let total_paid = await paymentHelper.getTotalPaidToVendor(vendor, start, end)
         let balance = total_purchase - total_paid;
-        
+
 
 
         res.json({
@@ -558,6 +585,43 @@ let paymentHelper = new paymentClass();
             total_credit: total_credit.toLocaleString(),
             total_paid: total_paid.toLocaleString(),
             balance: balance.toLocaleString()
+
+        })
+    } catch (error) {
+        await helper.closeConnection();
+        // console.log(error)
+        log.error(error)
+        res.json({ status: '-1', data: null })
+    }
+
+});
+
+
+router.get('/getProductPurchases', async (req, res) => {
+
+
+    try {
+        //get the total purchased, total credit, total paid, total arrears
+        let product = req.query.product;
+        let objects = await detailsHelper.getMany(`product = ${product}`,detailsHelper.table_name);
+        for (var i = 0; i < objects.length; i++) {
+            var obj = objects[i];
+            
+            let purchase = await helper.getItem(`code = '${obj.code}'`, helper.table_name);
+            let vendor = await vendorHelper.getItem(` id = ${purchase.vendor}`, vendorHelper.table_name)
+            obj.total = (obj.quantity * obj.price).toLocaleString();
+            obj.vendor_name = vendor.name;
+            obj.vendor_id = obj.vendor;
+            obj.display_name = await adminHelper.getUserName(obj.created_by);
+
+        }
+
+
+
+        res.json({
+            status: '1',
+            data:objects ,
+            
 
         })
     } catch (error) {

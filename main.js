@@ -9,9 +9,9 @@ const { autoUpdater } = require('electron-updater');
 const schedule = require('node-schedule');
 // const MainWindow = require('./MainWindow')
 // const AppTray = require('./AppTray')
-process.env.NODE_ENV = 'production';
+process.env.NODE_ENV = 'development';
 let constants = require('./constants')
-const isDev = true //process.env.NODE_ENV !== 'production' ? true : false;
+const isDev =  process.env.NODE_ENV !== 'production' ? true : false;
 const isMac = process.platform === 'darwin' ? true : false;
 let PORT = constants.port;
 const FileStore = require('./Store');

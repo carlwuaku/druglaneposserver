@@ -13,7 +13,7 @@
                 <h4>Company Settings</h4>
             </div>
             <div class="card-body">
-                <form action="saveSettings" method="POST">
+                <form action="saveSettings" method="POST" enctype="multipart/form-data">
                     <div class="row justify-content-center">
                         <div class="col-md-6">
                             <div class="alert alert-info"><%= message %></div>
@@ -59,6 +59,35 @@
                                     <br>
                                     <input name="number_of_shifts" value="<%= number_of_shifts %>" required 
                                         class="form-control" >
+                                </div>
+                                <div class="form-group">
+                                    <label class="control-label">Restrict Sale of Zero Stock Items?</label>
+                                    <br>
+                                    <em>Choosing yes means you won't allow sales persons to sell items 
+                                        whose stock is zero.
+                                    </em> <br>
+                                    <select name="restrict_zero_stock_sales">
+                                        <option <%= restrict_zero_stock_sales == 'yes' ? 'selected' : '' %> value="yes">Yes, Block them from being sold</option>
+                                        <option <%= restrict_zero_stock_sales == 'no' ? 'selected' : '' %> value="no">No, Allow them to be sold</option>
+                                    </select>
+                                    
+                                  
+                                </div>
+                                <div class="form-group">
+                                    <label class="control-label">Select Company Logo</label>
+                                    <img height="40" src="<%= '/assets/images/'+logo %>" alt="no logo selected"> <br>
+                                    <em class="text-muted">Select a new one if you want to change it. Else ignore this field</em>
+                                    <input name="uploadfile" accept=".jpg,.png"  type="file" >
+                                </div>
+                                <div class="form-group">
+                                    <label class="control-label">Display Company Logo on Receipts?</label>
+                                    <br>
+                                    <select name="receipt_logo">
+                                        <option <%= receipt_logo == 'yes' ? 'selected' : '' %> value="yes">Yes</option>
+                                        <option <%= receipt_logo == 'no' ? 'selected' : '' %> value="no">No</option>
+                                    </select>
+                                    
+                                  
                                 </div>
 
                                 

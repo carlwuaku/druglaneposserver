@@ -290,6 +290,22 @@ class PurchaseDetailsHelper extends dbClass {
         }
     }
 
+    async getTotalPurchaseSelling(start, end){
+        let sql = `select sum(quantity * selling_price) as total from ${this.table_name}  `;
+        if(start != ''){
+            sql += ` where date >= '${start}' and date <= '${end}' `
+        }
+
+        try {
+            await this.getConnection();
+            let q = await this.connection.get(sql);
+            return q.total == null ? 0 : q.total;
+        } catch (error) {
+            log.error(error);
+            throw new Error(error)
+        }
+    }
+
     /**
      * get the monthly quantities purchased for the product
      * @param {String} id the product id
@@ -313,6 +329,62 @@ class PurchaseDetailsHelper extends dbClass {
             let q = await this.connection.all(sql);
             
             return q;
+        } catch (error) {
+            log.error(error);
+            throw new Error(error)
+        }
+    }
+
+    
+    /**
+     * get the vendor the item has been purchased from most
+     * @param {Number} id the product id
+     * @param {String} start_date optional
+     * @param {String} end_date optional
+     * @returns {Number} 
+     */
+    async getTopVendor(id, start_date='', end_date=''){
+        //get all the vendors
+        //get the total sold for each of them
+
+        let sql1 = `select * from vendors;`;
+        
+        
+        
+
+        try {
+            await this.getConnection();
+            let vendors = await this.connection.all(sql1);
+            if(vendors.length < 1){
+                return {"id": "n/a", "name": "n/a"}
+            }
+            
+            for (var i = 0; i < vendors.length; i++) {
+                //get the total for each vendor
+                let sql2 = `select sum(quantity) as total from purchase_details where code in 
+                (select code from purchases where vendor = ${vendors[i].id} )
+                `;
+                // if(start_date != ''){
+                //     sql += ` and date >= '${start_date}' `
+                // }
+        
+                // if(end_date != ''){
+                //     sql += ` and date <= '${end_date}' `
+                // }
+        
+                // sql += ` ) `
+                let q2 = await this.connection.get(sql2);
+                vendors[i].total =  q2.total == null ? 0 : q2.total;
+            }
+            let key = "total"
+            let order = -1 //for desc
+            //sort the items and pick the top person
+            vendors.sort((leftSide, rightSide) => {
+                if (leftSide[key] < rightSide[key]) return -1 * order;
+                if (leftSide[key] > rightSide[key]) return 1 * order;
+                return 0;
+              });
+              return vendors[0];
         } catch (error) {
             log.error(error);
             throw new Error(error)

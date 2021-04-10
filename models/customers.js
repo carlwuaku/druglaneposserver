@@ -14,7 +14,8 @@ const Customers = sequelize.define("customers", {
   phone: DataTypes.STRING,
   email: DataTypes.STRING,
   location: DataTypes.STRING,
-  created_on: DataTypes.DATE
+  created_on: DataTypes.DATE,
+  date_of_birth: DataTypes.DATE
 }, {
   tableName: 'customers',
   timestamps: false

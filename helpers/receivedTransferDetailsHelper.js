@@ -142,14 +142,28 @@ class ReceivedTransferDetailsHelper extends dbClass {
     }
 
 
-    /**
-     * get the total difference in stockadjustment
-     * @param {String} code 
-     * @returns {Number} 
-     */
-    async getTotal(code){
-        let sql = `select sum(quantity * price) as total from ${this.table_name} where code = '${code}' `;
-        
+    async getTotal(start, end){
+        let sql = `select sum(quantity * price) as total from ${this.table_name}  `;
+        if(start != ''){
+            sql += ` where date >= '${start}' and date <= '${end}' `
+        }
+
+        try {
+            await this.getConnection();
+            let q = await this.connection.get(sql);
+            return q.total == null ? 0 : q.total;
+        } catch (error) {
+            log.error(error);
+            throw new Error(error)
+        }
+    }
+
+
+    async getTotalCost(start, end){
+        let sql = `select sum(quantity * cost_price) as total from ${this.table_name}  `;
+        if(start != ''){
+            sql += ` where date >= '${start}' and date <= '${end}' `
+        }
 
         try {
             await this.getConnection();

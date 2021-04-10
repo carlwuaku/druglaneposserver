@@ -467,7 +467,6 @@ class SalesDetailsHelper extends dbClass {
         if(start != ''){
             sql += ` where date >= '${start}' and date <= '${end}' group by product order by total desc limit ${limit}`
         }
-       console.log(sql)
         try {
             await this.getConnection();
             let q = await this.connection.all(sql);

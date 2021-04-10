@@ -34,41 +34,41 @@ db.runMigrations();
 
 ///////////////RUN SEQUELIZE MIGRATIONS///////////
 
-// const Sequelize = require('sequelize')
-// const Umzug = require('umzug')
+const Sequelize = require('sequelize')
+const Umzug = require('umzug')
 
-// // creates a basic sqlite database
-// const sequelize = require("./helpers/sequelize")
+// creates a basic sqlite database
+const sequelize = require("./helpers/sequelize")
 
 
-// const umzug = new Umzug({
-//     migrations: {
-//         // indicates the folder containing the migration .js files
-//         path: path.join(__dirname, './migrations'),
-//         // inject sequelize's QueryInterface in the migrations
-//         params: [
-//             sequelize.getQueryInterface()
-//         ]
-//     },
-//     // indicates that the migration data should be store in the database
-//     // itself through sequelize. The default configuration creates a table
-//     // named `SequelizeMeta`.
-//     storage: 'sequelize',
-//     storageOptions: {
-//         sequelize: sequelize
-//     }
-// })
+const umzug = new Umzug({
+    migrations: {
+        // indicates the folder containing the migration .js files
+        path: path.join(__dirname, './migrations'),
+        // inject sequelize's QueryInterface in the migrations
+        params: [
+            sequelize.getQueryInterface()
+        ]
+    },
+    // indicates that the migration data should be store in the database
+    // itself through sequelize. The default configuration creates a table
+    // named `SequelizeMeta`.
+    storage: 'sequelize',
+    storageOptions: {
+        sequelize: sequelize
+    }
+})
 
-//     ; (async () => {
-//         // checks migrations and run them if they are not already applied
-//         try {
-//             await umzug.up()
-//             console.log('All migrations performed successfully')
+    ; (async () => {
+        // checks migrations and run them if they are not already applied
+        try {
+            await umzug.up()
+            console.log('All migrations performed successfully')
 
-//         } catch (error) {
-//             console.log(error)
-//         }
-//     })()
+        } catch (error) {
+            console.log(error)
+        }
+    })()
 
 
 ////////////////////////////////////////////
@@ -111,10 +111,27 @@ app.use(fileUpload(
         debug: true
     }
 ));
+
+//routes and their permissions
+let route_permissions = [
+    {route: "/api_product/saveBranchDetails", permission: "Manage Inventory"},
+    {route: "/api_product/saveBranchDetails", permission: "Manage Inventory"},
+    {route: "/api_product/saveBranchDetails", permission: "Manage Inventory"},
+    {route: "/api_product/saveBranchDetails", permission: "Manage Inventory"},
+    {route: "/api_product/saveBranchDetails", permission: "Manage Inventory"},
+    {route: "/api_product/saveBranchDetails", permission: "Manage Inventory"},
+    {route: "/api_product/saveBranchDetails", permission: "Manage Inventory"},
+    {route: "/api_product/saveBranchDetails", permission: "Manage Inventory"},
+
+]
 //CORS STUFF    
 app.use(async (req, res, next) => {
-    //allow all clients
-    res.header('Access-Control-Allow-Origin', '*');
+    //allow all clients in development mode
+    if(process.env.NODE_ENV != "production"){
+        res.header('Access-Control-Allow-Origin', '*');
+    }
+
+    
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Token, Usertype, Userid, Type');
 
     if (req.method === 'OPTIONS') {
@@ -133,6 +150,7 @@ app.use(async (req, res, next) => {
         try {
             //do checks here if user has logged in or not
             let user = await userSession.getItem(` token = '${token}' `, userSession.sessions_table);
+            
             if (user != undefined) {
                 req.query.userid = user.user_id;
                 req.userid = user.user_id;
@@ -159,6 +177,7 @@ app.use(async (req, res, next) => {
 
 
 });
+
 
 function checkSignIn(req, res, next) {
     if (req.session.user) {
@@ -440,7 +459,7 @@ app.get('/login', (req, res) => {
     }
     res.render('login', data);
     // res.sendFile(__dirname + '/app/index.html');
-});
+}); 
 
 app.post('/dologin', async (req, res) => {
     var bcrypt = require('bcryptjs');
@@ -479,77 +498,90 @@ app.get('/settings', checkSignIn, async (req, res) => {
     data.address = await sh.getSetting(`'address'`);
     data.digital_address = await sh.getSetting(`'digital_address'`);
     data.number_of_shifts = await sh.getSetting(`'number_of_shifts'`);
+    data.restrict_zero_stock_sales = await sh.getSetting(`'restrict_zero_stock_sales'`);
+    data.logo = await sh.getSetting(`'logo'`);
+    data.receipt_logo = await sh.getSetting(`'receipt_logo'`);
     res.render('settings', data);
     // res.sendFile(__dirname + '/app/index.html');
 });
 
 app.post('/saveSettings', checkSignIn, async (req, res) => {
-    let electron = require('electron');
 
     let settingsHelper = require('./helpers/settingsHelper');
     let sh = new settingsHelper();
-    var data = [
-        {
-            name: `'company_name'`,
-            value: `'${req.body.name}'`,
-            module: `'System'`
-        },
-        {
-            name: `'phone'`,
-            value: `'${req.body.phone}'`,
-            module: `'System'`
-        },
-        {
-            name: `'email'`,
-            value: `'${req.body.email}'`,
-            module: `'System'`
-        },
-        {
-            name: `'address'`,
-            value: `'${req.body.address}'`,
-            module: `'System'`
-        },
-        {
-            name: `'digital_address'`,
-            value: `'${req.body.digital_address}'`,
-            module: `'System'`
-        },
-        {
-            name: `'number_of_shifts'`,
-            value: req.body.number_of_shifts == null || req.body.number_of_shifts == undefined || req.body.number_of_shifts == '' ? 'Full Day': `'${req.body.number_of_shifts}'`,
+    // var data = [
+    //     {
+    //         name: `'company_name'`,
+    //         value: `'${req.body.name}'`,
+    //         module: `'System'`
+    //     },
+    //     {
+    //         name: `'phone'`,
+    //         value: `'${req.body.phone}'`,
+    //         module: `'System'`
+    //     },
+    //     {
+    //         name: `'email'`,
+    //         value: `'${req.body.email}'`,
+    //         module: `'System'`
+    //     },
+    //     {
+    //         name: `'address'`,
+    //         value: `'${req.body.address}'`,
+    //         module: `'System'`
+    //     },
+    //     {
+    //         name: `'digital_address'`,
+    //         value: `'${req.body.digital_address}'`,
+    //         module: `'System'`
+    //     },
+    //     {
+    //         name: `'number_of_shifts'`,
+    //         value: req.body.number_of_shifts == null || req.body.number_of_shifts == undefined || req.body.number_of_shifts == '' ? 'Full Day': `'${req.body.number_of_shifts}'`,
            
-            module: `'System'`
-        }
-    ]
+    //         module: `'System'`
+    //     },
+    //     {
+    //         name: `'restrict_zero_stock_sales'`,
+    //         value: req.body.restrict_zero_stock_sales == null || req.body.restrict_zero_stock_sales == undefined || req.body.restrict_zero_stock_sales == '' ? 'no': `'${req.body.restrict_zero_stock_sales}'`,
+           
+    //         module: `'System'`
+    //     }
+    // ]
+    try {
+        await sh.update({
 
-    let q1 = await sh.update({
+            value: `'${req.body.name}'`,
+    
+        }, "name = 'company_name'", sh.table_name);
 
-        value: `'${req.body.name}'`,
+        await sh.update({
 
-    }, "name = 'company_name'", sh.table_name);
-    let q2 = await sh.update({
+            value: `'${req.body.phone}'`,
+    
+        }, "name = 'phone'", sh.table_name);
 
-        value: `'${req.body.phone}'`,
+        await sh.update({
 
-    }, "name = 'phone'", sh.table_name);
-    let q3 = await sh.update({
+            value: `'${req.body.email}'`,
+    
+        }, "name = 'email'", sh.table_name);
 
-        value: `'${req.body.email}'`,
+        await sh.update({
 
-    }, "name = 'email'", sh.table_name);
-    let q4 = await sh.update({
+            value: `'${req.body.address}'`,
+    
+        }, "name = 'address'", sh.table_name);
 
-        value: `'${req.body.address}'`,
 
-    }, "name = 'address'", sh.table_name);
-    let q5 = await sh.update({
+        await sh.update({
 
-        value: `'${req.body.digital_address}'`,
+            value: `'${req.body.digital_address}'`,
+    
+        }, "name = 'digital_address'", sh.table_name);
 
-    }, "name = 'digital_address'", sh.table_name);
-    //check if setting exists
-    let q6_exists = await sh.getSetting(`'number_of_shifts'`);
-    let q6 = null;
+      let q6_exists =  await sh.getSetting(`'number_of_shifts'`);
+  
     if (q6_exists == null) {
         var data = [
 
@@ -560,29 +592,96 @@ app.post('/saveSettings', checkSignIn, async (req, res) => {
                 module: `'System'`
             }
         ]
-        q6 = await sh.insertMany(sh.insert_fields, data, sh.table_name);
+       await sh.insertMany(sh.insert_fields, data, sh.table_name);
     }
     else {
-        q6 = await sh.update({
+         await sh.update({
 
             value: req.body.number_of_shifts == null || req.body.number_of_shifts == undefined || req.body.number_of_shifts == '' ? 'Full Day': `'${req.body.number_of_shifts}'`,
 
         }, "name = 'number_of_shifts'", sh.table_name);
     }
 
-    //update
-    let success = q1 && q2 && q3 && q4 && q5 && q6;
 
+    let logo_exists = await sh.getSetting(`'logo'`);
+    //upload the file here
+    var file = req.files.uploadfile
+    if(file != undefined && file != null){
+        let path = './public/assets/images/'  + file.name;
 
+        file.mv(path, async function(err){
+            if(err){
+                console.log(err);
 
-    if (success) {
-        //successful. go to admin setup
+            }
+            else{
+                console.log(logo_exists)
+                if (logo_exists == null) {
+        
+                    var data = [
+            
+                        {
+                            name: `'logo'`,
+                            value:`"${file.name}"`,
+            
+                            module: `'System'`
+                        }
+                    ]
+                     await sh.insertMany(sh.insert_fields, data, sh.table_name);
+                }
+                else {
+                    await sh.update({
+            
+                        value:`"${file.name}"`,            
+                    }, "name = 'logo'", sh.table_name);
+                }
+            }
+        });
+    }
+    
+    
+    let receipt_logo_exists =  await sh.getSetting(`'receipt_logo'`);
+  
+    if (receipt_logo_exists == null) {
+        var data = [
 
-        res.redirect('settings?m=Settings set successfully');
+            {
+                name: `'receipt_logo'`,
+                value: req.body.receipt_logo == null || req.body.receipt_logo == undefined || req.body.receipt_logo == '' ? `'no'`: `'${req.body.receipt_logo}'`,
+
+                module: `'System'`
+            }
+        ]
+       await sh.insertMany(sh.insert_fields, data, sh.table_name);
     }
     else {
-        res.redirect('settings?m=Error. Please try again')
+         await sh.update({
+
+            value: req.body.receipt_logo == null || req.body.receipt_logo == undefined || req.body.receipt_logo == '' ? `'no'`: `'${req.body.receipt_logo}'`,
+
+        }, "name = 'receipt_logo'", sh.table_name);
     }
+    
+
+
+    await sh.update({
+
+        value: `"${req.body.restrict_zero_stock_sales}"`,
+
+    }, "name = 'restrict_zero_stock_sales'", sh.table_name);
+
+
+
+        res.redirect('settings?m=Settings set successfully');
+    } catch (error) {
+        res.redirect('settings?m=Error. Please try again')
+       
+    }
+
+   
+
+
+    
 
 
 
@@ -1072,12 +1171,12 @@ let server = app.listen(PORT, function () {
 
 
 let socket = require('socket.io');
-const { raw } = require('body-parser');
+// const { raw } = require('body-parser');
 var io = socket(server);
 
 
 io.on("connection", function (socket) {
-    log.error("made socket connection ", socket.handshake.address);
+    // log.error("made socket connection ", socket.handshake.address);
     //socket.broadcast.emit('user_in', socket.id);
     io.to(socket.id).emit('assign_id', socket.id);
 

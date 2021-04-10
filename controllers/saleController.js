@@ -23,6 +23,13 @@ let stockValueClass = require('../helpers/stockValueHelper')
 let stockValueHelper = new stockValueClass();
 const log = require('electron-log');
 
+let SalesBatchesClass = require('../helpers/salesBatchesHelper')
+let salesBatchesHelper = new SalesBatchesClass();
+
+let productBatchClass = require('../helpers/productBatchesHelper')
+let productBatchHelper = new productBatchClass();
+
+
 
 router.get('/getList', async (req, res) => {
     let offset = req.query.offset == undefined ? 0 : req.query.offset;
@@ -151,33 +158,59 @@ router.post('/saveBulk', async (req, res) => {
                 objects.push(data);
             }
             // console.log(objects)
-            
+
             let sales_data = helper.prep_data(req.body);
             sales_data.date = `'${date}'`;
             sales_data.created_on = `'${created_on}'`;
             sales_data.created_by = req.userid;
             sales_data.code = `'${code}'`;
 
-            try {
-                let customer_phone = req.body.customer_phone;
-                //get the customer who matches the name
-                let cust_details = await customerHelper.getItem(` phone = "${customer_phone}" `, customerHelper.table_name);
-                if (cust_details == null) {
-                    //save the person
-                    sales_data.customer =
-                     await customerHelper.insert({
-                        name: `"${req.body.customer_name}"`,
-                        phone: `"${req.body.customer_phone}"`
-                    }, customerHelper.table_name)
-                }
-                else{
-                    sales_data.customer = cust_details.id
-                }
-                // sales_data.customer = `"${req.body.customer_name} - ${req.body.customer_phone}"`;
-                 
-            } catch (error) {
-                console.log(error)
+
+            let batches = JSON.parse(req.body.batch_details);
+            let batch_updates = [];
+            for (let x = 0; x < batches.length; x++) {
+                const bat = batches[x];
+                bat.code = `'${code}'`;
+                bat.batch_number = `'${bat.batch_number}'`;
+                bat.expiry = `'${bat.expiry}'`;
+                bat.date = `'${date}'`;
+                 bat.quantity_sold = await salesBatchesHelper.getTotalQuantityDateTime(bat.product)
+                 batch_updates.push(productBatchHelper.generateUpdateFieldQuery(
+                     "quantity_sold", bat.quantity_sold,`product = ${bat.product} and batch_number = ${bat.batch_number}`,
+                     productBatchHelper.table_name
+                     )
+                 )
+                //  console.log(batch_updates)
             }
+            
+
+
+            // try {
+            //     let customer_phone = req.body.customer_phone;
+    
+            //     if (!customerHelper.isEmpty(customer_phone) &&
+            //         customer_phone != "undefined" && customer_phone != "null" && !customerHelper.isEmpty(req.body.customer_name)) {
+    
+    
+            //         //get the customer who matches the name
+            //         let cust_details = await customerHelper.getItem(` phone = "${customer_phone}" `, customerHelper.table_name);
+            //         if (cust_details == null) {
+            //             //save the person
+            //             sales_data.customer =
+            //                 await customerHelper.insert({
+            //                     name: `"${req.body.customer_name}"`,
+            //                     phone: `"${req.body.customer_phone}"`
+            //                 }, customerHelper.table_name)
+            //         }
+            //         else {
+            //             sales_data.customer = cust_details.id
+            //         }
+            //     }
+            //     // sales_data.customer = `"${req.body.customer_name} - ${req.body.customer_phone}"`;
+    
+            // } catch (error) {
+            //     console.log(error)
+            // }
 
 
             // console.log(sales_data)
@@ -185,6 +218,11 @@ router.post('/saveBulk', async (req, res) => {
             let sql = "BEGIN TRANSACTION; ";
             sql += helper.generateInsertQuery(sales_data, helper.table_name);
             sql += detailsHelper.generateInsertManyQuery(detailsHelper.fields, objects, detailsHelper.table_name);
+            if(batches.length > 0){
+                sql += salesBatchesHelper.generateInsertManyQuery(salesBatchesHelper.fields,batches, salesBatchesHelper.table_name);
+                sql += batch_updates.join(" ")
+            }
+
             sql += "COMMIT;"
             // console.log(sql)
             await helper.connection.exec(sql);
@@ -215,6 +253,91 @@ router.post('/saveBulk', async (req, res) => {
         res.json({ status: '-1' })
     }
 });
+
+
+router.post('/editSale', async (req, res) => {
+    try {
+
+        let date = req.body.date;
+        let created_on = req.body.created_on == undefined ? helper.getToday('timestamp') : req.body.created_on;
+
+
+
+        let payment_method = req.body.payment_method;
+        let code = req.body.code;
+        await helper.getConnection();
+
+
+
+
+
+        let sales_data = helper.prep_data(req.body);
+        sales_data.date = `'${date}'`;
+        sales_data.created_on = `'${created_on}'`;
+        sales_data.created_by = req.userid;
+        sales_data.code = `'${code}'`;
+
+        let old_data = await helper.getItem(`code = '${code}'`, helper.table_name)
+
+        // try {
+        //     let customer_phone = req.body.customer_phone;
+
+        //     if (!customerHelper.isEmpty(customer_phone) &&
+        //         customer_phone != "undefined" && customer_phone != "null" && !customerHelper.isEmpty(req.body.customer_name)) {
+
+
+        //         //get the customer who matches the name
+        //         let cust_details = await customerHelper.getItem(` phone = "${customer_phone}" `, customerHelper.table_name);
+        //         if (cust_details == null) {
+        //             //save the person
+        //             sales_data.customer =
+        //                 await customerHelper.insert({
+        //                     name: `"${req.body.customer_name}"`,
+        //                     phone: `"${req.body.customer_phone}"`
+        //                 }, customerHelper.table_name)
+        //         }
+        //         else {
+        //             sales_data.customer = cust_details.id
+        //         }
+        //     }
+        //     // sales_data.customer = `"${req.body.customer_name} - ${req.body.customer_phone}"`;
+
+        // } catch (error) {
+        //     console.log(error)
+        // }
+
+        // let changes = [];
+        // for (const property in sales_data) {
+        //     if(sales_data[property] != req.body[property]){
+        //         changes.push(`${property}: ${old_data[property]} => ${sales_data[property]}`)
+        //     }
+        //   }
+
+        // console.log(sales_data)
+        await helper.update(sales_data, `code = '${code}'`, helper.table_name);
+        
+
+        
+        activities.log(req.query.userid, `"edited sale : ${code}. "`, `'Sales'`)
+        // console.log(`"edited sale : ${code}. changes: ${changes.toString()} "`)
+        // await stockValueHelper.updateStockValue();
+        // helper.connection.close().then(succ => { }, err => { })
+
+
+        res.json({ status: '1', code: code })
+
+
+
+
+    } catch (error) {
+        await helper.closeConnection();
+
+        log.error(error)
+        console.log(error)
+        res.json({ status: '-1' })
+    }
+});
+
 
 router.get('/getSaleDetails', async (req, res) => {
     try {
@@ -340,13 +463,13 @@ router.get('/findReceiptsBetweenDates', async (req, res) => {
             //check customer. if not an id, just use the raw value
             try {
                 let cust = await customerHelper.getItem(`id = ${obj.customer}`, customerHelper.table_name);
-            if(cust != null && cust != undefined){
-                obj.customer = cust.name+" - "+cust.phone
-            }
+                if (cust != null && cust != undefined) {
+                    obj.customer = cust.name + " - " + cust.phone
+                }
             } catch (error) {
-                
+
             }
-            
+
         }
 
 
@@ -669,24 +792,24 @@ router.get('/getBranchDailySalesSummary', async (req, res) => {
             obj.cost = total_cost.toLocaleString()
             objects.push(obj)
         }
-        let best_sellers = await detailsHelper.getBestSellers(start_date, end_date);
-        let worst_sellers = await detailsHelper.getWorstSellers(start_date, end_date);
+        // let best_sellers = await detailsHelper.getBestSellers(start_date, end_date);
+        // let worst_sellers = await detailsHelper.getWorstSellers(start_date, end_date);
         let total = await detailsHelper.getTotalSales(start_date, end_date);
         let avg = await detailsHelper.getAverageSales(start_date, end_date)
         let total_cost = await detailsHelper.getTotalSalesCost(start_date, end_date);
-        let total_credit = await detailsHelper.getSalesByPaymentMethod('Credit',start_date, end_date)
+        let total_credit = await detailsHelper.getSalesByPaymentMethod('Credit', start_date, end_date)
         let incomingPaymentHelper = require('../helpers/incomingPaymentHelper')
         let incomingHelper = new incomingPaymentHelper();
 
-        let total_credit_paid = await incomingHelper.getTotalPaid('',start_date, end_date)
+        let total_credit_paid = await incomingHelper.getTotalPaid('', start_date, end_date)
         let credit_balance = total_credit - total_credit_paid;
         let cost = total_cost.toLocaleString()
         let overall_profit = total - total_cost
         res.json({
             status: '1',
             data: objects,
-            best_sellers: best_sellers,
-            worst_sellers: worst_sellers,
+            // best_sellers: best_sellers,
+            // worst_sellers: worst_sellers,
             total: total.toLocaleString(),
             average: avg,
             profit: overall_profit.toLocaleString(),
@@ -694,6 +817,56 @@ router.get('/getBranchDailySalesSummary', async (req, res) => {
             total_credit: total_credit.toLocaleString(),
             total_credit_paid: total_credit_paid.toLocaleString(),
             credit_balance: credit_balance.toLocaleString(),
+        })
+    } catch (error) {
+        await helper.closeConnection();
+        console.log(error)
+        log.error(error)
+        res.json({ status: '-1', data: null })
+    }
+
+});
+
+
+router.get('/getBranchDailyRecords', async (req, res) => {
+    try {
+        let helperClass = require('../helpers/dailyRecordsHelper')
+        let daily_record_helper = new helperClass();
+
+        let start_date = req.query.start_date == undefined ? helper.getToday() : req.query.start_date;
+        let end_date = req.query.end_date == undefined ? helper.getToday() : req.query.end_date;
+
+        //get the range
+        let range = await daily_record_helper.getDatesBetween(start_date, end_date);
+        // console.log(range)
+        let objects = []
+        for (var i = 0; i < range.length; i++) {
+            let start = range[i];
+            let end = range[i];
+            // let objects  =  await detailsHelper.getDailySales(start, end);
+            let obj = await daily_record_helper.getTotalSummary(start);
+            //computer sales
+            let total = await detailsHelper.getTotalSales(start, end);
+            let keys = ["momo","cash","cheque","insurance","other","credit","pos"]
+            keys.forEach(k => {
+                obj[k] = obj[k] == null ? 0 : obj[k];
+            });
+            let entered_total = obj.momo + obj.cash + obj.credit + 
+            obj.insurance + obj.credit + obj.other + obj.pos;
+            
+
+
+            obj.date = start;
+            obj.computer_sales = total.toLocaleString()
+            obj.difference = entered_total - total;
+            obj.total_sales = entered_total;
+            objects.push(obj)
+        }
+       
+        res.json({
+            status: '1',
+            data: objects,
+            
         })
     } catch (error) {
         await helper.closeConnection();
@@ -726,17 +899,39 @@ router.get('/getCategorySales', async (req, res) => {
 });
 
 
+router.get('/getBestSellers', async (req, res) => {
+    try {
+
+        let start_date = req.query.start_date == undefined ? helper.getToday() : req.query.start_date;
+        let end_date = req.query.end_date == undefined ? helper.getToday() : req.query.end_date;
+        let limit = req.query.limit == undefined ? 10 : req.query.limit;
+        let data = await detailsHelper.getBestSellers(start_date, end_date, limit);
+
+        res.json({
+            status: '1',
+            data: data
+        })
+    } catch (error) {
+        await helper.closeConnection();
+        console.log(error)
+        log.error(error)
+        res.json({ status: '-1', data: null })
+    }
+
+});
+
+
 router.get('/getArrears', async (req, res) => {
     let start_date = req.query.start_date == undefined ? '' : req.query.start_date;
-        let end_date = req.query.end_date == undefined ? '' : req.query.end_date;
-        let incomingClass = require('../helpers/incomingPaymentHelper')
-		let incomingHelper = new incomingClass();
+    let end_date = req.query.end_date == undefined ? '' : req.query.end_date;
+    let incomingClass = require('../helpers/incomingPaymentHelper')
+    let incomingHelper = new incomingClass();
     try {
         let objects = await helper.getCreditSales(start_date, end_date);
         // let overall_credit = 0;
         // let overall_paid = 0;
         // let overall_balance = 0;
-        for(var i = 0; i < objects.length; i++){
+        for (var i = 0; i < objects.length; i++) {
             let curr = objects[i]
             try {
                 let customer = await customerHelper.getItem(`id = ${curr.customer}`, customerHelper.table_name)
@@ -745,7 +940,7 @@ router.get('/getArrears', async (req, res) => {
                 curr.phone = customer.phone
                 // overall_paid += total_paid
                 // overall_credit += curr.total;
-                
+
                 curr.paid = total_paid.toLocaleString()
                 curr.balance = (curr.total - total_paid).toLocaleString()
                 // overall_balance += curr.total - total_paid
@@ -756,23 +951,25 @@ router.get('/getArrears', async (req, res) => {
                 curr.paid = 'n/a'
                 curr.balance = 'n/a'
                 // overall_credit += curr.total;
-                
+
                 curr.total = curr.total.toLocaleString()
                 // console.log(error)
             }
-            
+
         }
-        
+
         let overall_credit = await helper.getTotalCreditSales(start_date, end_date);
 
-        let overall_paid = await incomingHelper.getTotalPaid('',start_date, end_date);
+        let overall_paid = await incomingHelper.getTotalPaid('', start_date, end_date);
         let overall_balance = overall_credit - overall_paid;
-        
 
-        res.json({ status: '1', data: objects, 
-        overall_balance : overall_balance.toLocaleString(),
-        overall_credit : overall_credit.toLocaleString(),
-        overall_paid : overall_paid.toLocaleString() })
+
+        res.json({
+            status: '1', data: objects,
+            overall_balance: overall_balance.toLocaleString(),
+            overall_credit: overall_credit.toLocaleString(),
+            overall_paid: overall_paid.toLocaleString()
+        })
     } catch (error) {
         await helper.closeConnection();
         console.log(error)
@@ -784,21 +981,144 @@ router.get('/getArrears', async (req, res) => {
 
 
 router.get('/getArrearsCount', async (req, res) => {
-    
-        let incomingClass = require('../helpers/incomingPaymentHelper')
-		let incomingHelper = new incomingClass();
+
+    let incomingClass = require('../helpers/incomingPaymentHelper')
+    let incomingHelper = new incomingClass();
     try {
         let overall_credit = await helper.getTotalCreditSales();
 
         let overall_paid = await incomingHelper.getTotalPaid();
         let overall_balance = overall_credit - overall_paid;
-        
 
-        res.json({ status: '1', overall_credit: overall_credit.toLocaleString(),
-        overall_paid: overall_paid.toLocaleString(), overall_balance:overall_balance.toLocaleString()})
+
+        res.json({
+            status: '1', overall_credit: overall_credit.toLocaleString(),
+            overall_paid: overall_paid.toLocaleString(), overall_balance: overall_balance.toLocaleString()
+        })
     } catch (error) {
         await helper.closeConnection();
         console.log(error)
+        log.error(error)
+        res.json({ status: '-1', data: null })
+    }
+
+});
+
+
+////////////////DAILY RECORDS//////////////////////
+router.post('/saveDailyRecord', async (req, res) => {
+    try {
+        let helperClass = require('../helpers/dailyRecordsHelper')
+        let h = new helperClass();
+
+        let data = h.prep_data(req.body);
+        data.created_by = req.userid;
+
+        let date = req.body.date;
+        let shift = req.body.shift;
+        let query = ` date = '${date}'   and shift = '${shift}'`;
+        
+        //if already submitted, update it
+        let exists = await h.getItem(query, h.table_name);
+        if(exists == null){
+            //insert
+            await h.insert(data, h.table_name);
+        }
+        else{
+            await h.update(data, `id = ${exists.id}`, h.table_name)
+        }
+
+
+        // //console.log(data)
+        
+
+        res.json({ status: '1', data: null })
+    } catch (error) {
+        await helper.closeConnection();
+        //console.log(error)
+        log.error(error)
+        res.json({ status: '-1', data: null })
+    }
+
+
+
+
+
+});
+
+router.get('/findDailyRecordsBetweenDates', async (req, res) => {
+    try {
+        let helperClass = require('../helpers/dailyRecordsHelper')
+        let h = new helperClass();
+
+        let start = req.query.start_date == undefined ? h.getToday() : req.query.start_date;
+        let end = req.query.end_date == undefined ? h.getToday() : req.query.end_date;
+
+
+        let objects = null;
+        objects = await h.getMany(` date >= '${start}' and date <= '${end}' `, h.table_name);
+        res.json({
+            status: '1',
+            data: objects
+        })
+    } catch (error) {
+        await helper.closeConnection();
+        // //console.log(error)
+        log.error(error)
+        res.json({ status: '-1', data: null })
+    }
+
+});
+
+/**
+ * get the daily sale record for a specified day and shift
+ */
+router.get('/findDailyRecordsByDates', async (req, res) => {
+    try {
+        let helperClass = require('../helpers/dailyRecordsHelper')
+        let h = new helperClass();
+
+        let date = req.query.date;
+        let shift = req.query.shift == undefined ? '' : req.query.shift;
+        let query = ` date = '${date}'   and shift = '${shift}'`;
+        
+
+        let objects = null;
+        objects = await h.getItem(query, h.table_name);
+        res.json({
+            status: '1',
+            data: objects
+        })
+    } catch (error) {
+        await helper.closeConnection();
+        // //console.log(error)
+        log.error(error)
+        res.json({ status: '-1', data: null })
+    }
+
+});
+
+router.post('/deleteDailyRecord', async (req, res) => {
+    let helperClass = require('../helpers/dailyRecordsHelper')
+    let h = new helperClass();
+    try {
+        let codes = req.body.id.split(",");//comma-separated
+        let code_quotes = []
+        for (var i = 0; i < codes.length; i++) {
+            code_quotes.push(`${codes[i]}`)
+        }
+
+
+        await h.delete(` id in (${code_quotes.join(",")}) `, h.table_name);
+        await activitiesHelper.log(req.query.userid, `"deleted daily sales records: ${code_quotes.join(",")}  "`, `'Accounts'`)
+
+
+
+        res.json({
+            status: '1'
+        })
+    } catch (error) {
+        await helper.closeConnection();
         log.error(error)
         res.json({ status: '-1', data: null })
     }

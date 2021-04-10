@@ -90,7 +90,7 @@ class OutgoingPaymentHelper extends dbClass {
     }
 
     async getAllTotalPaid(recipient='', start_date='', end_date=''){
-        let sql = `select sum(amount) as total from ${this.table_name} where 1
+        let sql = `select sum(amount) as total from ${this.table_name} where type != 'Credit Purchase Payment'
           `;
         if(start_date != ''){
             sql += ` and date >= '${start_date}' `
@@ -107,6 +107,35 @@ class OutgoingPaymentHelper extends dbClass {
             await this.getConnection();
             let q = await this.connection.get(sql);
             return q.total == null ? 0 : q.total;;
+        } catch (error) {
+            log.error(error);
+            throw new Error(error)
+        }
+    }
+
+    /**
+     * 
+     * @param {string} start_date  start date
+     * @param {string} end_date 
+     * @returns {number}
+     */
+    async getPaymentsGrouped( start_date='', end_date=''){
+        let sql = `select type, sum(amount) as total from ${this.table_name}
+         where type != 'Credit Purchase Payment'
+          `;
+        if(start_date != ''){
+            sql += ` and date >= '${start_date}' `
+        }
+
+        if(end_date != ''){
+            sql += ` and date <= '${end_date}' `
+        }
+        sql += ` group by type  `
+
+        try {
+            await this.getConnection();
+            let q = await this.connection.all(sql);
+            return q;
         } catch (error) {
             log.error(error);
             throw new Error(error)

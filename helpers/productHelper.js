@@ -14,7 +14,7 @@ class ProductHelper extends dbClass {
     fields = ["price", "unit", "min_stock", "max_stock",
         "expiry", "cost_price",
         "status",
-        "name", "category", "notes", "barcode", "size", "shelf","description"]
+        "name", "category", "notes", "barcode", "size", "shelf","description","preferred_vendor"]
     table_name = "products";
 
     not_string_fields = ["id", "price", "min_stock", "max_stock", "cost_price"];

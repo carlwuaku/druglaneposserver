@@ -83,6 +83,21 @@ router.get('/getBranches', async (req, res) => {
 	}
 })
 
+router.get('/getLogo', async (req, res) => {
+	try {
+		let settingsHelper = require('../helpers/settingsHelper');
+    let sh = new settingsHelper();
+		let logo = await sh.getSetting(`'logo'`);
+		res.json({ status: '1', data: 'assets/images/'+logo })
+	} catch (error) {
+		await helper.closeConnection();
+		console.log(error);
+		res.json({ status: '-1', data: null })
+	}
+})
+
+
+
 
 router.post('/saveBranch', async (req, res) => {
 	try {
@@ -884,9 +899,10 @@ let outgoingHelperClass = require('../helpers/outgoingPaymentHelper')
 	let purchases = await pDetailsHelper.getTotalPurchase(start, end)
 	let transfers_out = await tdetailsHelper.getTotal(start, end)
 	let transfers = await rdetailsHelper.getTotal(start, end)
-	let starting_stock = await stockValueHelper.getStockValueByDate(start);
-	let closing_stock = await stockValueHelper.getStockValueByDate(end);
-	let expenses = await h.getAllTotalPaid('', start, end)
+	let starting_stock = await stockValueHelper.getStockCostValueByDate(start);
+	let closing_stock = await stockValueHelper.getStockCostValueByDate(end);
+	let expenses = await h.getAllTotalPaid('', start, end);
+	let expenses_list = await h.getPaymentsGrouped(start, end);
 
 	let difference = sales - (purchases + starting_stock - closing_stock) - expenses
 		let profit = difference > 0
@@ -900,7 +916,8 @@ let outgoingHelperClass = require('../helpers/outgoingPaymentHelper')
 			closing_stock: closing_stock.toLocaleString(),
 			expenses: expenses.toLocaleString(),
 			profit: profit,
-			difference: difference.toLocaleString()
+			difference: difference.toLocaleString(),
+			expenses_list: expenses_list
 
 		})
 	} catch (error) {
@@ -980,6 +997,19 @@ router.get('/findIncomingPaymentsBetweenDates', async (req, res) => {
 
 		}
 
+		for(var i = 0; i < objects.length; i++){
+			try {
+				let customer = await customerHelper.getItem(`id = ${objects[i].payer}`, customerHelper.table_name);
+				objects[i].customer_name = customer.name;
+				objects[i].phone = customer.phone;
+			} catch (error) {
+				console.log(error)
+				objects[i].customer_name = "N/A";
+				objects[i].phone = "N/A";
+			}
+
+		}
+
 		
 
 
@@ -1000,7 +1030,7 @@ router.post('/deleteIncomingPayment', async (req, res) => {
 	let helperClass = require('../helpers/incomingPaymentHelper')
 	let h = new helperClass();
 	try {
-		let codes = req.body.code.split(",");//comma-separated
+		let codes = req.body.id.split(",");//comma-separated
 		let code_quotes = []
 		for (var i = 0; i < codes.length; i++) {
 			code_quotes.push(`${codes[i]}`)

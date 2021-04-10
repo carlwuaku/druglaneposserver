@@ -6,7 +6,7 @@ class CustomerHelper extends dbClass {
     constructor() {
         super();
     }
-    fields = ["name", "phone", "email", "location"]
+    fields = ["name", "phone", "email", "location","date_of_birth","sex"]
     table_name = "customers";
     diagnostics_table_name = "customer_diagnostics";
     diagnostics_master_table_name = "diagnostic_tests";

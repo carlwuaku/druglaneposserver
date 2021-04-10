@@ -63,6 +63,23 @@ class StockValueHelper extends dbClass {
        
     }
 
+    async getStockCostValueByDate(date) {
+        let sql = `select 
+        cost_value from stock_values where date <= '${date}' order by date desc `;
+        
+
+        try {
+            await this.getConnection();
+            let q = await this.connection.get(sql);
+            return q == undefined ? 0 : q.cost_value;
+        } catch (error) {
+            log.error(error);
+            throw new Error(error)
+        }
+
+       
+    }
+
     async getCostValue() {
         let sql = `select 
         sum(current_stock * cost_price) as total from products where cost_price 
