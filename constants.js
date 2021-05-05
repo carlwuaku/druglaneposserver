@@ -15,7 +15,7 @@ exports.settings_location = (electron.app || electron.remote.app).getPath('userD
 const path = require('path')
 
 exports.settings_path =path.join( this.settings_location,'system-settings.json');
-exports.db_path =path.join( this.settings_location,'druglane.db');
+exports.db_path =path.join( this.settings_location,'druglane (2).db');
 exports.sequelize_db = path.join( this.settings_location,'sequelize_druglane.db');
 exports.backup_folder = path.join((electron.app || electron.remote.app).getPath('documents'), "druglaneBackups");
 exports.settings_filename = 'system-settings.json';
@@ -885,7 +885,8 @@ const migrations = [
 
           INSERT INTO products_new (id, name, price, category, notes, unit, picture, created_on, 
             max_stock, min_stock, expiry, barcode, current_stock, last_modified, cost_price, status)
-      SELECT *
+      SELECT id, name, price, category, notes, unit, picture, created_on, 
+      max_stock, min_stock, expiry, barcode, current_stock, last_modified, cost_price, status 
       FROM products;
 
 
@@ -1081,7 +1082,7 @@ const migrations = [
   },
   {
     query: ` 
-
+   
     PRAGMA foreign_keys=off;
 
     BEGIN TRANSACTION;

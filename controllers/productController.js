@@ -2222,7 +2222,17 @@ router.post('/upload', (req, res, next) => {
             var price = obj_array.price;
             var cost_price = obj_array.cost_price == undefined ? 0 : obj_array.cost_price;
             var category = obj_array.category == undefined ? "Miscellaneous" : obj_array.category;
-            var expiry = obj_array.expiry == undefined ? "1970-01-01" : obj_array.expiry;
+
+            var expiry ="";
+            if(obj_array.expiry == undefined) {
+                expiry = "1970-01-01";
+            }  else{
+               let unix =  Date.parse(obj_array.expiry);
+                let mill = unix * 1000;
+                const dateObject = new Date(unix)
+
+                expiry = helper.formatDate(dateObject)
+            } 
             var expected = obj_array.expected == undefined ? 0 : obj_array.expected;
             var counted = obj_array.counted == undefined ? 0 : obj_array.counted;
             var shelf = obj_array.shelf == undefined ? "" : obj_array.shelf;

@@ -10,6 +10,11 @@ const filestore = new FileStore({
     defaults: constants.default_config
 });
 const moment = require('moment')
+const Sequelize = require('sequelize')
+const Umzug = require('umzug')
+
+// creates a basic sqlite database
+const sequelize = require("./sequelize")
 
 
 
@@ -1012,18 +1017,20 @@ class Db {
             throw new Error(err)
         }
     }
+    
 
     async runMigrations() {
         await this.getConnection();
         //run the migrations
 
         let dbversion = filestore.get('dbversion');
-        console.log("dbversion: " + dbversion)
+        console.log("dbversion: " + dbversion);
+        let has_error = false;
         for (var i = 0; i < constants.migrations.length; i++) {
             let curr = constants.migrations[i];
             let query = curr.query;
             let version = curr.version;
-            //if its an empty query, just se the version and move on. some 
+            //if its an empty query, just set the version and move on. some 
             //of these are intentional
             if (version > dbversion) {
                 if (query.trim().length < 1) {
@@ -1035,6 +1042,7 @@ class Db {
                         //successful
                         filestore.set('dbversion', version);
                     } catch (error) {
+                        has_error = true;
                         log.error(`error at # ${version}`)
                         log.error(error)
                         console.log(`error at # ${version}` + error)
@@ -1043,6 +1051,42 @@ class Db {
                 }
             }
 
+        }
+
+        if(!has_error){
+            
+///////////////RUN SEQUELIZE MIGRATIONS IF THERE WAS NO ERROR///////////
+
+
+
+const umzug = new Umzug({
+    migrations: {
+        // indicates the folder containing the migration .js files
+        path: path.join(__dirname, '../migrations'),
+        // inject sequelize's QueryInterface in the migrations
+        params: [
+            sequelize.getQueryInterface()
+        ]
+    },
+    // indicates that the migration data should be store in the database
+    // itself through sequelize. The default configuration creates a table
+    // named `SequelizeMeta`.
+    storage: 'sequelize',
+    storageOptions: {
+        sequelize: sequelize
+    }
+})
+
+    ; (async () => {
+        // checks migrations and run them if they are not already applied
+        try {
+            await umzug.up()
+            console.log('All migrations performed successfully')
+
+        } catch (error) {
+            console.log(error)
+        }
+    })()
         }
 
         //this.connection.close().then(succ => { }, err => { })
