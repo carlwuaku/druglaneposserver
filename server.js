@@ -26,6 +26,9 @@ const path = require('path');
 
 
 
+
+
+
 /////////////////////TO BE REMOVED/////////////////
 const db = new DatabaseConnection();
 db.runMigrations();
@@ -709,12 +712,21 @@ app.post('/saveUser', checkSignIn, async (req, res) => {
     let Helper = require('./helpers/adminHelper');
     let h = new Helper();
     let id = req.body.id;
+    var password = req.body.password;
+    var confirm_password = req.body.confirm_password;
+    // if(password != confirm_password){
+    //     res.redirect('/userForm?m=Passwords do not match. please check and try again.')
+    //     return false;
+    // }
 
-    if (id !== undefined) {
+
+    if (id !== undefined && id !== undefined && id !== null 
+        && id != "undefined" && id != "null" && id != "") {
         let data = h.prep_data(req.body);
         //update. else insert
-        var password = req.body.password;
-        if (password !== undefined && password !== null) {
+        console.log(password)
+        if (password !== undefined && password !== null 
+            && password != "undefined" && password != "null" && password != "") {
             var bcrypt = require('bcryptjs');
             var hash = bcrypt.hashSync(password, 10);
             data.password_hash = `'${hash}'`;
@@ -1103,6 +1115,7 @@ app.get('/uploadDrugInfo', async (req, res) => {
 
 });
 
+const FirebaseFunctions = require("./firebase")
 
 let server = app.listen(PORT, function () {
     var ip = require('ip');

@@ -2,8 +2,8 @@
 const PORT = process.env.PORT || 5000;
 //exports.base_url = "http://localhost:"+PORT+"/";
 exports.base_url = "https://revolfoods.herokuapp.com/";
-exports.server_url = "https://druglanepms.calgadsoftwares.com";
-// exports.server_url = "http://localhost/stock";
+// exports.server_url = "https://druglanepms.calgadsoftwares.com";
+exports.server_url = "http://localhost/stock";
 exports.customer_image_url = "assets/customer_images/";
 exports.customer_image_thumbnail_url = "assets/customer_images/thumbnails/";
     
@@ -15,7 +15,7 @@ exports.settings_location = (electron.app || electron.remote.app).getPath('userD
 const path = require('path')
 
 exports.settings_path =path.join( this.settings_location,'system-settings.json');
-exports.db_path =path.join( this.settings_location,'druglane (2).db');
+exports.db_path =path.join( this.settings_location,'druglane.db');
 exports.sequelize_db = path.join( this.settings_location,'sequelize_druglane.db');
 exports.backup_folder = path.join((electron.app || electron.remote.app).getPath('documents'), "druglaneBackups");
 exports.settings_filename = 'system-settings.json';
@@ -1537,7 +1537,7 @@ const migrations = [
     (1, 85);`,
     version: 96
   },
-  {
+  { 
     query: `
     BEGIN TRANSACTION;
     create table if not exists db_sync (

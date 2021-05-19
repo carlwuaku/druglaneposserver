@@ -19,7 +19,7 @@ const DetailsHelper = require('../helpers/purchaseDetailsHelper.js');
 const purchaseDetailsHelper = new DetailsHelper();
 
 const SalesDetailsHelper = require('../helpers/salesDetailsHelper.js');
-        const salesDetailsHelper = new SalesDetailsHelper();
+const salesDetailsHelper = new SalesDetailsHelper();
 
 let vendorClass = require('../helpers/vendorHelper');
 let vendorHelper = new vendorClass();
@@ -27,7 +27,7 @@ router.get('/getList', async (req, res) => {
     let offset = req.query.offset == undefined ? 0 : req.query.offset;
     let limit = req.query.limit == undefined ? null : req.query.limit;
     try {
-        
+
 
 
         // let objects = await helper.getAll(helper.table_name, limit, offset);
@@ -93,14 +93,14 @@ router.get('/getList', async (req, res) => {
 
 
             try {
-                let totals =await salesDetailsHelper.getTotalQuantityAndAmount(obj.id);
+                let totals = await salesDetailsHelper.getTotalQuantityAndAmount(obj.id);
                 obj.total_amount_sold = totals.amount;
                 obj.total_quantity_sold = totals.total;
-                let last_six_months_totals =await salesDetailsHelper.getTotalQuantityAndAmount(obj.id, last_six_months, today);
+                let last_six_months_totals = await salesDetailsHelper.getTotalQuantityAndAmount(obj.id, last_six_months, today);
                 obj.six_months_amount_sold = last_six_months_totals.amount;
                 obj.six_months_quantity_sold = last_six_months_totals.total;
                 //preferred vendor
-                
+
                 // let avg = await salesDetailsHelper.getAverageMonthlyQuantities(obj.id);
                 // let avg_sum = 0;
                 // let count = 0;
@@ -219,62 +219,62 @@ router.get('/search', async (req, res) => {
     let limit = req.query.limit == undefined ? null : req.query.limit;
     try {
         let objects = null;
-        if(advanced == "yes"){
+        if (advanced == "yes") {
             //replace the texts with appropriate symbols
             let fields = req.query.fields.split("|||");
             let values = req.query.values.split("|||");
             let operators = req.query.operators.split("|||");
             let conditions = [];
-            for(var x = 0; x < fields.length; x++){
+            for (var x = 0; x < fields.length; x++) {
                 switch (operators[x]) {
                     case "Contains":
-                      conditions.push(`${fields[x]} like '%${values[x]}%'`);
-                      break;
+                        conditions.push(`${fields[x]} like '%${values[x]}%'`);
+                        break;
                     case "Starts with":
                         conditions.push(`${fields[x]} like '${values[x]}%'`);
-                      break;
+                        break;
                     case "Ends with":
-                      conditions.push(`${fields[x]} like '%${values[x]}'`);
-                      break;
+                        conditions.push(`${fields[x]} like '%${values[x]}'`);
+                        break;
                     case "Is exactly":
-                      conditions.push(`${fields[x]} = '${values[x]}'`);
-                      break;
-                      case "Less Than":
-                      conditions.push(`${fields[x]} < '${values[x]}'`);
-                      break;
-                      case "Greater Than":
-                      conditions.push(`${fields[x]} > '${values[x]}'`);
-                      break;
-                      case "Less Or Equal":
-                      conditions.push(`${fields[x]} <= '${values[x]}'`);
-                      break;
-                      case "Greater or Equal":
-                      conditions.push(`${fields[x]} >= '${values[x]}'`);
-                      break;
-                      case "Not Equals": 
-                      conditions.push(`${fields[x]} != '${values[x]}'`);
-                      break;
-                      case "Equals":
-                      conditions.push(`${fields[x]} = '${values[x]}'`);
-                      break;
+                        conditions.push(`${fields[x]} = '${values[x]}'`);
+                        break;
+                    case "Less Than":
+                        conditions.push(`${fields[x]} < '${values[x]}'`);
+                        break;
+                    case "Greater Than":
+                        conditions.push(`${fields[x]} > '${values[x]}'`);
+                        break;
+                    case "Less Or Equal":
+                        conditions.push(`${fields[x]} <= '${values[x]}'`);
+                        break;
+                    case "Greater or Equal":
+                        conditions.push(`${fields[x]} >= '${values[x]}'`);
+                        break;
+                    case "Not Equals":
+                        conditions.push(`${fields[x]} != '${values[x]}'`);
+                        break;
+                    case "Equals":
+                        conditions.push(`${fields[x]} = '${values[x]}'`);
+                        break;
                     case "Does not contain":
-                      conditions.push(`${fields[x]} not like '%${values[x]}%'`);
-                      break;
-        
+                        conditions.push(`${fields[x]} not like '%${values[x]}%'`);
+                        break;
+
                     default:
-                      conditions.push(`${fields[x]} like '%${values[x]}%'`);
-                      break;
-                  }
+                        conditions.push(`${fields[x]} like '%${values[x]}%'`);
+                        break;
+                }
             }
             objects = await helper.getMany(conditions.join(" and "), helper.table_name, limit, offset)
         }
-        else{
-            objects =          await helper.search(param, limit, offset);
+        else {
+            objects = await helper.search(param, limit, offset);
 
         }
         //also search the batches for matching records
         // let other_batches = await productBatchHelper.getDistinct("product", `barcode like "%${param}%"`, offset);
-        
+
         //check
         // let this_month = helper.setDates("this_month")
         // let last_month = helper.setDates("last_month")
@@ -314,7 +314,7 @@ router.get('/search', async (req, res) => {
                 obj.preferred_vendor_name = vendor.name;
             } catch (error) {
                 obj.preferred_vendor_name = "n/a";
-                
+
             }
 
             //get the vendor purchaesd from most
@@ -327,13 +327,13 @@ router.get('/search', async (req, res) => {
             }
             try {
 
-                let totals =await salesDetailsHelper.getTotalQuantityAndAmount(obj.id);
+                let totals = await salesDetailsHelper.getTotalQuantityAndAmount(obj.id);
                 obj.total_amount_sold = totals.amount;
                 obj.total_quantity_sold = totals.total;
-                let last_six_months_totals =await salesDetailsHelper.getTotalQuantityAndAmount(obj.id, last_six_months, today);
+                let last_six_months_totals = await salesDetailsHelper.getTotalQuantityAndAmount(obj.id, last_six_months, today);
                 obj.six_months_amount_sold = last_six_months_totals.amount;
                 obj.six_months_quantity_sold = last_six_months_totals.total;
-                
+
 
 
                 // let avg = await salesDetailsHelper.getAverageMonthlyQuantities(obj.id);
@@ -378,7 +378,7 @@ router.get('/getRelatedProducts', async (req, res) => {
     let id = req.query.id;
     //get the description of the product
     let item = await helper.getItem(`id = ${id}`, helper.table_name);
-    if( item.description == null || item.description == undefined || item.description == ''){
+    if (item.description == null || item.description == undefined || item.description == '') {
         res.json({ status: '1', data: [] });
         return false;
     }
@@ -386,7 +386,7 @@ router.get('/getRelatedProducts', async (req, res) => {
     let limit = 5;
     let description = item.description.toLowerCase();
     try {
-        let objects = await helper.getMany(`lower(description) like '${description}' and current_stock > 0 order by expiry`,helper.table_name, limit, offset);
+        let objects = await helper.getMany(`lower(description) like '${description}' and current_stock > 0 order by expiry`, helper.table_name, limit, offset);
         let selected = []
         for (var i = 0; i < objects.length; i++) {
             var obj = objects[i];
@@ -401,7 +401,7 @@ router.get('/getRelatedProducts', async (req, res) => {
             obj.near_max = stock >= max;
             obj.stock = obj.current_stock;
             obj.active_ingredients = [];
-            if(!obj.out_of_stock && obj.expiring_earlier){
+            if (!obj.out_of_stock && obj.expiring_earlier) {
                 selected.push(obj)
             }
         }
@@ -417,9 +417,9 @@ router.get('/getRelatedProducts', async (req, res) => {
 
 
 router.get('/getProductBatches', async (req, res) => {
-    try{
+    try {
         let id = req.query.id
-        let  batches = await productBatchHelper.getMany(` product = ${id} and quantity - quantity_sold > 0`, productBatchHelper.table_name);
+        let batches = await productBatchHelper.getMany(` product = ${id} and quantity - quantity_sold > 0`, productBatchHelper.table_name);
         res.json({ status: '1', data: batches })
     } catch (error) {
         await helper.closeConnection();
@@ -520,10 +520,10 @@ router.post('/saveBranchDetails', async (req, res) => {
 router.post('/massEdit', async (req, res) => {
     let id = req.body.id;//comma-separated
     let field = req.body.field;
-    let value = req.body.field == 'category' || 
-    req.body.field == 'description' || 
-    req.body.field == 'unit' || 
-    req.body.field == 'expiry_date' ? `'${req.body.value}'` : req.body.value;
+    let value = req.body.field == 'category' ||
+        req.body.field == 'description' ||
+        req.body.field == 'unit' ||
+        req.body.field == 'expiry_date' ? `'${req.body.value}'` : req.body.value;
 
 
     try {
@@ -1425,8 +1425,8 @@ router.get('/getStockOutList', async (req, res) => {
             obj.stock_value = (obj.current_stock * obj.price).toLocaleString()
 
 
-             //get preferred vendor
-             try {
+            //get preferred vendor
+            try {
                 let vendor = await vendorHelper.getItem(`id = ${obj.preferred_vendor}`, vendorHelper.table_name)
                 obj.preferred_vendor_name = vendor.name;
             } catch (error) {
@@ -1444,14 +1444,14 @@ router.get('/getStockOutList', async (req, res) => {
             }
 
             try {
-                let totals =await salesDetailsHelper.getTotalQuantityAndAmount(obj.id);
+                let totals = await salesDetailsHelper.getTotalQuantityAndAmount(obj.id);
                 obj.total_amount_sold = totals.amount;
                 obj.total_quantity_sold = totals.total;
-                let last_six_months_totals =await salesDetailsHelper.getTotalQuantityAndAmount(obj.id, last_six_months, today);
+                let last_six_months_totals = await salesDetailsHelper.getTotalQuantityAndAmount(obj.id, last_six_months, today);
                 obj.six_months_amount_sold = last_six_months_totals.amount;
                 obj.six_months_quantity_sold = last_six_months_totals.total;
                 //preferred vendor
-                
+
                 // let avg = await salesDetailsHelper.getAverageMonthlyQuantities(obj.id);
                 // let avg_sum = 0;
                 // let count = 0;
@@ -1520,8 +1520,8 @@ router.get('/getStockNearMinList', async (req, res) => {
             obj.stock = obj.current_stock;
             obj.stock_value = (obj.current_stock * obj.price).toLocaleString()
 
-             //get preferred vendor
-             try {
+            //get preferred vendor
+            try {
                 let vendor = await vendorHelper.getItem(`id = ${obj.preferred_vendor}`, vendorHelper.table_name)
                 obj.preferred_vendor_name = vendor.name;
             } catch (error) {
@@ -1539,14 +1539,14 @@ router.get('/getStockNearMinList', async (req, res) => {
             }
 
             try {
-                let totals =await salesDetailsHelper.getTotalQuantityAndAmount(obj.id);
+                let totals = await salesDetailsHelper.getTotalQuantityAndAmount(obj.id);
                 obj.total_amount_sold = totals.amount;
                 obj.total_quantity_sold = totals.total;
-                let last_six_months_totals =await salesDetailsHelper.getTotalQuantityAndAmount(obj.id, last_six_months, today);
+                let last_six_months_totals = await salesDetailsHelper.getTotalQuantityAndAmount(obj.id, last_six_months, today);
                 obj.six_months_amount_sold = last_six_months_totals.amount;
                 obj.six_months_quantity_sold = last_six_months_totals.total;
                 //preferred vendor
-                
+
                 // let avg = await salesDetailsHelper.getAverageMonthlyQuantities(obj.id);
                 // let avg_sum = 0;
                 // let count = 0;
@@ -1615,8 +1615,8 @@ router.get('/getStockNearMaxList', async (req, res) => {
             obj.stock = obj.current_stock;
             obj.stock_value = (obj.current_stock * obj.price).toLocaleString()
 
-             //get preferred vendor
-             try {
+            //get preferred vendor
+            try {
                 let vendor = await vendorHelper.getItem(`id = ${obj.preferred_vendor}`, vendorHelper.table_name)
                 obj.preferred_vendor_name = vendor.name;
             } catch (error) {
@@ -1634,14 +1634,14 @@ router.get('/getStockNearMaxList', async (req, res) => {
             }
 
             try {
-                let totals =await salesDetailsHelper.getTotalQuantityAndAmount(obj.id);
+                let totals = await salesDetailsHelper.getTotalQuantityAndAmount(obj.id);
                 obj.total_amount_sold = totals.amount;
                 obj.total_quantity_sold = totals.total;
-                let last_six_months_totals =await salesDetailsHelper.getTotalQuantityAndAmount(obj.id, last_six_months, today);
+                let last_six_months_totals = await salesDetailsHelper.getTotalQuantityAndAmount(obj.id, last_six_months, today);
                 obj.six_months_amount_sold = last_six_months_totals.amount;
                 obj.six_months_quantity_sold = last_six_months_totals.total;
                 //preferred vendor
-                
+
                 // let avg = await salesDetailsHelper.getAverageMonthlyQuantities(obj.id);
                 // let avg_sum = 0;
                 // let count = 0;
@@ -1859,8 +1859,8 @@ router.get('/getExpiryList', async (req, res) => {
             obj.stock = obj.current_stock;
             obj.stock_value = (obj.current_stock * obj.price).toLocaleString()
 
-             //get preferred vendor
-             try {
+            //get preferred vendor
+            try {
                 let vendor = await vendorHelper.getItem(`id = ${obj.preferred_vendor}`, vendorHelper.table_name)
                 obj.preferred_vendor_name = vendor.name;
             } catch (error) {
@@ -1878,14 +1878,14 @@ router.get('/getExpiryList', async (req, res) => {
             }
 
             try {
-                let totals =await salesDetailsHelper.getTotalQuantityAndAmount(obj.id);
+                let totals = await salesDetailsHelper.getTotalQuantityAndAmount(obj.id);
                 obj.total_amount_sold = totals.amount;
                 obj.total_quantity_sold = totals.total;
-                let last_six_months_totals =await salesDetailsHelper.getTotalQuantityAndAmount(obj.id, last_six_months, today);
+                let last_six_months_totals = await salesDetailsHelper.getTotalQuantityAndAmount(obj.id, last_six_months, today);
                 obj.six_months_amount_sold = last_six_months_totals.amount;
                 obj.six_months_quantity_sold = last_six_months_totals.total;
                 //preferred vendor
-                
+
                 // let avg = await salesDetailsHelper.getAverageMonthlyQuantities(obj.id);
                 // let avg_sum = 0;
                 // let count = 0;
@@ -1937,15 +1937,15 @@ router.get('/getStockValueList', async (req, res) => {
             var curr = {}
             var date = range[i];
             curr.date = date;
-            var closing_stock = 
-            report_field == "selling_value" ? await stockValueHelper.getStockValueByDate(date) : await stockValueHelper.getStockCostValueByDate(date);
+            var closing_stock =
+                report_field == "selling_value" ? await stockValueHelper.getStockValueByDate(date) : await stockValueHelper.getStockCostValueByDate(date);
             curr.closing_stock = closing_stock.toLocaleString();
             var opening_stock = 0;
 
             if (i == 0) {
                 let yestee = helper.getYesterday(date)
-                let yesterday_value = 
-                report_field == "selling_value" ? await stockValueHelper.getStockValueByDate(yestee) : await stockValueHelper.getStockCostValueByDate(yestee);
+                let yesterday_value =
+                    report_field == "selling_value" ? await stockValueHelper.getStockValueByDate(yestee) : await stockValueHelper.getStockCostValueByDate(yestee);
 
                 opening_stock = yesterday_value;
             }
@@ -1955,20 +1955,20 @@ router.get('/getStockValueList', async (req, res) => {
             last_value = closing_stock;
             curr.opening_stock = opening_stock.toLocaleString()
             curr.difference = (opening_stock - closing_stock).toLocaleString()
-            let sales = report_field == "selling_value" ? await salesDetailsHelper.getTotalSales(date, date) :  await salesDetailsHelper.getTotalSalesCost(date, date);
-            let purchases =report_field == "selling_value" ? await pDetailsHelper.getTotalPurchaseSelling(date, date)
-            :await pDetailsHelper.getTotalPurchase(date, date);
+            let sales = report_field == "selling_value" ? await salesDetailsHelper.getTotalSales(date, date) : await salesDetailsHelper.getTotalSalesCost(date, date);
+            let purchases = report_field == "selling_value" ? await pDetailsHelper.getTotalPurchaseSelling(date, date)
+                : await pDetailsHelper.getTotalPurchase(date, date);
             let transfers_out = report_field == "selling_value" ? await tdetailsHelper.getTotal(date, date)
-            : await tdetailsHelper.getTotalCost(date, date);
+                : await tdetailsHelper.getTotalCost(date, date);
             let transfers = report_field == "selling_value" ? await rdetailsHelper.getTotal(date, date)
-            : await rdetailsHelper.getTotalCost(date, date);
+                : await rdetailsHelper.getTotalCost(date, date);
 
-            curr.sales =  sales.toLocaleString()
+            curr.sales = sales.toLocaleString()
             curr.purchases = purchases.toLocaleString()
             curr.transfers_out = transfers_out.toLocaleString()
             curr.transfers = transfers.toLocaleString()
 
-           
+
             objects.push(curr)
         }
         res.json({ status: '1', data: objects })
@@ -2031,8 +2031,8 @@ router.get('/getExpiredList', async (req, res) => {
             obj.stock = obj.current_stock
             obj.stock_value = (obj.current_stock * obj.price).toLocaleString()
 
-             //get preferred vendor
-             try {
+            //get preferred vendor
+            try {
                 let vendor = await vendorHelper.getItem(`id = ${obj.preferred_vendor}`, vendorHelper.table_name)
                 obj.preferred_vendor_name = vendor.name;
             } catch (error) {
@@ -2050,14 +2050,14 @@ router.get('/getExpiredList', async (req, res) => {
             }
 
             try {
-                let totals =await salesDetailsHelper.getTotalQuantityAndAmount(obj.id);
+                let totals = await salesDetailsHelper.getTotalQuantityAndAmount(obj.id);
                 obj.total_amount_sold = totals.amount;
                 obj.total_quantity_sold = totals.total;
-                let last_six_months_totals =await salesDetailsHelper.getTotalQuantityAndAmount(obj.id, last_six_months, today);
+                let last_six_months_totals = await salesDetailsHelper.getTotalQuantityAndAmount(obj.id, last_six_months, today);
                 obj.six_months_amount_sold = last_six_months_totals.amount;
                 obj.six_months_quantity_sold = last_six_months_totals.total;
                 //preferred vendor
-                
+
                 // let avg = await salesDetailsHelper.getAverageMonthlyQuantities(obj.id);
                 // let avg_sum = 0;
                 // let count = 0;
@@ -2109,12 +2109,12 @@ router.get('/getFunctionalGroups', async (req, res) => {
             arr.push(item.description)
         })
         //give some default values
-        for(var x = 0; x < constants.default_functional_groups.length; x++){
-            if(arr.indexOf(constants.default_functional_groups[x]) == -1){
+        for (var x = 0; x < constants.default_functional_groups.length; x++) {
+            if (arr.indexOf(constants.default_functional_groups[x]) == -1) {
                 arr.push(constants.default_functional_groups[x])
             }
         }
-        
+
         res.json({ status: '1', data: arr })
     } catch (error) {
         //console.l.log(error)
@@ -2223,16 +2223,16 @@ router.post('/upload', (req, res, next) => {
             var cost_price = obj_array.cost_price == undefined ? 0 : obj_array.cost_price;
             var category = obj_array.category == undefined ? "Miscellaneous" : obj_array.category;
 
-            var expiry ="";
-            if(obj_array.expiry == undefined) {
+            var expiry = "";
+            if (obj_array.expiry == undefined) {
                 expiry = "1970-01-01";
-            }  else{
-               let unix =  Date.parse(obj_array.expiry);
+            } else {
+                let unix = Date.parse(obj_array.expiry);
                 let mill = unix * 1000;
                 const dateObject = new Date(unix)
 
                 expiry = helper.formatDate(dateObject)
-            } 
+            }
             var expected = obj_array.expected == undefined ? 0 : obj_array.expected;
             var counted = obj_array.counted == undefined ? 0 : obj_array.counted;
             var shelf = obj_array.shelf == undefined ? "" : obj_array.shelf;
@@ -2337,13 +2337,13 @@ router.get('/getChangedStock', async (req, res) => {
 
 
 
-        let pending = await stockPendingHelper.getAll( stockPendingHelper.table_name, limit, offset)
+        let pending = await stockPendingHelper.getAll(stockPendingHelper.table_name, limit, offset)
         let total = await stockPendingHelper.count('id', stockPendingHelper.table_name);
         // //console.l.log(total)
         let objects = []
         for (var i = 0; i < pending.length; i++) {
             var product_id = pending[i].product
-            let product = await helper.getItem(`id = ${product_id}`,helper.table_name)
+            let product = await helper.getItem(`id = ${product_id}`, helper.table_name)
             var date = pending[i].created_on
             pending[i].message = "";
             pending[i].name = product.name
@@ -2385,13 +2385,13 @@ router.get('/getChangedStock', async (req, res) => {
                 pending[i].in = quantity_in;
                 overall_change += quantity_in
 
-            } catch (error) { 
+            } catch (error) {
                 pending[i].in = 0
                 pending[i].message += "Error in transfer in quantity: " + error + "\n"
             }
 
             pending[i].overall_change = overall_change
-            if(overall_change != 0){
+            if (overall_change != 0) {
                 objects.push(pending[i])
             }
         }
@@ -2460,7 +2460,7 @@ router.post('/saveStockAdjustmentUpdatedQuantities', async (req, res) => {
             data.unit = units[i] == undefined || units[i] == null ? `''` : `"${units[i]}"`;
             data.shelf = shelves[i] == undefined || shelves[i] == null ? `''` : `"${shelves[i]}"`;
             objects.push(data);
-           
+
         }
         // //console.l.log(objects)
 
@@ -2500,30 +2500,30 @@ router.post('/saveStockAdjustmentUpdatedQuantities', async (req, res) => {
 
 router.get('/getProductConsumption', async (req, res) => {
     const SalesDetailsHelper = require('../helpers/salesDetailsHelper.js');
-        const salesDetailsHelper = new SalesDetailsHelper();
+    const salesDetailsHelper = new SalesDetailsHelper();
 
-        const PurchaseDetailsHelper = require('../helpers/purchaseDetailsHelper.js');
-        const purchaseDetailsHelper = new PurchaseDetailsHelper();
+    const PurchaseDetailsHelper = require('../helpers/purchaseDetailsHelper.js');
+    const purchaseDetailsHelper = new PurchaseDetailsHelper();
 
-        const TransferDetailsHelper = require('../helpers/transferDetailsHelper.js');
-        const transferDetailsHelper = new TransferDetailsHelper();
+    const TransferDetailsHelper = require('../helpers/transferDetailsHelper.js');
+    const transferDetailsHelper = new TransferDetailsHelper();
 
-        const ReceivedTransferDetailsHelper = require('../helpers/receivedTransferDetailsHelper.js');
-        const receivedTransferDetailsHelper = new ReceivedTransferDetailsHelper();
+    const ReceivedTransferDetailsHelper = require('../helpers/receivedTransferDetailsHelper.js');
+    const receivedTransferDetailsHelper = new ReceivedTransferDetailsHelper();
 
     let id = req.query.product;
-    let start_month = req.query.start_month ;
-        let end_month = req.query.end_month ;
-        let start_year = req.query.start_year ;
-        let end_year = req.query.end_year ;
-        console.log(end_month)
-        let start_date = start_year+"-"+salesDetailsHelper.padZero(start_month)+"-01";
-        let end_day = salesDetailsHelper.getLastDayOfMonth(end_month)
-        let end_date = end_year+"-"+salesDetailsHelper.padZero(end_month)+"-"+end_day;
-        
-        
-        
-    
+    let start_month = req.query.start_month;
+    let end_month = req.query.end_month;
+    let start_year = req.query.start_year;
+    let end_year = req.query.end_year;
+    console.log(end_month)
+    let start_date = start_year + "-" + salesDetailsHelper.padZero(start_month) + "-01";
+    let end_day = salesDetailsHelper.getLastDayOfMonth(end_month)
+    let end_date = end_year + "-" + salesDetailsHelper.padZero(end_month) + "-" + end_day;
+
+
+
+
     try {
         //get the months between the start and ends
 
@@ -2531,60 +2531,62 @@ router.get('/getProductConsumption', async (req, res) => {
         let purchases = await purchaseDetailsHelper.getProductMonthlyQuantity(id, start_date, end_date)
         let in_transfers = await receivedTransferDetailsHelper.getProductMonthlyQuantity(id, start_date, end_date)
         let out_transfers = await transferDetailsHelper.getProductMonthlyQuantity(id, start_date, end_date)
-        let data= []
+        let data = []
         // console.log(sales)
         //foreach year, get the months
-        for(var i = start_year; i <= end_year; i++){
+        for (var i = start_year; i <= end_year; i++) {
             //if first month, start from the start_month.
             let start = 1;
             let end = 12;
-            if(i == start_year){
+            if (i == start_year) {
                 start = start_month;
             }
-            if(i == end_year){
+            if (i == end_year) {
                 end = end_month
             }
-            for(var x  = start; x <= end; x++){
-                let month_name = salesDetailsHelper.getMonthName(x)+ " "+i
-                let month_year = salesDetailsHelper.padZero(x)+ "-"+i;
+            for (var x = start; x <= end; x++) {
+                let month_name = salesDetailsHelper.getMonthName(x) + " " + i
+                let month_year = salesDetailsHelper.padZero(x) + "-" + i;
                 let sold = 0;
                 let purchased = 0;
                 let in_transferred = 0;
                 let out_transferred = 0;
                 for (let y = 0; y < sales.length; y++) {
-                    if(sales[y].month_year == month_year){
+                    if (sales[y].month_year == month_year) {
                         sold = sales[y].total;
                         break;
                     }
-                    
+
                 }
 
                 for (let y = 0; y < purchases.length; y++) {
-                    if(purchases[y].month_year == month_year){
+                    if (purchases[y].month_year == month_year) {
                         purchased = purchases[y].total;
                         break;
                     }
-                    
+
                 }
 
                 for (let y = 0; y < in_transfers.length; y++) {
-                    if(in_transfers[y].month_year == month_year){
+                    if (in_transfers[y].month_year == month_year) {
                         in_transferred = in_transfers[y].total;
                         break;
                     }
-                    
+
                 }
 
                 for (let y = 0; y < out_transfers.length; y++) {
-                    if(out_transfers[y].month_year == month_year){
+                    if (out_transfers[y].month_year == month_year) {
                         out_transferred = out_transfers[y].total;
                         break;
                     }
-                    
+
                 }
                 data.push(
-                    {"period": month_name, "sold": sold, "purchased": purchased, "out_transferred": out_transferred,
-                "in_transferred": in_transferred}
+                    {
+                        "period": month_name, "sold": sold, "purchased": purchased, "out_transferred": out_transferred,
+                        "in_transferred": in_transferred
+                    }
                 )
             }
         }
@@ -2597,6 +2599,80 @@ router.get('/getProductConsumption', async (req, res) => {
     }
 
 });
+
+
+
+
+router.get('/getDuplicateCount', async (req, res) => {
+    try {
+
+
+        let q = await helper.getDuplicates()
+        let count = q.length;
+        res.json({ status: '1', count: count })
+    } catch (error) {
+        await helper.closeConnection();
+        //console.l.log(error)
+        res.json({ status: '-1', data: null })
+    }
+
+});
+
+router.get('/getDuplicateList', async (req, res) => {
+    try {
+        let objects = await helper.getDuplicates();
+        res.json({ status: '1', data: objects })
+    } catch (error) {
+        await helper.closeConnection();
+        //console.l.log(error)
+        res.json({ status: '-1', data: null })
+    }
+
+});
+
+router.post('/mergeDuplicates', async (req, res) => {
+    try {
+        let ids = req.body.ids.split("|||");//comma-separated
+        
+        for (var i = 0; i < ids.length; i++) {
+            try {
+                //get the name of the item and get those with the same name
+                let item = await helper.getItem(`id = ${ids[i]}`, helper.table_name);
+                //get the items that match the name
+                let dupes = await helper.getMany(`name = "${item.name}" and id != ${item.id}`, helper.table_name);
+                for (var j = 0; j < dupes.length; j++) {
+                    //update each relevant table where the dupe appears to the parent id;
+                    await helper.updateField("product",`${ids[i]}`,` product = ${dupes[j].id}`, 'sales_details')
+                    await helper.updateField("product",`${ids[i]}`,` product = ${dupes[j].id}`, 'stock_adjustment')
+                    await helper.updateField("product",`${ids[i]}`,` product = ${dupes[j].id}`, 'purchase_details')
+                    await helper.updateField("product",`${ids[i]}`,` product = ${dupes[j].id}`, 'received_transfer_details')
+                    await helper.updateField("product",`${ids[i]}`,` product = ${dupes[j].id}`, 'transfer_details')
+                    await helper.updateField("product",`${ids[i]}`,` product = ${dupes[j].id}`, 'refills')
+                    await helper.updateField("product",`${ids[i]}`,` product = ${dupes[j].id}`, 'stock_adjustment_pending')
+                    let where = ` id = ${dupes[j].id} `
+                    await helper.delete(where, helper.table_name);
+                    await activities.log(req.query.userid, `"deleted a duplicate for  ${item.name} "`, `'Products'`);
+                    
+                }
+
+                //update the stock
+                await helper.refreshCurrentStock(ids[i])
+                await stockValueHelper.updateStockValue();
+            } catch (error) {
+                console.log(error)
+            }
+
+        } 
+       
+        res.json({ status: '1'})
+    } catch (error) {
+        await helper.closeConnection();
+        //console.l.log(error)
+        res.json({ status: '-1', data: null })
+    }
+
+});
+
 
 //export the whole thingy
 module.exports = router;

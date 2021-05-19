@@ -90,6 +90,18 @@ class ProductHelper extends dbClass {
     }
 
 
+     /**
+     * get items with duplicate names in the db
+     * @returns {Array} an array of objects
+     */
+    async getDuplicates() {
+        try {
+            let objects = await this.runQuery(` select id, count(id) as total, name from products group by name having total > 1;`);
+            return objects;
+        } catch (error) {
+            throw new Error(error)
+        }
+    }
 }
 
 module.exports = ProductHelper

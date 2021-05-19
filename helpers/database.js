@@ -750,7 +750,7 @@ class Db {
             throw new Error(err)
         }
 
-    }
+    } 
 
     /**
     * Update a field or fields in a table based on the conditions
@@ -950,6 +950,27 @@ class Db {
         }
     }
 
+
+    /**
+     * run a raw query on a table
+     * @param {string} query 
+     * @param {string} table 
+     * @returns {Array}
+     */
+    async runQuery(sql) {
+        try {
+            
+            await this.getConnection();
+            let query = await this.connection.all(sql);
+            return query;//an array of objects
+        } catch (error) {
+            log.error(sql);
+            console.log(sql)
+            log.error(err);
+            //this.connection.close().then(succ => { }, err => { })
+            throw new Error(err)
+        }
+    }
 
     async getField(field, table, conditions = '') {
         //use placeholders for the variables

@@ -96,7 +96,7 @@
                                                                 }
                                                             %>
                                                             
-                                                            <input  name="password" value=""
+                                                            <input ng-model="password"  name="password" value=""
                                                           type="password" class="form-control"
                                                            >
                                                         </div>
@@ -116,7 +116,7 @@
                                                                 }
                                                             %>
                                                             
-                                                            <input  name="confirm_password" value=""
+                                                            <input ng-model="confirm_password" name="confirm_password" value=""
                                                           type="password" class="form-control"
                                                            >
 
@@ -133,7 +133,8 @@
                                                         
                                             
                                            
-                                            <button type="submit" class="btn btn-primary btn-block">Submit</button>
+                                            <button ng-disabled="password != confirm_password" type="submit" class="btn btn-primary btn-block">Submit</button>
+                                            <span ng-if="password != confirm_password" class="text-danger">The passwords do not match</span>
                                         </form>
                                             
                                 </div>
@@ -150,7 +151,15 @@
 
     </div>
 </section>
+<script>
+    var myApp = angular.module('myApp', []);
+    myApp.controller('myCtrl', function($scope) {
+        
+    });
+    $(document).ready(function() {
 
+    })
+</script>
 
 
 <!-- <script src="/socket.io/socket.io.js"></script>
