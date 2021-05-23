@@ -43,6 +43,8 @@
 
         const { ipcRenderer } = require('electron');
         const fs = require('fs');
+        const log = require('electron-log');
+
         const version = document.getElementById('version'); 
         ipcRenderer.send('get_backup_file');
         
@@ -72,6 +74,7 @@
                             $("#loading_icon").fadeOut("fast")
                             $("#error_icon").fadeOut("fast")
                             $("#success_icon").fadeIn("fast")
+                            log.info("backup successful")
                             setTimeout(() => {
                                 window.close();  
                             }, 3000);
@@ -88,9 +91,11 @@
                             $("#loading_icon").fadeOut("fast")
                             $("#error_icon").fadeIn("fast")
                             $("#success_icon").fadeOut("fast")
+                            log.error('backup failed. '+err)
+
                             setTimeout(() => {
                                 window.close();  
-                            }, 3000);
+                            }, 5000);
                         }
                     });
           

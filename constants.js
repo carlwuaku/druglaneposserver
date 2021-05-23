@@ -2,8 +2,8 @@
 const PORT = process.env.PORT || 5000;
 //exports.base_url = "http://localhost:"+PORT+"/";
 exports.base_url = "https://revolfoods.herokuapp.com/";
-// exports.server_url = "https://druglanepms.calgadsoftwares.com";
-exports.server_url = "http://localhost/stock";
+exports.server_url = "https://druglanepms.calgadsoftwares.com";
+// exports.server_url = "http://localhost/stock";
 exports.customer_image_url = "assets/customer_images/";
 exports.customer_image_thumbnail_url = "assets/customer_images/thumbnails/";
     

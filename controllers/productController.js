@@ -445,6 +445,9 @@ router.post('/saveBranchDetails', async (req, res) => {
     data.last_modified = `'${helper.getToday('timestamp')}'`
     let name = req.body.name;
     let change_stock = req.body.change_stock;
+    let change_unit = req.body.change_unit;
+    let new_unit = req.body.new_unit;
+
     try {
         if (id == undefined) {
 
@@ -478,6 +481,9 @@ router.post('/saveBranchDetails', async (req, res) => {
 
                 await helper.refreshCurrentStock(id)
                 await stockValueHelper.updateStockValue();
+            }
+            if(change_unit == 'yes'){
+                data.unit =  `'${new_unit}'`
             }
 
             await helper.update(data, ` id = ${id}`, helper.table_name);

@@ -1115,7 +1115,7 @@ app.get('/uploadDrugInfo', async (req, res) => {
 
 });
 
-const FirebaseFunctions = require("./firebase")
+// const FirebaseFunctions = require("./firebase")
 
 let server = app.listen(PORT, function () {
     var ip = require('ip');

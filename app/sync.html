@@ -45,6 +45,8 @@
 
         const { ipcRenderer } = require('electron');
         const fs = require('fs');
+        const log = require('electron-log');
+
         const version = document.getElementById('version'); 
         ipcRenderer.send('get_sync_file');
         
@@ -70,6 +72,7 @@
                             $("#loading_icon").fadeOut("fast")
                             $("#error_icon").fadeOut("fast")
                             $("#success_icon").fadeIn("fast")
+                            log.info('sync successful')
                             setTimeout(() => {
                                 window.close();  
                             }, 3000);
@@ -82,13 +85,15 @@
                             // }
                         },
                         error: function(err){
-                            console.log(err);
+
                             $("#loading_icon").fadeOut("fast")
                             $("#error_icon").fadeIn("fast")
-                            $("#success_icon").fadeOut("fast")
-                            setTimeout(() => {
-                                window.close();  
-                            }, 30000);
+                            $("#success_icon").fadeOut("fast");
+                            log.error('sync failed. '+err)
+                            console.log(err)
+                            // setTimeout(() => {
+                            //     window.close();  
+                            // }, 5000);
                         }
                     });
           
