@@ -164,24 +164,26 @@ router.post('/saveBulk', async (req, res) => {
             sales_data.created_on = `'${created_on}'`;
             sales_data.created_by = req.userid;
             sales_data.code = `'${code}'`;
-
-
-            let batches = JSON.parse(req.body.batch_details);
-            let batch_updates = [];
-            for (let x = 0; x < batches.length; x++) {
-                const bat = batches[x];
-                bat.code = `'${code}'`;
-                bat.batch_number = `'${bat.batch_number}'`;
-                bat.expiry = `'${bat.expiry}'`;
-                bat.date = `'${date}'`;
-                 bat.quantity_sold = await salesBatchesHelper.getTotalQuantityDateTime(bat.product)
-                 batch_updates.push(productBatchHelper.generateUpdateFieldQuery(
-                     "quantity_sold", bat.quantity_sold,`product = ${bat.product} and batch_number = ${bat.batch_number}`,
-                     productBatchHelper.table_name
+            let batches = []
+            if(req.body.batch_details != undefined && req.body.batch_details != null) {
+                 batches = JSON.parse(req.body.batch_details);
+                let batch_updates = [];
+                for (let x = 0; x < batches.length; x++) {
+                    const bat = batches[x];
+                    bat.code = `'${code}'`;
+                    bat.batch_number = `'${bat.batch_number}'`;
+                    bat.expiry = `'${bat.expiry}'`;
+                    bat.date = `'${date}'`;
+                     bat.quantity_sold = await salesBatchesHelper.getTotalQuantityDateTime(bat.product)
+                     batch_updates.push(productBatchHelper.generateUpdateFieldQuery(
+                         "quantity_sold", bat.quantity_sold,`product = ${bat.product} and batch_number = ${bat.batch_number}`,
+                         productBatchHelper.table_name
+                         )
                      )
-                 )
-                //  console.log(batch_updates)
-            }
+                    //  console.log(batch_updates)
+                } 
+            } 
+            
             
 
 
