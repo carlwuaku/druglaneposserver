@@ -7,6 +7,7 @@ admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)
 });
 const firestoredb = admin.firestore();
+const constants = require('./constants');
 
 // const query = firestoredb.collection('remote_purchases').where("status", '==', 'Pending');
 
@@ -49,10 +50,11 @@ let productBatchHelper = new productBatchClass();
 async function getPendingPurchases(){
     
 
-    const snapshot = await firestoredb.collection('remote_purchases').where("status", '==', 'Pending');
+    const snapshot = await firestoredb.collection('remote_purchases')
+    .where("status", '==', 'Pending').where("company_id", "==", constants.company_id);
     snapshot.onSnapshot((doc) =>{
         
-        // saveNewPurchasesArray(doc.docs)
+        saveNewPurchasesArray(doc.docs)
 
     })
 // snapshot.forEach((doc) => {

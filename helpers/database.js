@@ -623,6 +623,19 @@ class Db {
     }
 
 
+    generateDeleteQuery(condition, table) {
+
+       
+        try {
+            let query = `delete from ${table} where ${condition};`;
+        return query;
+
+        } catch (err) {
+            
+            throw new Error(err)
+        }
+    }
+
 
     async insertMany(fields, data, table) {
         //data is expected as array of objects with the keys being column names
@@ -753,7 +766,7 @@ class Db {
     } 
 
     /**
-    * Update a field or fields in a table based on the conditions
+    * generate the sql query to update a field or fields in a table based on the conditions
     * @param {String} field
     * @param {String} value
     * @param {string} conditions 
@@ -1194,6 +1207,20 @@ const umzug = new Umzug({
         let final_where = where.join(" and ");
 
         return final_where;
+    }
+
+    /**
+     * Runs a sql transaction command based on the list of queries provided
+     * @param {Array} queries 
+     */
+    async runTransaction(queries){
+        let sql = "BEGIN TRANSACTION; ";
+        queries.map(q => {
+            sql += q;
+        })
+        sql += "COMMIT;"
+        console.log(sql)
+        await this.connection.exec(sql);
     }
 
 

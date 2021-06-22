@@ -6,7 +6,7 @@ module.exports = {
               {
                type:Sequelize.INTEGER
               });
-  },
+  }, 
 
   down: async (queryInterface) => {
     await queryInterface.removeColumn('products','preferred_vendor');

@@ -165,6 +165,7 @@ router.post('/saveBulk', async (req, res) => {
             sales_data.created_by = req.userid;
             sales_data.code = `'${code}'`;
             let batches = []
+            console.log = (req.body.batch_details)
             if(req.body.batch_details != undefined && req.body.batch_details != null) {
                  batches = JSON.parse(req.body.batch_details);
                 let batch_updates = [];

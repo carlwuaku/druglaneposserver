@@ -904,8 +904,9 @@ let outgoingHelperClass = require('../helpers/outgoingPaymentHelper')
 	let expenses = await h.getAllTotalPaid('', start, end);
 	let expenses_list = await h.getPaymentsGrouped(start, end);
 
-	let difference = sales - (purchases + starting_stock - closing_stock) - expenses
+	let difference = sales+ purchases- ( starting_stock - closing_stock) - expenses
 		let profit = difference > 0
+		let formula = `Total sales made + Total purchases made - ( Starting stock - Closing stock) - Total expenses`
 
 
 		res.json({
@@ -917,7 +918,8 @@ let outgoingHelperClass = require('../helpers/outgoingPaymentHelper')
 			expenses: expenses.toLocaleString(),
 			profit: profit,
 			difference: difference.toLocaleString(),
-			expenses_list: expenses_list
+			expenses_list: expenses_list,
+			formula
 
 		})
 	} catch (error) {

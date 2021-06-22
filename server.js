@@ -221,6 +221,7 @@ app.get('/', async (req, res) => {
         }
         data.name = await sh.getSetting(`'company_name'`);
         data.address = await sh.getSetting(`'address'`);
+        constants.company_id = await sh.getSetting(`'company_id'`);
         data.host = filestore.get('host');
         data.port = filestore.get('port');
         data.backup_time = filestore.get("auto_backup_time") == undefined ? 19 : filestore.get("auto_backup_time")

@@ -482,8 +482,8 @@ router.post('/saveBranchDetails', async (req, res) => {
                 await helper.refreshCurrentStock(id)
                 await stockValueHelper.updateStockValue();
             }
-            if(change_unit == 'yes'){
-                data.unit =  `'${new_unit}'`
+            if (change_unit == 'yes') {
+                data.unit = `'${new_unit}'`
             }
 
             await helper.update(data, ` id = ${id}`, helper.table_name);
@@ -1112,7 +1112,7 @@ router.post('/saveSingleStockAdjustment', async (req, res) => {
     } catch (error) {
         await helper.closeConnection();
         // stockHelper.connection.run("ROLL BACK");
-        //console.l.log(error)
+        console.log(error)
         res.json({ status: '-1' })
     }
 
@@ -1127,7 +1127,7 @@ router.post('/savePendingSingleStockAdjustment', async (req, res) => {
         let created_on = req.body.created_on == undefined ? helper.getToday('timestamp') : req.body.created_on;
         let product_id = req.body.product;
         let qtt = req.body.quantity_counted;
-        let name = req.body.product_name;
+        let name = req.body.product_name; 
         let code = req.body.code;
         let data = stockHelper.prep_data(req.body);
         data.created_on = `"${created_on}"`;
@@ -2170,40 +2170,48 @@ router.get('/refreshAllProducts', async (req, res) => {
 
 
 
-
+/**
+ * merge multiple items into 1, combining all their records in sales, 
+ * purchases, stock adjustment, transfers
+ */
 router.post('/merge', async (req, res) => {
     try {
-        //merge a number of items into the first one. it has to convert sales, purchases, stockadjustments of all to the first one
-        let stockClass = require('../helpers/stockAdjustmentHelper');
-        let stockHelper = new stockClass();
+        let master = req.body.master; //the id of item to maintain
+        let ids = req.body.id.split(",");//comma-separated items to be 
+        //absorbed
+        let item = await helper.getItem(`id = ${master}`, helper.table_name);
+        let queries = []
+        for (var i = 0; i < ids.length; i++) {
+            
+                queries.push(helper.generateUpdateFieldQuery("product", `${master}`, ` product in (${ids[i]})`, 'sales_details'));
+                 
+                queries.push(helper.generateUpdateFieldQuery("product", `${master}`, ` product in (${ids[i]})`, 'stock_adjustment'))
+                queries.push(helper.generateUpdateFieldQuery("product", `${master}`, ` product  in ( ${ids[i]})`, 'purchase_details'))
+                queries.push(helper.generateUpdateFieldQuery("product", `${master}`, ` product  in ( ${ids[i]})`, 'received_transfer_details'))
+                queries.push(helper.generateUpdateFieldQuery("product", `${master}`, ` product  in ( ${ids[i]})`, 'transfer_details'))
+                queries.push(helper.generateUpdateFieldQuery("product", `${master}`, ` product  in ( ${ids[i]})`, 'refills'))
+                queries.push(helper.generateUpdateFieldQuery("product", `${master}`, ` product  in ( ${ids[i]})`, 'stock_adjustment_pending'));
+                let where = ` id = ${ids[i]} `
+                queries.push( helper.generateDeleteQuery(where, helper.table_name));
+                await helper.runTransaction(queries)
 
-        let date = req.body.date == undefined ? helper.getToday() : req.body.date;
-        let created_on = req.body.created_on == undefined ? helper.getToday('timestamp') : req.body.created_on;
-        let product_id = req.body.product;
-        let qtt = req.body.quantity_counted;
-        let name = req.body.product_name;
 
-        let data = stockHelper.prep_data(req.body);
-        data.created_on = created_on;
-        data.date = date;
-        await stockHelper.getConnection();
-        let sql = "BEGIN TRANSACTION; ";
-        sql += stockHelper.generateInsertQuery(data, stockHelper.table_name);
-        sql += "COMMIT;"
-        await stockHelper.connection.exec(sql);
+            
 
-        await helper.refreshCurrentStock(product_id)
+        }
+    
+        
+        await helper.refreshCurrentStock(master)
         await stockValueHelper.updateStockValue();
-        activities.log(req.query.userid, `added new stock adjustment for ${name}. new quantity: ${qtt}`, 'Products')
+        await activities.log(req.query.userid, `"merged items into  ${item.name} "`, `'Products'`);
+
 
         res.json({ status: '1' })
     } catch (error) {
         await helper.closeConnection();
-        // stockHelper.connection.run("ROLL BACK");
-        //console.l.log(error)
-        res.json({ status: '-1' })
+        console.log(error)
+        res.json({ status: '-1', data: null })
     }
-
 });
 
 
@@ -2639,7 +2647,7 @@ router.get('/getDuplicateList', async (req, res) => {
 router.post('/mergeDuplicates', async (req, res) => {
     try {
         let ids = req.body.ids.split("|||");//comma-separated
-        
+
         for (var i = 0; i < ids.length; i++) {
             try {
                 //get the name of the item and get those with the same name
@@ -2648,17 +2656,17 @@ router.post('/mergeDuplicates', async (req, res) => {
                 let dupes = await helper.getMany(`name = "${item.name}" and id != ${item.id}`, helper.table_name);
                 for (var j = 0; j < dupes.length; j++) {
                     //update each relevant table where the dupe appears to the parent id;
-                    await helper.updateField("product",`${ids[i]}`,` product = ${dupes[j].id}`, 'sales_details')
-                    await helper.updateField("product",`${ids[i]}`,` product = ${dupes[j].id}`, 'stock_adjustment')
-                    await helper.updateField("product",`${ids[i]}`,` product = ${dupes[j].id}`, 'purchase_details')
-                    await helper.updateField("product",`${ids[i]}`,` product = ${dupes[j].id}`, 'received_transfer_details')
-                    await helper.updateField("product",`${ids[i]}`,` product = ${dupes[j].id}`, 'transfer_details')
-                    await helper.updateField("product",`${ids[i]}`,` product = ${dupes[j].id}`, 'refills')
-                    await helper.updateField("product",`${ids[i]}`,` product = ${dupes[j].id}`, 'stock_adjustment_pending')
+                    await helper.updateField("product", `${ids[i]}`, ` product = ${dupes[j].id}`, 'sales_details')
+                    await helper.updateField("product", `${ids[i]}`, ` product = ${dupes[j].id}`, 'stock_adjustment')
+                    await helper.updateField("product", `${ids[i]}`, ` product = ${dupes[j].id}`, 'purchase_details')
+                    await helper.updateField("product", `${ids[i]}`, ` product = ${dupes[j].id}`, 'received_transfer_details')
+                    await helper.updateField("product", `${ids[i]}`, ` product = ${dupes[j].id}`, 'transfer_details')
+                    await helper.updateField("product", `${ids[i]}`, ` product = ${dupes[j].id}`, 'refills')
+                    await helper.updateField("product", `${ids[i]}`, ` product = ${dupes[j].id}`, 'stock_adjustment_pending')
                     let where = ` id = ${dupes[j].id} `
                     await helper.delete(where, helper.table_name);
                     await activities.log(req.query.userid, `"deleted a duplicate for  ${item.name} "`, `'Products'`);
-                    
+
                 }
 
                 //update the stock
@@ -2668,9 +2676,9 @@ router.post('/mergeDuplicates', async (req, res) => {
                 console.log(error)
             }
 
-        } 
-       
-        res.json({ status: '1'})
+        }
+
+        res.json({ status: '1' })
     } catch (error) {
         await helper.closeConnection();
         //console.l.log(error)

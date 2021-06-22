@@ -445,7 +445,7 @@ class SalesDetailsHelper extends dbClass {
     async getDailySales(start, end){
         let sql = `select sum(quantity * price) as total, date from ${this.table_name}  `;
         if(start != ''){
-            sql += ` where date >= '${start}' and date <= '${end}' `
+            sql += ` where (date >= '${start}' and date <= '${end}') or  (created_on >= '${start}' and created_on <= '${end}')`
         }
         sql += ` group by date `
 

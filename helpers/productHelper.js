@@ -83,6 +83,7 @@ class ProductHelper extends dbClass {
     async refreshCurrentStock(id) {
         try {
             let stock = await this.calculateCurrentStock(id);
+            // console.log("stock updated to ",stock)
             await this.updateField('current_stock', stock, ` id = ${id}`, this.table_name);
         } catch (error) {
             throw new Error(error)

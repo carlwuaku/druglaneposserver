@@ -10,6 +10,6 @@ module.exports = {
 
   down: async (queryInterface) => {
     await queryInterface.removeColumn('sales_batches','expiry');
-
+ 
   }
 };
