@@ -91,9 +91,9 @@
                             $("#success_icon").fadeOut("fast");
                             log.error('sync failed. '+err)
                             console.log(err)
-                            // setTimeout(() => {
-                            //     window.close();  
-                            // }, 5000);
+                            setTimeout(() => {
+                                window.close();  
+                            }, 5000);
                         }
                     });
           

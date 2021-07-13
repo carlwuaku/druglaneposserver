@@ -46,6 +46,34 @@ router.get('/getList', async (req, res) => {
 
 });
 
+router.get('/search', async (req, res) => {
+    let param = req.query.param;
+    try {
+        let objects = await helper.search(param);
+        let today = helper.getToday()
+        for(var i = 0; i < objects.length; i++){
+            let curr = objects[i]
+            let total_paid = await paymentHelper.getTotalPaidToVendor(curr.id, '', today);
+        
+        let total_bought = await purchaseDetailsHelper.getTotalAmountFromVendor(curr.id);
+        let balance = total_bought - total_paid;
+        curr.total_paid = total_paid.toLocaleString()
+        curr.total_bought = total_bought.toLocaleString();
+        curr.balance = balance.toLocaleString()
+        }
+        
+
+        res.json({ status: '1', data: objects })
+    } catch (error) {
+        await helper.closeConnection();
+        //console.l.log(error)
+        log.error(error)
+        res.json({ status: '-1', data: null })
+    }
+
+});
+
+
 router.post('/save', async (req, res) => {
     try {
         let data = helper.prep_data(req.body);

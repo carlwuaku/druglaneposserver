@@ -28,7 +28,7 @@ class SettingsHelper extends dbClass {
     }
 
     async saveSetting(name, value){
-
+        
     }
 
 

@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const constants = require('../constants');
 
 
 
@@ -336,7 +337,7 @@ router.post('/deleteUser', async (req, res) => {
 	//console.log(id)
 	try {
 
-		await h.delete(id, h.table_name);
+		await helper.delete(`id = ${id}`, helper.table_name);
 		await activitiesHelper.log(req.userid, `'deleted user ${user}'`)
 		res.json({ status: '1' })
 	} catch (error) {
@@ -1077,6 +1078,139 @@ router.get('/getCustomerPayments', async (req, res) => {
 
 });
 ///////////////////END INCOMING PAYMENTS///////////////
+
+
+router.get('/resetUserPassword', async (req, res) => {
+    let Helper = require('../helpers/token');
+    let h = new Helper();
+    try {
+
+
+        //if retry, do not regenerate the token.
+        if (req.query.retry == "1") {
+            message = req.query.message;
+
+            let data = { error: true, retry: true, message: message }
+            //render the page
+            res.render("resetPassword", data)
+            return false;
+        }
+        //check the username  or email
+        let user = req.query.user;
+        let AdminHelper = require("../helpers/adminHelper")
+        let adminHelper = new AdminHelper();
+        let user_details = await adminHelper.getItem(`lower(email) = lower('${user}') or lower(username) = lower('${user}')`, adminHelper.table_name);
+        //if found, generate the token and send the mail
+        if (user_details != null) {
+
+
+            //create a token and send it to the url
+            const crypto = require("crypto");
+
+            const token = crypto.randomBytes(5).toString("hex");
+            //insert it into the token table
+            //clear others
+            await h.delete(`name = 'reset_user_password_${user_details.email}'`, h.table_name)
+            await h.insert({ name: `'reset_user_password_${user_details.email}'`, token: `'${token}'` }, h.table_name)
+
+            const axios = require('axios');
+
+
+            let email = user_details.email;
+
+            message = `You have requested to reset your Druglane password. Please use this code as token in the reset page: ${token}.`;
+            // console.log(message)
+			const FormData = require('form-data');
+ 
+const form = new FormData();
+form.append('mails', email);
+form.append('message',message);
+form.append('subject', "Reset Druglane Password");
+
+        axios.post(constants.server_url + `/api_admin/sendBulkMail`, form,{ headers: form.getHeaders() })
+
+            
+                .then(function (response) {
+                    console.log(response.data);
+                    let data = {
+                        error: false, retry: false, message: `Email sent to your email. Please 
+            check your inbox to retrieve the token`}
+                    //render the page
+                    res.json(data);
+                })
+                .catch(function (error) {
+                    let data = {
+                        error: true, retry: false, message: `Unable to communicate with cloud server. Please 
+            check your internet connection and try again`}
+                    res.json(data);
+                });
+        }
+        else{
+            let data = {
+                error: true, retry: false, message: `No username or email found. Please check and try 
+                again.`}
+            res.json(data);
+        }
+
+    } catch (error) {
+        console.log(error);
+        let data = {
+            error: true, retry: false, message: `Server error. Please try again`}
+        res.json(data);
+    }
+
+});
+
+
+router.post('/doResetUserPassword', async (req, res) => {
+    try {
+	let Helper = require('../helpers/token');
+    let h = new Helper();
+    const activityHelper = require('../helpers/activitiesHelper')
+    const ah = new activityHelper();
+
+    let token = req.body.token;
+    let password = req.body.password;
+    let email = req.body.username;
+    
+        var bcrypt = require('bcryptjs');
+
+		let AdminHelper = require("../helpers/adminHelper")
+        let adminHelper = new AdminHelper();
+        let user_details = await adminHelper.getItem(`lower(email) = lower('${email}') or lower(username) = lower('${email}')`, adminHelper.table_name);
+        
+		if(user_details == null){
+			res.json({status: "-1",message: "Username or email not found"})
+			return false;
+		}
+        //get the setting admin_password
+        var old_token = await h.getField("token", h.table_name, `name = 'reset_user_password_${user_details.email}'`);
+        // console.log(old_token.token, token)
+        if (token == old_token.token) {
+            var hash = bcrypt.hashSync(password, 10);
+
+                //set the new password
+                await adminHelper.updateField("password_hash", `'${hash}'`, `id = ${user_details.id}`, adminHelper.table_name)
+                res.json({status: "1",message: "Password reset successfully"})
+
+        } else {
+            // Passwords don't match
+			res.json({status: "-1",message: "Wrong token entered. Try again"})
+
+        }
+
+    } catch (error) {
+        log.error(error)
+        console.log(error)
+		res.json({status: "-1",message: "Server error. Try again"})
+
+    }
+
+
+
+
+});
+
 
 //export the whole thingy
 module.exports = router;

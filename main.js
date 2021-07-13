@@ -9,7 +9,7 @@ const { autoUpdater } = require('electron-updater');
 const schedule = require('node-schedule');
 // const MainWindow = require('./MainWindow')
 // const AppTray = require('./AppTray')
-process.env.NODE_ENV = 'development';
+process.env.NODE_ENV = 'production';
 let constants = require('./constants')
 const isDev =  process.env.NODE_ENV !== 'production' ? true : false;
 const isMac = process.platform === 'darwin' ? true : false;
@@ -34,7 +34,7 @@ if (!gotTheLock) {
 } else {
   app.on('second-instance', (event, commandLine, workingDirectory) => {
     // Someone tried to run a second instance, we should focus our window.
-    if (mainWindow) {
+    if (mainWindow != null && mainWindow != undefined) {
       if (mainWindow.isMinimized()) mainWindow.restore()
       mainWindow.focus()
     }
@@ -150,7 +150,7 @@ if (!gotTheLock) {
       //   tray = null
       //   return true; 
       // }
-      console.log("mainwindow closing")
+      // console.log("mainwindow closing");
       const options = {
         type: 'question',
         buttons: ['Minimize the application', 'Close Application', 'Cancel'],
@@ -163,7 +163,7 @@ if (!gotTheLock) {
 
       };
       var index = dialog.showMessageBoxSync(mainWindow, options)
-      console.log(index);
+      // console.log(index);
       switch (index) {
         case 0:
           e.preventDefault();
@@ -208,7 +208,7 @@ if (!gotTheLock) {
   └───────────────────────── second (0 - 59, OPTIONAL)
      */
     var time = filestore.get("auto_backup_time") == undefined ? 19 : filestore.get("auto_backup_time");
-    console.log(time)
+    // console.log(time)
     var sync = filestore.get("last_sync") == undefined ? "unset" : filestore.get("last_sync");
     
     //auto backup at 7:00PM each day
@@ -389,17 +389,17 @@ if (!gotTheLock) {
     // listen for all archive data to be written
     // 'close' event is fired only when a file descriptor is involved
     output.on('close', function () {
-      console.log(archive.pointer() + ' total bytes');
-      console.log('archiver has been finalized and the output file descriptor has closed.');
+      // console.log(archive.pointer() + ' total bytes');
+      // console.log('archiver has been finalized and the output file descriptor has closed.');
       //copy to the internal backup location
       fs.copyFile(backup_folder + `/druglane_backup_${ts}.zip`, internal_backup_folder + `/druglane_backup_${ts}.zip`, (err) => {
         if (err) {
-          console.log(err)
-          console.log('could not copy to internal folder');
+          // console.log(err)
+          // console.log('could not copy to internal folder');
 
         }
         else {
-          console.log('copied to internal folder');
+          // console.log('copied to internal folder');
 
         }
 

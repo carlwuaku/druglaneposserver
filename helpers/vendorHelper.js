@@ -25,7 +25,7 @@ class VendorHelper extends dbClass {
      * @returns {Array}
      */
     async search(param, limit = null, offset= 0){
-        return await super.search(param, ['name'], limit, offset);
+        return await super.search(param, ['name'],this.table_name, limit, offset);
     }
 }
 

@@ -1,7 +1,7 @@
 {
   "name": "DruglaneServer",
-  "version": "1.3.104",
-  "description": "Druglane POS local server",
+  "version": "1.4.104",
+  "description": "Druglane POS local server. Client Version 0.1. last update 2021-07-07",
   "productName": "DruglaneServer",
   "main": "main.js",
   "scripts": {
@@ -14,7 +14,8 @@
 
     "package-linux": "electron-packager . --overwrite --asar=true --platform=linux --arch=x64 --icon=assets/icons/png/1024x1024.png --prune=true --out=release-builds",
     "deploy": "electron-builder build  --win --publish always",
-    "postinstall": "electron-builder install-app-deps"
+    "postinstall": "electron-builder install-app-deps",
+    "migration-skeleton": "npx sequelize-cli migration:generate --name migration-skeleton"
   },
   "author": "Carl",
   "license": "MIT",

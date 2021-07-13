@@ -80,24 +80,24 @@ app.use(fileUpload(
 
 //routes and their permissions
 let route_permissions = [
-    {route: "/api_product/saveBranchDetails", permission: "Manage Inventory"},
-    {route: "/api_product/saveBranchDetails", permission: "Manage Inventory"},
-    {route: "/api_product/saveBranchDetails", permission: "Manage Inventory"},
-    {route: "/api_product/saveBranchDetails", permission: "Manage Inventory"},
-    {route: "/api_product/saveBranchDetails", permission: "Manage Inventory"},
-    {route: "/api_product/saveBranchDetails", permission: "Manage Inventory"},
-    {route: "/api_product/saveBranchDetails", permission: "Manage Inventory"},
-    {route: "/api_product/saveBranchDetails", permission: "Manage Inventory"},
+    { route: "/api_product/saveBranchDetails", permission: "Manage Inventory" },
+    { route: "/api_product/saveBranchDetails", permission: "Manage Inventory" },
+    { route: "/api_product/saveBranchDetails", permission: "Manage Inventory" },
+    { route: "/api_product/saveBranchDetails", permission: "Manage Inventory" },
+    { route: "/api_product/saveBranchDetails", permission: "Manage Inventory" },
+    { route: "/api_product/saveBranchDetails", permission: "Manage Inventory" },
+    { route: "/api_product/saveBranchDetails", permission: "Manage Inventory" },
+    { route: "/api_product/saveBranchDetails", permission: "Manage Inventory" },
 
 ]
 //CORS STUFF    
 app.use(async (req, res, next) => {
     //allow all clients in development mode
-    if(process.env.NODE_ENV != "production"){
+    if (process.env.NODE_ENV != "production") {
         res.header('Access-Control-Allow-Origin', '*');
     }
 
-    
+
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Token, Usertype, Userid, Type');
 
     if (req.method === 'OPTIONS') {
@@ -116,7 +116,7 @@ app.use(async (req, res, next) => {
         try {
             //do checks here if user has logged in or not
             let user = await userSession.getItem(` token = '${token}' `, userSession.sessions_table);
-            
+
             if (user != undefined) {
                 req.query.userid = user.user_id;
                 req.userid = user.user_id;
@@ -258,7 +258,7 @@ app.get('/welcome', (req, res) => {
     res.render('welcome');
     // res.sendFile(__dirname + '/app/index.html');
 });
- 
+
 app.get('/firstrun', async (req, res) => {
     let data = {}
     try {
@@ -384,7 +384,7 @@ app.post('/saveSetup', async (req, res) => {
 
     await sh.update({
 
-        value: req.body.number_of_shifts == null || req.body.number_of_shifts == undefined || req.body.number_of_shifts == '' ? 'Full Day': `'${req.body.number_of_shifts}'`,
+        value: req.body.number_of_shifts == null || req.body.number_of_shifts == undefined || req.body.number_of_shifts == '' ? 'Full Day' : `'${req.body.number_of_shifts}'`,
 
     }, "name = 'number_of_shifts'", sh.table_name);
     if (success) {
@@ -426,7 +426,7 @@ app.get('/login', (req, res) => {
     }
     res.render('login', data);
     // res.sendFile(__dirname + '/app/index.html');
-}); 
+});
 
 app.post('/dologin', async (req, res) => {
     var bcrypt = require('bcryptjs');
@@ -505,13 +505,13 @@ app.post('/saveSettings', checkSignIn, async (req, res) => {
     //     {
     //         name: `'number_of_shifts'`,
     //         value: req.body.number_of_shifts == null || req.body.number_of_shifts == undefined || req.body.number_of_shifts == '' ? 'Full Day': `'${req.body.number_of_shifts}'`,
-           
+
     //         module: `'System'`
     //     },
     //     {
     //         name: `'restrict_zero_stock_sales'`,
     //         value: req.body.restrict_zero_stock_sales == null || req.body.restrict_zero_stock_sales == undefined || req.body.restrict_zero_stock_sales == '' ? 'no': `'${req.body.restrict_zero_stock_sales}'`,
-           
+
     //         module: `'System'`
     //     }
     // ]
@@ -519,136 +519,136 @@ app.post('/saveSettings', checkSignIn, async (req, res) => {
         await sh.update({
 
             value: `'${req.body.name}'`,
-    
+
         }, "name = 'company_name'", sh.table_name);
 
         await sh.update({
 
             value: `'${req.body.phone}'`,
-    
+
         }, "name = 'phone'", sh.table_name);
 
         await sh.update({
 
             value: `'${req.body.email}'`,
-    
+
         }, "name = 'email'", sh.table_name);
 
         await sh.update({
 
             value: `'${req.body.address}'`,
-    
+
         }, "name = 'address'", sh.table_name);
 
 
         await sh.update({
 
             value: `'${req.body.digital_address}'`,
-    
+
         }, "name = 'digital_address'", sh.table_name);
 
-      let q6_exists =  await sh.getSetting(`'number_of_shifts'`);
-  
-    if (q6_exists == null) {
-        var data = [
+        let q6_exists = await sh.getSetting(`'number_of_shifts'`);
 
-            {
-                name: `'number_of_shifts'`,
-                value: req.body.number_of_shifts == null || req.body.number_of_shifts == undefined || req.body.number_of_shifts == '' ? 'Full Day': `'${req.body.number_of_shifts}'`,
+        if (q6_exists == null) {
+            var data = [
 
-                module: `'System'`
-            }
-        ]
-       await sh.insertMany(sh.insert_fields, data, sh.table_name);
-    }
-    else {
-         await sh.update({
+                {
+                    name: `'number_of_shifts'`,
+                    value: req.body.number_of_shifts == null || req.body.number_of_shifts == undefined || req.body.number_of_shifts == '' ? 'Full Day' : `'${req.body.number_of_shifts}'`,
 
-            value: req.body.number_of_shifts == null || req.body.number_of_shifts == undefined || req.body.number_of_shifts == '' ? 'Full Day': `'${req.body.number_of_shifts}'`,
+                    module: `'System'`
+                }
+            ]
+            await sh.insertMany(sh.insert_fields, data, sh.table_name);
+        }
+        else {
+            await sh.update({
 
-        }, "name = 'number_of_shifts'", sh.table_name);
-    }
+                value: req.body.number_of_shifts == null || req.body.number_of_shifts == undefined || req.body.number_of_shifts == '' ? 'Full Day' : `'${req.body.number_of_shifts}'`,
+
+            }, "name = 'number_of_shifts'", sh.table_name);
+        }
 
 
-    let logo_exists = await sh.getSetting(`'logo'`);
-    //upload the file here
-    var file = req.files.uploadfile
-    if(file != undefined && file != null){
-        let path = './public/assets/images/'  + file.name;
+        let logo_exists = await sh.getSetting(`'logo'`);
+        //upload the file here
+        var file = req.files.uploadfile
+        if (file != undefined && file != null) {
+            let path = './public/assets/images/' + file.name;
 
-        file.mv(path, async function(err){
-            if(err){
-                console.log(err);
+            file.mv(path, async function (err) {
+                if (err) {
+                    console.log(err);
 
-            }
-            else{
-                console.log(logo_exists)
-                if (logo_exists == null) {
-        
-                    var data = [
-            
-                        {
-                            name: `'logo'`,
-                            value:`"${file.name}"`,
-            
-                            module: `'System'`
-                        }
-                    ]
-                     await sh.insertMany(sh.insert_fields, data, sh.table_name);
                 }
                 else {
-                    await sh.update({
-            
-                        value:`"${file.name}"`,            
-                    }, "name = 'logo'", sh.table_name);
+                    console.log(logo_exists)
+                    if (logo_exists == null) {
+
+                        var data = [
+
+                            {
+                                name: `'logo'`,
+                                value: `"${file.name}"`,
+
+                                module: `'System'`
+                            }
+                        ]
+                        await sh.insertMany(sh.insert_fields, data, sh.table_name);
+                    }
+                    else {
+                        await sh.update({
+
+                            value: `"${file.name}"`,
+                        }, "name = 'logo'", sh.table_name);
+                    }
                 }
-            }
-        });
-    }
-    
-    
-    let receipt_logo_exists =  await sh.getSetting(`'receipt_logo'`);
-  
-    if (receipt_logo_exists == null) {
-        var data = [
-
-            {
-                name: `'receipt_logo'`,
-                value: req.body.receipt_logo == null || req.body.receipt_logo == undefined || req.body.receipt_logo == '' ? `'no'`: `'${req.body.receipt_logo}'`,
-
-                module: `'System'`
-            }
-        ]
-       await sh.insertMany(sh.insert_fields, data, sh.table_name);
-    }
-    else {
-         await sh.update({
-
-            value: req.body.receipt_logo == null || req.body.receipt_logo == undefined || req.body.receipt_logo == '' ? `'no'`: `'${req.body.receipt_logo}'`,
-
-        }, "name = 'receipt_logo'", sh.table_name);
-    }
-    
+            });
+        }
 
 
-    await sh.update({
+        let receipt_logo_exists = await sh.getSetting(`'receipt_logo'`);
 
-        value: `"${req.body.restrict_zero_stock_sales}"`,
+        if (receipt_logo_exists == null) {
+            var data = [
 
-    }, "name = 'restrict_zero_stock_sales'", sh.table_name);
+                {
+                    name: `'receipt_logo'`,
+                    value: req.body.receipt_logo == null || req.body.receipt_logo == undefined || req.body.receipt_logo == '' ? `'no'` : `'${req.body.receipt_logo}'`,
+
+                    module: `'System'`
+                }
+            ]
+            await sh.insertMany(sh.insert_fields, data, sh.table_name);
+        }
+        else {
+            await sh.update({
+
+                value: req.body.receipt_logo == null || req.body.receipt_logo == undefined || req.body.receipt_logo == '' ? `'no'` : `'${req.body.receipt_logo}'`,
+
+            }, "name = 'receipt_logo'", sh.table_name);
+        }
+
+
+
+        await sh.update({
+
+            value: `"${req.body.restrict_zero_stock_sales}"`,
+
+        }, "name = 'restrict_zero_stock_sales'", sh.table_name);
 
 
 
         res.redirect('settings?m=Settings set successfully');
     } catch (error) {
         res.redirect('settings?m=Error. Please try again')
-       
+
     }
 
-   
 
 
-    
+
+
 
 
 
@@ -721,12 +721,12 @@ app.post('/saveUser', checkSignIn, async (req, res) => {
     // }
 
 
-    if (id !== undefined && id !== undefined && id !== null 
+    if (id !== undefined && id !== undefined && id !== null
         && id != "undefined" && id != "null" && id != "") {
         let data = h.prep_data(req.body);
         //update. else insert
         console.log(password)
-        if (password !== undefined && password !== null 
+        if (password !== undefined && password !== null
             && password != "undefined" && password != "null" && password != "") {
             var bcrypt = require('bcryptjs');
             var hash = bcrypt.hashSync(password, 10);
@@ -769,10 +769,10 @@ app.post('/deleteUser', checkSignIn, async (req, res) => {
     let Helper = require('./helpers/adminHelper');
     let h = new Helper();
     let id = req.body.id;
-    console.log(id)
+    // console.log(id)
     try {
 
-        await h.delete(id, h.table_name);
+        await h.delete(`id  = ${id}`, h.table_name);
         res.redirect('/users?m=User deleted successfully.')
     } catch (error) {
         log.error(error)
@@ -937,9 +937,6 @@ app.post('/deleteRole', checkSignIn, async (req, res) => {
     }
 
 
-
-
-
 });
 
 
@@ -1056,17 +1053,17 @@ app.get('/uploadDrugInfo', async (req, res) => {
         let ai = new aiClass();
         // var file = req.body.data
         //turn the whole thing to json
-         const fs = require('fs');
+        const fs = require('fs');
 
         let rawdata = fs.readFileSync('drugs.json');
         let filecontent = JSON.parse(rawdata);
-    //     const pathToJson = path.join(__dirname, 'drugs.json');
-    //     const jsonStream = fs.createReadStream(pathToJson);
-    // res.set({'Content-Type': 'application/json'});
-    // jsonStream.on('data',(chunk) => {
-    //     console.log("some input", chunk.toString());
-    // })
-        
+        //     const pathToJson = path.join(__dirname, 'drugs.json');
+        //     const jsonStream = fs.createReadStream(pathToJson);
+        // res.set({'Content-Type': 'application/json'});
+        // jsonStream.on('data',(chunk) => {
+        //     console.log("some input", chunk.toString());
+        // })
+
         let data = {}
         for (var i = 0; i < filecontent.length; i++) {
             let fc = filecontent[i]
@@ -1095,26 +1092,193 @@ app.get('/uploadDrugInfo', async (req, res) => {
                 }
                 name = data.name = `"${fc.openfda.generic_name[0]}"`
                 await ai.insert(data, "drug_info")
-                results.push({"name: ": name, "result": "success"})
+                results.push({ "name: ": name, "result": "success" })
             } catch (error) {
                 // console.log(error);
-                results.push({"name: ": name, "result": error})
+                results.push({ "name: ": name, "result": error })
             }
 
         }
         // console.log(results)
 
-        res.render('druginforesults',{results: results});
+        res.render('druginforesults', { results: results });
         // res.json({ status: '1' })
     } catch (error) {
         console.log(error)
         // res.json({ status: '-1' })
-        res.render('druginforesults', {results: results});
+        res.render('druginforesults', { results: results });
     }
 
 
 
 });
+
+
+app.get('/update_password', checkSignIn, async (req, res) => {
+    let data = {}
+    var msg = req.query.message;
+
+    if (msg != undefined) {
+        data.message = msg
+    }
+    else {
+        data.message = ""
+    }
+    res.render("updatePassword", data)
+})
+
+app.post('/doUpdatePassword', checkSignIn, async (req, res) => {
+    let Helper = require('./helpers/adminHelper');
+    let h = new Helper();
+    const activityHelper = require('./helpers/activitiesHelper')
+    const ah = new activityHelper();
+
+    let old_password = req.body.old_password;
+    let new_password = req.body.new_password;
+    let confirm_password = req.body.confirm_new_password;
+    try {
+        var bcrypt = require('bcryptjs');
+        let settingsHelper = require('./helpers/settingsHelper');
+        let sh = new settingsHelper();
+        //get the setting admin_password
+        var admin_password = await sh.getSetting(`'admin_password'`);
+        if (bcrypt.compareSync(old_password, admin_password)) {
+            // old password is correct
+            //compare the passwords
+            if (new_password != confirm_password) {
+                res.redirect('/update_password?message=New passwords do not match')
+            }
+            else {
+                var hash = bcrypt.hashSync(new_password, 10);
+
+                //set the new password
+                await sh.updateField("value", `'${hash}'`, `name = 'admin_password'`, sh.table_name)
+                res.redirect('/?message=Password reset successfully')
+
+            }
+        } else {
+            // Passwords don't match
+
+            res.redirect('/update_password?message=Old password is incorrect')
+        }
+
+    } catch (error) {
+        log.error(error)
+    }
+
+
+
+
+});
+
+app.get('/resetAdminPassword', async (req, res) => {
+    let Helper = require('./helpers/token');
+    let h = new Helper();
+    try {
+
+
+        //if retry, do not regenerate the token.
+        if (req.query.retry == "1") {
+            message = req.query.message;
+
+            let data = { error: true, retry: true, message: message }
+            //render the page
+            res.render("resetPassword", data)
+            return false;
+        }
+        //create a token and send it to the url
+        const crypto = require("crypto");
+
+        const token = crypto.randomBytes(5).toString("hex");
+        //insert it into the token table
+        //clear others
+        await h.delete(`name = 'reset_admin_password'`, h.table_name)
+        await h.insert({ name: "'reset_admin_password'", token: `'${token}'` }, h.table_name)
+
+        const axios = require('axios');
+
+        let settingsHelper = require('./helpers/settingsHelper');
+        let sh = new settingsHelper();
+        let email = await sh.getSetting(`'email'`);
+
+        message = `You have requested to reset your Druglane server admin password. 
+Please use this code as token in the reset page: ${token}.`;
+        // console.log(message)
+        const FormData = require('form-data');
+ 
+const form = new FormData();
+form.append('mails', email);
+form.append('message',message);
+form.append('subject', "Reset Administrator Password");
+
+        axios.post(constants.server_url + `/api_admin/sendBulkMail`, form,{ headers: form.getHeaders() })
+            .then(function (response) {
+                console.log(response.data);
+                let data = {
+                    error: false, retry: false, message: `Email sent to your administrator email. Please 
+            check your inbox to retrieve the token`}
+                //render the page
+                res.render("resetPassword", data)
+            })
+            .catch(function (error) {
+                let data = {
+                    error: true, retry: false, message: `Unable to communicate with cloud server. Please 
+            check your internet connection and try again`}
+                res.render("resetPassword")
+            });
+
+    } catch (error) {
+        console.log(error)
+    }
+
+});
+
+app.post('/doResetPassword', async (req, res) => {
+    let Helper = require('./helpers/token');
+    let h = new Helper();
+    const activityHelper = require('./helpers/activitiesHelper')
+    const ah = new activityHelper();
+
+    let token = req.body.token;
+    let new_password = req.body.new_password;
+    let confirm_password = req.body.confirm_new_password;
+    try {
+        var bcrypt = require('bcryptjs');
+        let settingsHelper = require('./helpers/settingsHelper');
+        let sh = new settingsHelper();
+        //get the setting admin_password
+        var old_token = await h.getField("token", h.table_name, `name = 'reset_admin_password'`);
+        // console.log(old_token.token, token)
+        if (token == old_token.token) {
+            //compare the passwords
+            if (new_password != confirm_password) {
+                res.redirect('/resetAdminPassword?retry=1&message=Passwords do not match')
+            }
+            else {
+                var hash = bcrypt.hashSync(new_password, 10);
+
+                //set the new password
+                await sh.updateField("value", `'${hash}'`, `name = 'admin_password'`, sh.table_name)
+                res.redirect('/?message=Password reset successfully')
+
+            }
+        } else {
+            // Passwords don't match
+
+            res.redirect('/resetAdminPassword?retry=1&message=Incorrect token. Check and try again')
+        }
+
+    } catch (error) {
+        log.error(error)
+        console.log(error)
+    }
+
+
+
+
+});
+
+
 
 // const FirebaseFunctions = require("./firebase")
 

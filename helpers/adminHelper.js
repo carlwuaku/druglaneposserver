@@ -203,7 +203,7 @@ class AdminHelper extends dbClass {
             query.forEach(element => {
                 res.push(element.name)
             });
-            console.log('query',res)
+            // console.log('query',res)
             return res;
         }
                     return query;//an array objects
