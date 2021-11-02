@@ -44,7 +44,7 @@ class OutgoingPaymentHelper extends dbClass {
     async getTotalPaidToVendor(id, start_date='', end_date=''){
         let sql = `select sum(amount) as total from ${this.table_name} where 
         type = 'Credit Purchase Payment' `;
-        if(id != ''){
+        if(id != '' && id != null && id != undefined && id != 'undefined'){
             sql += ` and recipient = ${id}  `
         }
         if(start_date != ''){

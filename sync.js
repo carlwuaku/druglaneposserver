@@ -7,6 +7,7 @@ var sqlite3 = require('sqlite-async')// require('sqlite3').verbose()
 const path = require('path')
 
 let constants = require('./constants')
+let appName = constants.appname
 let company_id_global = "";
 
 let internal_backup_folder = constants.internal_backups_path;
@@ -410,7 +411,7 @@ let mwindow = null;
     mwindow = new BrowserWindow({
       height: 300,
       width: 300,
-      title: 'DruglaneServer Sync',
+      title: `${appName}Server Sync`,
       webPreferences: {
         nodeIntegration: true
       },

@@ -13,7 +13,7 @@ class AdminHelper extends dbClass {
     }
     fields = ["id", "role_id", "email",  "phone",
           "display_name", "username",
-        "active",  "password_hash", "created_on"]
+        "active",  "password_hash", "created_on","allow_online"]
     table_name = "users";
     roles_table = "roles";
     permissions_table = "permissions";
@@ -148,7 +148,7 @@ class AdminHelper extends dbClass {
      * return all user roles
      * 
      * 
-     * @returns array. Empty if error, array of objects otherwise
+     * @returns  array. Empty if error, array of objects otherwise
      */
     async getRoles(){
         let sql = `select *  from ${this.roles_table} `;
@@ -230,6 +230,36 @@ class AdminHelper extends dbClass {
         } catch (error) {
             log.error(error);
             return [];
+        }
+    }
+
+    /**
+       * check the db if the user id's role has been assigned a permission
+       * @param userid string 
+       * @param permission string the name of the permission
+       * @returns boolean
+       */
+     async hasPermission(userid, permission){
+        //get all permissions
+        try {
+            let has_permission = false;
+            //get hte user and retrieve the role id
+            let user = await this.getItem(`id = ${userid}`, this.table_name);
+            //get all permissions for the role
+            let role_permissions = await this.getRolePermissions(user.role_id);
+            console.log(role_permissions)
+            for (let index = 0; index < role_permissions.length; index++) {
+                const p = role_permissions[index];
+                if(p.name == permission){
+                    has_permission = true;
+                    break;
+                }
+            }
+           
+            return has_permission;
+
+        } catch (error) {
+            return false;
         }
     }
 

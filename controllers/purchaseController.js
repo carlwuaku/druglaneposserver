@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const log = require('electron-log');
+const constants = require('../constants')
 
 const Helper = require('../helpers/purchaseHelper.js');
 const helper = new Helper();
@@ -56,7 +57,11 @@ router.get('/getList', async (req, res) => {
 
 router.post('/saveBulk', async (req, res) => {
     try {
-
+        // let has_permission = await adminHelper.hasPermission(req.userid, constants.PERMISSION_REC)
+        // if(!has_permission){
+        //     res.json({ status: '-9', data: null,message:'not permitted' })
+        //     return;
+        // }
         let date = req.body.date == undefined ? helper.getToday() : req.body.date;
         let created_on = req.body.created_on == undefined ? helper.getToday('timestamp') : req.body.created_on;
 
@@ -265,8 +270,8 @@ router.post('/edit', async (req, res) => {
         res.json({ status: '1' })
     } catch (error) {
         await helper.closeConnection();
-        log.error(error)
-        // console.log(error)
+        log.error(error);
+        console.log(error);
         res.json({ status: '-1' })
     }
 });
@@ -365,8 +370,8 @@ router.post('/delete', async (req, res) => {
     } catch (error) {
         await helper.closeConnection();
         // console.log(error)
-        log.error(error)
-        res.json({ status: '-1', data: null })
+        log.error(error);
+        res.json({ status: '-1', data: null });
     }
 
 });
@@ -399,7 +404,7 @@ router.post('/deleteItem', async (req, res) => {
     } catch (error) {
         await helper.closeConnection();
         // console.log(error)
-        log.error(error)
+        log.error(error);
         res.json({ status: '-1', data: null })
     }
 
@@ -520,7 +525,7 @@ router.get('/findReceiptsBetweenDates', async (req, res) => {
     } catch (error) {
         await helper.closeConnection();
         // console.log(error)
-        log.error(error)
+        log.error(error);
         res.json({ status: '-1', data: null })
     }
 
@@ -554,7 +559,7 @@ router.get('/findReceiptsByVendor', async (req, res) => {
     } catch (error) {
         await helper.closeConnection();
         // console.log(error)
-        log.error(error)
+        log.error(error);
         res.json({ status: '-1', data: null })
     }
 
@@ -590,7 +595,7 @@ router.get('/getPurchaseTotals', async (req, res) => {
     } catch (error) {
         await helper.closeConnection();
         // console.log(error)
-        log.error(error)
+        log.error(error);
         res.json({ status: '-1', data: null })
     }
 
@@ -627,7 +632,7 @@ router.get('/getProductPurchases', async (req, res) => {
     } catch (error) {
         await helper.closeConnection();
         // console.log(error)
-        log.error(error)
+        log.error(error);
         res.json({ status: '-1', data: null })
     }
 

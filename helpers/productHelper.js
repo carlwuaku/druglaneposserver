@@ -79,16 +79,27 @@ class ProductHelper extends dbClass {
     /**
      * recalculate the stock of the product id
      * @param {Number} id product id
+     * @param {Number} new_value a value to be added to the stock. if null, the system autocalculates the 
+     * new stock. Otherwise it uses new_value to add to stock
      */
-    async refreshCurrentStock(id) {
+    async refreshCurrentStock(id, new_value = null) {
         try {
-            let stock = await this.calculateCurrentStock(id);
-            // console.log("stock updated to ",stock)
+            if(new_value == null){
+                let stock = await this.calculateCurrentStock(id);
+                // console.log("stock updated to ",stock)
             await this.updateField('current_stock', stock, ` id = ${id}`, this.table_name);
+            }
+            else{
+                await this.updateField('current_stock', `stock + ${new_value}`, ` id = ${id}`, this.table_name);
+
+            }
+           
+            
         } catch (error) {
             throw new Error(error)
         }
     }
+    
 
 
      /**

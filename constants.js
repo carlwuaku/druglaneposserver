@@ -1,5 +1,7 @@
 
 const PORT = process.env.PORT || 5000;
+const appName = "Druglane";
+exports.appname = appName;
 //exports.base_url = "http://localhost:"+PORT+"/";
 exports.base_url = "https://revolfoods.herokuapp.com/";
 // exports.server_url = "https://druglanepms.calgadsoftwares.com";
@@ -12,16 +14,20 @@ exports.product_image_thumbnail_url = "assets/product_images/thumbnails/";
 exports.port = PORT; 
 const electron = require('electron');
 exports.settings_location = (electron.app || electron.remote.app).getPath('userData');
-const path = require('path')
+const path = require('path');
+exports.firebase_user_collection = "users";
+exports.firebase_requests_collection = "requests";
+exports.firebase_responses_collection = "responses";
 
 exports.settings_path =path.join( this.settings_location,'system-settings.json');
-exports.db_path =path.join( this.settings_location,'druglane.db');
+exports.db_path = path.join( this.settings_location,'druglane.db');
 exports.sequelize_db = path.join( this.settings_location,'sequelize_druglane.db');
-exports.backup_folder = path.join((electron.app || electron.remote.app).getPath('documents'), "druglaneBackups");
+exports.backup_folder = path.join((electron.app || electron.remote.app).getPath('documents'), `${appName}Backups`);
 exports.settings_filename = 'system-settings.json';
 exports.db_filename = 'druglane.db';
 exports.internal_backups_path =path.join( this.settings_location,'backups');
 exports.company_id = ''
+exports
 exports.default_functional_groups = [
   "Adult Analgesics Tablets",
   "Adult Analgesics Suppositories",
@@ -54,6 +60,32 @@ exports.default_config = {
   auto_backup_time: 19,
   last_sync: 0
 }
+
+exports.PERMISSION_VIEW_USER_ACTIVITIES = "View Sales History";
+exports.PERMISSION_VIEW_PURCHASE_HISTORY = "View Purchase History";
+exports.PERMISSION_VIEW_INVENTORY = "View Inventory";
+exports.PERMISSION_VIEW_END_OF_DAY_REPORT = "View End Of Day Report";
+exports.PERMISSION_VIEW_ACCOUNTS = "View Accounts";
+exports.PERMISSION_TRANSFER_ITEMS = "Transfer Items";
+exports.PERMISSION_RETURN_SOLD_ITEMS = "Return Sold Items";
+exports.PERMISSION_RECEIVE_TRANSFERS = "Receive Transfers";
+exports.PERMISSION_RECEIVE_PURCHASES = "Receive Purchases";
+exports.PERMISSION_MANAGE_VENDORS = "Manage Vendors";
+exports.PERMISSION_MANAGE_STAFF = "Manage Staff";
+exports.PERMISSION_MANAGE_SETTINGS = "Manage Settings";
+exports.PERMISSION_MANAGE_INVENTORY = "Manage Inventory";
+exports.PERMISSION_MANAGE_CUSTOMERS = "Manage Customers";
+exports.PERMISSION_MANAGE_ACCOUNTS = "Manage Accounts";
+exports.PERMISSION_GIVE_DISCOUNT = "Give Discount";
+exports.PERMISSION_EDIT_SALES = "Edit Sales";
+exports.PERMISSION_DELETE_TRANSFERS = "Delete Transfers";
+exports.PERMISSION_DELETE_SALES_RECORDS = "Sales Records";
+exports.PERMISSION_DELETE_PURCHASES = "Delete Purchases";
+exports.PERMISSION_CREATE_SALES = "Create Sales";
+exports.PERMISSION_ADJUST_STOCK = "Adjust Stock";
+exports.PERMISSION_VIEW_TRANSFER_HISTORY = "View Transfer History";
+exports.PERMISSION_VIEW_SALES_REPORTS = "View Sales Reports";
+exports.PERMISSION_VIEW_SALES_HISTORY = "View Sales History";
 //database migrations
 const migrations = [
   {

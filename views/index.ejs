@@ -10,6 +10,8 @@
                         <i class="fa fa-info"> </i> Automatic backups are done once everyday.
                         <b>Select the time for the backups: </b>
                         <select id="backup_time" name="backup_time">
+                                <option <%= backup_time == 'off' ? 'selected' : '' %> value="off">Turn off autobackup</option>
+
                                 <option <%= backup_time == 0 ? 'selected' : '' %> value="0">12 AM</option>
                                 <option <%= backup_time == 1 ? 'selected' : '' %> value="1">1 AM</option>
                                 <option <%= backup_time == 2 ? 'selected' : '' %> value="2">2 AM</option>

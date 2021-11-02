@@ -1,3 +1,5 @@
+//npx sequelize-cli migration:generate --name migration-skeleton
+
 const path = require('path');
 // const os = require('os');
 const { app, BrowserWindow, Menu, ipcMain, ClientRequest, dialog } = require('electron');
@@ -9,8 +11,9 @@ const { autoUpdater } = require('electron-updater');
 const schedule = require('node-schedule');
 // const MainWindow = require('./MainWindow')
 // const AppTray = require('./AppTray')
-process.env.NODE_ENV = 'production';
+process.env.NODE_ENV = 'development';
 let constants = require('./constants')
+let appName = constants.appname;
 const isDev =  process.env.NODE_ENV !== 'production' ? true : false;
 const isMac = process.platform === 'darwin' ? true : false;
 let PORT = constants.port;
@@ -24,10 +27,40 @@ const sync = require("./sync")
 // let tray = null;
 let mainWindow;
 let aboutWindow;
-let backup_folder = constants.backup_folder
-let internal_backup_folder = constants.internal_backups_path
+let backup_folder = constants.backup_folder;
+let internal_backup_folder = constants.internal_backups_path;
+/**
+ * const path = require('path')
+const firebase = require('../firebase')
+const firestoredb = firebase.db;
+ */
 
+const Splashscreen = require("@trodi/electron-splashscreen");
+const mainOpts = {
+    height: 800,
+    width: 1000,
+    title: `${appName}`,
+    webPreferences: {
+      nodeIntegration: true
+    },
+    icon: `${__dirname}/app/assets/icon2.png`,
+
+  }
+ 
+// { width: 800, height: 600, frame: false };
+// configure the splashscreen
+const config = {
+    windowOpts: mainOpts,
+    templateUrl: `${__dirname}/splashScreen.html`,
+    splashScreenOpts: {
+        width: 425,
+        height: 325,
+    },
+};
+
+//the first instance of the app will have gotTheLock = true. else it will be fls
 if (!gotTheLock) {
+  // console.log("lock false")
   app.quit()
  
   
@@ -35,7 +68,7 @@ if (!gotTheLock) {
   app.on('second-instance', (event, commandLine, workingDirectory) => {
     // Someone tried to run a second instance, we should focus our window.
     if (mainWindow != null && mainWindow != undefined) {
-      if (mainWindow.isMinimized()) mainWindow.restore()
+      if (mainWindow.isMinimized()) {mainWindow.restore()}
       mainWindow.focus()
     }
   })
@@ -48,7 +81,7 @@ if (!gotTheLock) {
 
   } catch (error) {
     log.error(error)
-    console.log(error)
+    // console.log(error)
     // aboutWindow = new BrowserWindow({
     //   height: 250,
     //   width: 300,
@@ -67,35 +100,36 @@ if (!gotTheLock) {
   // console.log('creating folder')
   if (!fs.existsSync(backup_folder)) fs.mkdir(backup_folder, function (err) {
     if (err) {
-      console.log('folder not created')
+      // console.log('folder not created')
     }
     else {
-      console.log('folder created')
+      // console.log('folder created')
     }
   });
 
   if (!fs.existsSync(internal_backup_folder)) fs.mkdir(internal_backup_folder, function (err) {
     if (err) {
-      console.log('internal folder not created')
+      // console.log('internal folder not created')
     }
     else {
-      console.log('internal backup folder created')
+      // console.log('internal backup folder created')
     }
   });
 
 
   function createMainWindow() {
     //  mainWindow = new MainWindow(`./app/index.html`); 
-    mainWindow = new BrowserWindow({
+    mainWindow =     new BrowserWindow({
       height: 800,
       width: 1000,
-      title: 'DruglaneServer',
+      title: `${appName}`,
       webPreferences: {
         nodeIntegration: true
       },
       icon: `${__dirname}/app/assets/icon2.png`,
 
     });
+    //Splashscreen.initSplashScreen(config);
 
     mainWindow.loadURL(`http://localhost:${constants.port}/`);
 
@@ -110,7 +144,7 @@ if (!gotTheLock) {
     aboutWindow = new BrowserWindow({
       height: 250,
       width: 300,
-      title: 'About DruglaneServer',
+      title: `About ${appName}`,
       resizable: false,
 
       icon: `${__dirname}/app/assets/logo.png`,
@@ -155,9 +189,9 @@ if (!gotTheLock) {
         type: 'question',
         buttons: ['Minimize the application', 'Close Application', 'Cancel'],
         defaultId: 0,
-        title: 'Druglane Server',
+        title: `${appName} Server`,
         message: 'Close the server?',
-        detail: `You need to keep it running to use the Druglane software.
+        detail: `You need to keep it running to use the ${appName} software.
         You can minimize it instead. 
         A backup will be created if you choose to close the application`,
 
@@ -211,11 +245,13 @@ if (!gotTheLock) {
     // console.log(time)
     var sync = filestore.get("last_sync") == undefined ? "unset" : filestore.get("last_sync");
     
-    //auto backup at 7:00PM each day
-
-    var j = schedule.scheduleJob('auto_backup', `0 ${time} * * *`, function () {
-      autoCreateBackup();
-    });
+    //auto backup at selected time each day or turn off
+    if(time !== 'off'){
+      var j = schedule.scheduleJob('auto_backup', `0 ${time} * * *`, function () {
+        autoCreateBackup();
+      });
+    }
+    
 
 
 
@@ -312,7 +348,7 @@ if (!gotTheLock) {
     // On macOS it is common for applications and their menu bar
     // to stay active until the user quits explicitly with Cmd + Q
     if (!isMac) {
-      // app.quit()
+      app.quit()
     }
   })
 
@@ -377,206 +413,33 @@ if (!gotTheLock) {
   }
 
   function createBackupAndShutDown() {
-    var archiver = require('archiver');
-    // var docs_folder = path.join(app.getPath('documents'), "druglaneBackups");
-    // create a file to stream archive data to.
-    var ts = getToday('timestamp_string')
-    var output = fs.createWriteStream(backup_folder + `/druglane_backup_${ts}.zip`);
-    var archive = archiver('zip', {
-      zlib: { level: 9 } // Sets the compression level.
-    });
+    doBackup("manual_shutdown");
 
-    // listen for all archive data to be written
-    // 'close' event is fired only when a file descriptor is involved
-    output.on('close', function () {
-      // console.log(archive.pointer() + ' total bytes');
-      // console.log('archiver has been finalized and the output file descriptor has closed.');
-      //copy to the internal backup location
-      fs.copyFile(backup_folder + `/druglane_backup_${ts}.zip`, internal_backup_folder + `/druglane_backup_${ts}.zip`, (err) => {
-        if (err) {
-          // console.log(err)
-          // console.log('could not copy to internal folder');
-
-        }
-        else {
-          // console.log('copied to internal folder');
-
-        }
-
-      });
-
-      var data = {
-        file_name: `"${internal_backup_folder}/druglane_backup_${ts}.zip"`,
-        description: `'manual backup'`,
-        created_by: `'admin'`,
-        uploaded: `'no'`,
-        db_version: filestore.get('dbversion')
-      }
-      saveBackup(data)
-      app.quit();
-
-
-    });
-
-    // This event is fired when the data source is drained no matter what was the data source.
-    // It is not part of this library but rather from the NodeJS Stream API.
-    // @see: https://nodejs.org/api/stream.html#stream_event_end
-    output.on('end', function () {
-      console.log('Data has been drained');
-    });
-
-    // good practice to catch warnings (ie stat failures and other non-blocking errors)
-    archive.on('warning', function (err) {
-      if (err.code === 'ENOENT') {
-        // log warning
-      } else {
-        // throw error
-        throw err;
-      }
-    });
-
-    // good practice to catch this error explicitly
-    archive.on('error', function (err) {
-      throw err;
-    });
-
-    // pipe archive data to the file
-    archive.pipe(output);
-
-    // // append a file from stream
-    // var file1 = __dirname + '/file1.txt';
-    // archive.append(fs.createReadStream(file1), { name: 'file1.txt' });
-
-    // // append a file from string
-    // archive.append('string cheese!', { name: 'file2.txt' });
-
-    // // append a file from buffer
-    // var buffer3 = Buffer.from('buff it!');
-    // archive.append(buffer3, { name: 'file3.txt' });
-    // append server-settings.json file
-    archive.file(constants.settings_path, { name: constants.settings_filename });
-    archive.file(constants.db_path, { name: constants.db_filename });
-
-    // append files from a sub-directory and naming it `new-subdir` within the archive
-    // archive.directory('subdir/', 'new-subdir');
-
-    // append files from a sub-directory, putting its contents at the root of archive
-    // archive.directory('subdir/', false);
-
-    // append files from a glob pattern
-    // archive.glob('subdir/*.txt');
-
-    // finalize the archive (ie we are done appending files but streams have to finish yet)
-    // 'close', 'end' or 'finish' may be fired right after calling this method so register to them beforehand
-    archive.finalize();
   }
 
 
 
   //create backup by zipping db and server-settings.json
   function createBackup() {
-    var archiver = require('archiver');
-    // var docs_folder = path.join(app.getPath('documents'), "druglaneBackups");
-    // create a file to stream archive data to.
-    var ts = getToday('timestamp_string')
-    var output = fs.createWriteStream(backup_folder + `/druglane_backup_${ts}.zip`);
-    var archive = archiver('zip', {
-      zlib: { level: 9 } // Sets the compression level.
-    });
+    doBackup("manual");
 
-    // listen for all archive data to be written
-    // 'close' event is fired only when a file descriptor is involved
-    output.on('close', function () {
-      console.log(archive.pointer() + ' total bytes');
-      console.log('archiver has been finalized and the output file descriptor has closed.');
-      //copy to the internal backup location
-      fs.copyFile(backup_folder + `/druglane_backup_${ts}.zip`, internal_backup_folder + `/druglane_backup_${ts}.zip`, (err) => {
-        if (err) {
-          console.log(err)
-          console.log('could not copy to internal folder');
-
-        }
-        else {
-          console.log('copied to internal folder');
-
-        }
-
-      });
-
-      var data = {
-        file_name: `"${internal_backup_folder}/druglane_backup_${ts}.zip"`,
-        description: `'manual backup'`,
-        created_by: `'admin'`,
-        uploaded: `'no'`,
-        db_version: filestore.get('dbversion')
-      }
-      saveBackup(data)
-
-
-
-      mainWindow.webContents.send('backup_done', { directory: backup_folder + `/druglane_backup_${ts}.zip` })
-    });
-
-    // This event is fired when the data source is drained no matter what was the data source.
-    // It is not part of this library but rather from the NodeJS Stream API.
-    // @see: https://nodejs.org/api/stream.html#stream_event_end
-    output.on('end', function () {
-      console.log('Data has been drained');
-    });
-
-    // good practice to catch warnings (ie stat failures and other non-blocking errors)
-    archive.on('warning', function (err) {
-      if (err.code === 'ENOENT') {
-        // log warning
-      } else {
-        // throw error
-        throw err;
-      }
-    });
-
-    // good practice to catch this error explicitly
-    archive.on('error', function (err) {
-      throw err;
-    });
-
-    // pipe archive data to the file
-    archive.pipe(output);
-
-    // // append a file from stream
-    // var file1 = __dirname + '/file1.txt';
-    // archive.append(fs.createReadStream(file1), { name: 'file1.txt' });
-
-    // // append a file from string
-    // archive.append('string cheese!', { name: 'file2.txt' });
-
-    // // append a file from buffer
-    // var buffer3 = Buffer.from('buff it!');
-    // archive.append(buffer3, { name: 'file3.txt' });
-    // append server-settings.json file
-    archive.file(constants.settings_path, { name: constants.settings_filename });
-    archive.file(constants.db_path, { name: constants.db_filename });
-
-    // append files from a sub-directory and naming it `new-subdir` within the archive
-    // archive.directory('subdir/', 'new-subdir');
-
-    // append files from a sub-directory, putting its contents at the root of archive
-    // archive.directory('subdir/', false);
-
-    // append files from a glob pattern
-    // archive.glob('subdir/*.txt');
-
-    // finalize the archive (ie we are done appending files but streams have to finish yet)
-    // 'close', 'end' or 'finish' may be fired right after calling this method so register to them beforehand
-    archive.finalize();
   }
 
   //create backup by zipping db and server-settings.json
   function autoCreateBackup() {
+    doBackup("automatic");
+  }
+
+  //the function to create a backup
+  function doBackup(description){
+    try {
+      
+    
     var archiver = require('archiver');
     // var docs_folder = path.join(app.getPath('documents'), "druglaneBackups");
     // create a file to stream archive data to.
     var ts = getToday('timestamp_string')
-    var output = fs.createWriteStream(backup_folder + `/druglane_backup_${ts}.zip`);
+    var output = fs.createWriteStream(internal_backup_folder + `/${appName}_backup_${ts}.zip`);
     var archive = archiver('zip', {
       zlib: { level: 9 } // Sets the compression level.
     });
@@ -585,28 +448,41 @@ if (!gotTheLock) {
     // 'close' event is fired only when a file descriptor is involved
     output.on('close', function () {
 
-      fs.copyFile(backup_folder + `/druglane_backup_${ts}.zip`, internal_backup_folder + `/druglane_backup_${ts}.zip`, (err) => {
-        if (err) {
-          console.log(err)
-          console.log('could not copy to internal folder');
+      // fs.copyFile(backup_folder + `/druglane_backup_${ts}.zip`, internal_backup_folder + `/druglane_backup_${ts}.zip`, (err) => {
+      //   if (err) {
+      //     console.log(err)
+      //     console.log('could not copy to internal folder');
 
-        }
-        else {
-          console.log('copied to internal folder');
+      //   }
+      //   else {
+      //     console.log('copied to internal folder');
 
-        }
+      //   }
 
-      });
+      // });
 
       var data = {
-        file_name: `"${internal_backup_folder}/druglane_backup_${ts}.zip"`,
-        description: `'automatic backup'`,
+        file_name: `"${internal_backup_folder}/${appName}_backup_${ts}.zip"`,
+        description: `'${description} backup'`,
         created_by: `'system'`,
         uploaded: `'no'`,
         db_version: filestore.get('dbversion')
       }
       saveBackup(data)
-      log.info('backup automatically created.');
+      switch (description) {
+        case "automatic":
+          log.info('backup  created.');
+
+          break;
+          case "manual":
+            mainWindow.webContents.send('backup_done', { directory: backup_folder + `/${appName}_backup_${ts}.zip` })
+            break;
+              case "manual_shutdown":
+          app.quit();
+        break;
+        default:
+          break;
+      }
 
     });
 
@@ -621,9 +497,9 @@ if (!gotTheLock) {
     archive.on('warning', function (err) {
       if (err.code === 'ENOENT') {
         // log warning
-        log.error('Warning creating auto backup: ' + err)
+        log.error('Warning creating  backup: ' + err)
       } else {
-        log.error('Warning creating auto backup: ' + err)
+        log.error('Warning creating  backup: ' + err)
         // throw error
         throw err;
       }
@@ -632,38 +508,24 @@ if (!gotTheLock) {
     // good practice to catch this error explicitly
     archive.on('error', function (err) {
       log.error('Warning creating auto backup: ' + err)
-      throw err;
+      throw err; 
     });
 
     // pipe archive data to the file
     archive.pipe(output);
 
-    // // append a file from stream
-    // var file1 = __dirname + '/file1.txt';
-    // archive.append(fs.createReadStream(file1), { name: 'file1.txt' });
-
-    // // append a file from string 
-    // archive.append('string cheese!', { name: 'file2.txt' });
-
-    // // append a file from buffer
-    // var buffer3 = Buffer.from('buff it!');
-    // archive.append(buffer3, { name: 'file3.txt' });
-    // append server-settings.json file
+    
     archive.file(constants.settings_path, { name: constants.settings_filename });
     archive.file(constants.db_path, { name: constants.db_filename });
 
-    // append files from a sub-directory and naming it `new-subdir` within the archive
-    // archive.directory('subdir/', 'new-subdir');
-
-    // append files from a sub-directory, putting its contents at the root of archive
-    // archive.directory('subdir/', false);
-
-    // append files from a glob pattern
-    // archive.glob('subdir/*.txt');
 
     // finalize the archive (ie we are done appending files but streams have to finish yet)
     // 'close', 'end' or 'finish' may be fired right after calling this method so register to them beforehand
     archive.finalize();
+  } catch (error) {
+    console.log(error);
+    log.error(error);
+  }
   }
 
   ipcMain.on('restore', (event, option) => {
@@ -692,7 +554,7 @@ if (!gotTheLock) {
   function restoreBackup(filename) {
     let DecompressZip = require('decompress-zip'); 
     var unzipper = new DecompressZip(filename);
-    console.log(filename)
+    console.log(filename);
     // Add the error event listener
     unzipper.on('error', function (err) {
       console.log('Caught an error', err);
@@ -793,7 +655,7 @@ if (!gotTheLock) {
         mwindow = new BrowserWindow({
           height: 300,
           width: 300,
-          title: 'DruglaneServer',
+          title: `${appName}Server`,
           webPreferences: {
             nodeIntegration: true
           },
@@ -858,9 +720,9 @@ if (!gotTheLock) {
   });
 
   //synchronization with database
-  setInterval(async() => {
-    sync.start_sync();
-  }, 3600000);
+  // setInterval(async() => {
+  //   sync.start_sync();
+  // }, 3600000);
 
   
 }

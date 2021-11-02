@@ -1,6 +1,7 @@
 const express = require('express');
 //const userController = require('./controllers/userController')
 const constants = require('./constants');
+let appName = constants.appname
 let PORT = constants.port;
 const log = require('electron-log');
 
@@ -119,6 +120,7 @@ app.use(async (req, res, next) => {
 
             if (user != undefined) {
                 req.query.userid = user.user_id;
+                req.body.userid = user.user_id;
                 req.userid = user.user_id;
                 //if not options, call next to allow the request to get to the routes
                 next();
@@ -236,6 +238,9 @@ app.get('/', async (req, res) => {
         }
 
         else {
+            //trigger the firebase watcher
+            const firebase = require('./firebase')
+
             res.render('index', data);
         }
     } catch (error) {
@@ -459,6 +464,11 @@ app.get('/settings', checkSignIn, async (req, res) => {
 
     let settingsHelper = require('./helpers/settingsHelper');
     let sh = new settingsHelper();
+    let q = await sh.getAll(sh.table_name);
+    // console.log(q)
+    // array.forEach(element => {
+    //     data
+    // });
     data.name = await sh.getSetting(`'company_name'`);
     data.phone = await sh.getSetting(`'phone'`);
     data.email = await sh.getSetting(`'email'`);
@@ -468,6 +478,7 @@ app.get('/settings', checkSignIn, async (req, res) => {
     data.restrict_zero_stock_sales = await sh.getSetting(`'restrict_zero_stock_sales'`);
     data.logo = await sh.getSetting(`'logo'`);
     data.receipt_logo = await sh.getSetting(`'receipt_logo'`);
+    data.activate_batch_mode = await sh.getSetting(`'activate_batch_mode'`);
     res.render('settings', data);
     // res.sendFile(__dirname + '/app/index.html');
 });
@@ -574,15 +585,15 @@ app.post('/saveSettings', checkSignIn, async (req, res) => {
         //upload the file here
         var file = req.files.uploadfile
         if (file != undefined && file != null) {
-            let path = './public/assets/images/' + file.name;
+            let filepath = path.join(constants.settings_location, file.name);
 
-            file.mv(path, async function (err) {
+            file.mv(filepath, async function (err) {
                 if (err) {
-                    console.log(err);
+                    log.error(err);
 
                 }
                 else {
-                    console.log(logo_exists)
+                    // console.log(logo_exists)
                     if (logo_exists == null) {
 
                         var data = [
@@ -637,7 +648,11 @@ app.post('/saveSettings', checkSignIn, async (req, res) => {
 
         }, "name = 'restrict_zero_stock_sales'", sh.table_name);
 
+        await sh.update({
 
+            value: `"${req.body.activate_batch_mode}"`,
+
+        }, "name = 'activate_batch_mode'", sh.table_name);
 
         res.redirect('settings?m=Settings set successfully');
     } catch (error) {
@@ -725,7 +740,7 @@ app.post('/saveUser', checkSignIn, async (req, res) => {
         && id != "undefined" && id != "null" && id != "") {
         let data = h.prep_data(req.body);
         //update. else insert
-        console.log(password)
+        // console.log(password)
         if (password !== undefined && password !== null
             && password != "undefined" && password != "null" && password != "") {
             var bcrypt = require('bcryptjs');
@@ -856,7 +871,7 @@ app.post('/saveRole', checkSignIn, async (req, res) => {
     let h = new Helper();
     let id = req.body.id;
     let permissions = req.body.role_permissions
-    console.log(req.body)
+    // console.log(req.body)
     if (id !== undefined) {
         let data = {};
         data.role_name = `'${req.body.role_name}'`;
@@ -1011,8 +1026,8 @@ app.get('/uploadBackupToServer', checkSignIn, async (req, res) => {
                 // const json = await response.json();
                 await sh.updateField("uploaded", "'yes'", ` id = ${id}`, sh.table_name)
 
-                console.log(response)
-                console.log("done successfully")
+                // console.log(response)
+                // console.log("done successfully")
                 log.info("last backup file uploaded successfully.")
                 res.redirect('restoreBackup?m=Backup uploaded successfully');
             })();
@@ -1020,12 +1035,12 @@ app.get('/uploadBackupToServer', checkSignIn, async (req, res) => {
 
         }
         else {
-            console.log("file not found")
+            // console.log("file not found")
 
             res.redirect('restoreBackup?m=Backup file not found. Please try again');
         }
     } catch (error) {
-        console.log(error)
+        // console.log(error)
 
         res.redirect('restoreBackup?m=Server error. Please try again or contact your admin');
 
@@ -1104,7 +1119,7 @@ app.get('/uploadDrugInfo', async (req, res) => {
         res.render('druginforesults', { results: results });
         // res.json({ status: '1' })
     } catch (error) {
-        console.log(error)
+        // console.log(error)
         // res.json({ status: '-1' })
         res.render('druginforesults', { results: results });
     }
@@ -1195,25 +1210,25 @@ app.get('/resetAdminPassword', async (req, res) => {
         await h.delete(`name = 'reset_admin_password'`, h.table_name)
         await h.insert({ name: "'reset_admin_password'", token: `'${token}'` }, h.table_name)
 
-        const axios = require('axios');
+
 
         let settingsHelper = require('./helpers/settingsHelper');
         let sh = new settingsHelper();
         let email = await sh.getSetting(`'email'`);
 
-        message = `You have requested to reset your Druglane server admin password. 
+        message = `You have requested to reset your ${appName} server admin password. 
 Please use this code as token in the reset page: ${token}.`;
         // console.log(message)
         const FormData = require('form-data');
- 
-const form = new FormData();
-form.append('mails', email);
-form.append('message',message);
-form.append('subject', "Reset Administrator Password");
 
-        axios.post(constants.server_url + `/api_admin/sendBulkMail`, form,{ headers: form.getHeaders() })
+        const form = new FormData();
+        form.append('mails', email);
+        form.append('message', message);
+        form.append('subject', "Reset Administrator Password");
+        const axios = require('axios');
+        axios.post(constants.server_url + `/api_admin/sendBulkMail`, form, { headers: form.getHeaders() })
             .then(function (response) {
-                console.log(response.data);
+                // console.log(response.data);
                 let data = {
                     error: false, retry: false, message: `Email sent to your administrator email. Please 
             check your inbox to retrieve the token`}
@@ -1224,11 +1239,11 @@ form.append('subject', "Reset Administrator Password");
                 let data = {
                     error: true, retry: false, message: `Unable to communicate with cloud server. Please 
             check your internet connection and try again`}
-                res.render("resetPassword")
+                res.render("resetPassword", data)
             });
 
     } catch (error) {
-        console.log(error)
+        // console.log(error)
     }
 
 });
@@ -1270,7 +1285,7 @@ app.post('/doResetPassword', async (req, res) => {
 
     } catch (error) {
         log.error(error)
-        console.log(error)
+        // console.log(error)
     }
 
 
@@ -1278,6 +1293,28 @@ app.post('/doResetPassword', async (req, res) => {
 
 });
 
+
+app.get('/syncUsers', async (req, res) => {
+    const firebase = require('./firebase')
+    try {
+
+
+        let objects = await userSession.getMany(`allow_online = 'yes'`, userSession.table_name);
+        for (var i = 0; i < objects.length; i++) {
+            var obj = objects[i];
+            obj.role = await userSession.getItem(` role_id = ${obj.role_id} `, userSession.roles_table)
+            obj.company_id = constants.company_id;
+        }
+        //
+        await firebase.syncUsers(objects)
+        // console.log(objects)
+        res.json({ status: '1', message: 'successful' })
+    } catch (error) {
+        await userSession.closeConnection();
+        log.error(error)
+        res.json({ status: '-1', data: null })
+    }
+});
 
 
 // const FirebaseFunctions = require("./firebase")
@@ -1342,8 +1379,6 @@ io.on("connection", function (socket) {
         socket.join(data.parent_company_id);
         data.message = `${data.name} came online`;
         io.to(data.parent_company_id).emit("user_in", data.name);
-
-
     });
 
 

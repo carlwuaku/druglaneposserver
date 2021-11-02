@@ -1,5 +1,19 @@
 
 var admin = require('firebase-admin');
+const constants = require('./constants');
+const adminService = require('./services/admin_service')
+const log = require('electron-log');
+
+let settingsHelper = require('./helpers/settingsHelper');
+let sh = new settingsHelper();
+
+let company_id = "";
+async function getCompanyId() {
+    company_id = await sh.getSetting(`'company_id'`);
+}
+getCompanyId();
+
+
 // thedruglane-c15d8-firebase-adminsdk-gy2lo-d6f0f69bed.json
 var serviceAccount = require('./helpers/druglanepms-firebase-adminsdk-jo95n-fc675546e8.json');
 // https://thedruglane-c15d8.firebaseio.com/
@@ -7,171 +21,215 @@ admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)
 });
 const firestoredb = admin.firestore();
-const constants = require('./constants');
 
-// const query = firestoredb.collection('remote_purchases').where("status", '==', 'Pending');
+exports.db = firestoredb;
 
-// const observer = query.onSnapshot(querySnapshot => {
-//     console.log(querySnapshot.docs);
-//     //insert into the database
-//     if (Array.isArray(querySnapshot)) {
-//         saveNewPurchasesArray(querySnapshot)
-//     }
-// }, err => {
-//     console.log(`Encountered error: ${err}`);
-// });
 
-const log = require('electron-log');
+exports.syncUsers = async function (data) {
+    let batch = firestoredb.batch();
 
-const PurchaseHelper = require('./helpers/purchaseHelper.js');
-const purchaseHelper = new PurchaseHelper();
+    const delete_ref = firestoredb.collection(constants.firebase_user_collection).where("company_id", "==", constants.company_id);
 
-const PurchaseDetailsHelper = require('./helpers/purchaseDetailsHelper.js');
-const purchasedetailsHelper = new PurchaseDetailsHelper();
 
-const ProductHelper = require('./helpers/productHelper.js');
-const productHelper = new ProductHelper();
+    delete_ref.get().then(function (querySnapshot) {
+        querySnapshot.forEach(function (doc) {
 
-const ActivitiesHelper = require('./helpers/activitiesHelper');
-const activities = new ActivitiesHelper();
+            batch.delete(doc.ref);
+        });
+    });
 
-let adminClass = require('./helpers/adminHelper');
-let adminHelper = new adminClass();
+    for (var i = 0; i < data.length; i++) {
+        //firebase sets a limit of 500 for batch transactions
+        if (i >= 500) {
+            break;
+        }
+        let item = data[i];
+        const users_collection = firestoredb.collection(constants.firebase_user_collection).doc();
+        batch.set(users_collection, item);
 
-let vendorClass = require('./helpers/vendorHelper');
-let vendorHelper = new vendorClass();
+    }
 
-let stockValueClass = require('./helpers/stockValueHelper')
-let stockValueHelper = new stockValueClass();
 
-let productBatchClass = require('./helpers/productBatchesHelper')
-let productBatchHelper = new productBatchClass();
+    // Update the population of 'SF'
+    // const sfRef = db.collection('cities').doc('SF');
+    // batch.update(sfRef, {population: 1000000});
 
-async function getPendingPurchases(){
-    
+    // // Delete the city 'LA'
 
-    const snapshot = await firestoredb.collection('remote_purchases')
-    .where("status", '==', 'Pending').where("company_id", "==", constants.company_id);
-    snapshot.onSnapshot((doc) =>{
-        
-        saveNewPurchasesArray(doc.docs)
 
-    })
-// snapshot.forEach((doc) => {
-//   console.log(doc.id, '=>', doc.data());
-// });
+    // Commit the batch
+    await batch.commit();
+    // const res = await db.collection('users').where("company_id", "==", constants.company_id).delete();
+
+    //this replaces the current data with the new one
+    // await firestoredb.collection('users').doc(docId).set(data);
+
 }
-getPendingPurchases();
+
+let received_requests = []
+
+////////////////LISTEN FOR REQUESTS FROM ONLINE USERS//////////////////////
+//VALIDATION WILL INCLUDE CHECKING TO MAKE SURE THE USER'S EMAIL IS IN THIS LOCALSERVER AND IS 
+//ALLOWED TO ACCESS ONLINE
+
+/**
+ * monitor the firebase db for incoming requests. each company will have it's id in order to 
+ * receive it's own requests
+ */
+async function getIncomingRequests() {
+    console.log("staring firebase")
+    try {
+
+        const query = firestoredb.collection('requests').where("status", '==', 'Pending');
+        let dbref;
+        const observer = query.onSnapshot(querySnapshot => {
+            try {
+              // console.log(`Received query snapshot of size ${querySnapshot.docChanges().length}`);
+            querySnapshot.docChanges().forEach(async (change) => {
+                // console.log(change.doc.id, change.type);
+                if (change.type === 'added') {
+                    let doc = change.doc;
+                    let data = doc.data();
+
+                    dbref = firestoredb.collection('requests').doc(doc.id);
+
+                    let response_data = await runQuery(data.route);
+                    // console.log(doc.id, response_data)
+                    response_data['request_status'] = "Complete"
+                    const res = await dbref.update(response_data);
+                    // console.log(res)
+                    // received_requests.push(doc.id)
+                }
+
+                //because each snapshot can contain items that were received in a previous snapshot,
+                //we want to process only those that have not been processed yet
+                // if(received_requests.indexOf(doc.id) == -1){
+
+                // }
+                // console.log(">>>> "+received_requests.toString())
 
 
-async function saveNewPurchasesArray(items) {
-    for (var i = 0; i < items.length; i++) {
-        try {
-            
-        
-        let curr = items[i].data();
-        let date = curr.date == undefined ? purchaseHelper.getToday() : curr.date;
-        let created_on = curr.created_on == undefined ? purchaseHelper.getToday('timestamp') : curr.created_on;
-
-
-
-        let payment_method = curr.payment_method;
-        let products = curr.products.split("||");
-        let prices = curr.prices.split("||");
-        let quantities = curr.quantities.split("||");
-        let selling_prices = curr.selling_prices.split("||");
-        let expiries = curr.expiries.split("||");
-        let units = curr.units.split("||");
-        let markups = curr.markups.split("||");
-
-
-        await purchaseHelper.getConnection();
-        //last id
-        let last_id = await purchaseHelper.getField('max(id) as max_id', purchaseHelper.table_name);
-        // console.log(last_id)
-        let code = last_id.max_id == null ? `'00001'` : `'${(last_id.max_id + 1).toString().padStart(5, '0')}'`;
-
-        let objects = [];
-        let product_updates = [];
-        for (let i = 0; i < products.length; i++) {
-            let data = purchasedetailsHelper.prep_data(curr);
-            data.created_on = `'${created_on}'`;
-            data.date = `'${date}'`;
-            data.unit = `'${units[i]}'`;
-            data.product = products[i];
-            data.selling_price = selling_prices[i];
-            data.quantity = quantities[i];
-            data.price = prices[i];
-            data.markup = markups[i];
-            data.code = code;
-            data.created_by = "admin";
-            objects.push(data);
-            //generate the update for the product
-            let product_data = {
-                price: selling_prices[i],
-                cost_price: prices[i],
-                unit: `'${units[i]}'`,
-                expiry: `'${expiries[i]}'`
+            })   
+            } catch (error) {
+                log.error(error)
             }
-            let p = productHelper.generateUpdateQuery(product_data, ` id = ${products[i]} `, productHelper.table_name)
-            product_updates.push(p);
-        }
-        // console.log(objects)
-
-        let purchase_data = purchaseHelper.prep_data(curr);
-        purchase_data.date = `'${date}'`;
-        purchase_data.created_on = `'${created_on}'`;
-        purchase_data.created_by = "1";
-        purchase_data.code = code;
-        // console.log(purchase_data)
-
-        let batches = JSON.parse(curr.batch_details);
-        batches.map(bat => {
-            bat.purchase_code = code;
-            bat.barcode = `'${bat.barcode}'`;
-            bat.batch_number = `'${bat.batch_number}'`;
-            bat.expiry = `'${bat.expiry}'`;
-            bat.quantity_sold = 0;
-
-        })
-
-
-
-
-        let sql = "BEGIN TRANSACTION; ";
-        sql += purchaseHelper.generateInsertQuery(purchase_data, purchaseHelper.table_name);
-        sql += purchasedetailsHelper.generateInsertManyQuery(purchasedetailsHelper.fields, objects, purchasedetailsHelper.table_name);
-        sql += product_updates.join(" ");
-        if (batches.length > 0) {
-            sql += productBatchHelper.generateInsertManyQuery(productBatchHelper.fields, batches, productBatchHelper.table_name);
-
-        }
-
-        sql += "COMMIT;"
-        console.log(sql)
-        await purchaseHelper.connection.exec(sql);
-        // console.log(sql)
-
-        for (var x = 0; x < products.length; x++) {
-
-            let pid = products[x];
-            await productHelper.refreshCurrentStock(pid)
-        }
-        await stockValueHelper.updateStockValue();
-
-        //enter the different batches
-
-
-
-        activities.log(req.query.userid, `"added new purchases: ${code} : ${payment_method}"`, `'Purchase'`)
-        // helper.connection.close().then(succ => { }, err => { })
+           
+            // ...
+        }, err => {
+            log.error(`Encountered error: ${err}`);
+        });
     } catch (error) {
-        console.log(error)
-    }
+        log.error(error)
     }
 
+
+
+    // console.log("monitoring requests...", company_id)
+    // const snapshot = await firestoredb.collection("requests")
+    //     .where("status", '==', 'Pending').get();//.where("company_id", "==", company_id)
+
+    // snapshot.forEach(async (doc) => {
+    //     let data = doc.data();
+    //     switch (data.route) {
+    //         case 'getUsers':
+    //             //get users and update the doc response
+    //             let users = await adminService.get_users_function();
+    //             // console.log(users)
+    //             break;
+
+    //         default:
+    //             // console.log(doc)
+    //             break;
+    //     }
+    //     // console.log(doc.id, '=>', doc.data());
+    //   });
 
 }
+getIncomingRequests();
+
+/**
+ * Load a service and run a query based on the route passed
+ * @param {String} route the route containing the params. e.g. 
+ * sales/findbyid
+ */
+async function runQuery(route) {
+    try {
 
 
+        //split the route and get any query items.
+        let data = {}
+        let route_parts = route.split("?");//the first part if the path, the second if any contains the query params
+        let path_name = route_parts[0];//e.g. sales/getbetweendates or sales/findbyid/3
+        if (route_parts.length > 1) {
+            let query = route_parts[1];//e.g. param=gigngig&v=02&pr=3vvno
+            let query_params = query.split("&");
+            query_params.forEach(element => {
+                let parts = element.split("=");
+                //assign the keys to the values if there was a value
+                data[parts[0]] = parts.length > 0 ? parts[1] : null;
+            });
+        }
+
+        //the route itself
+        let path_parts = path_name.split("/");//[0]=modulename e.g. sales or products, [1]=methodname, [2 onwards]=params
+        let module_name = path_parts[0];
+        let methodname = path_parts[1];
+        let other_params = path_parts.length > 2 ? path_parts[2] : "";
+        // console.log(route)
+        //load the right service by the module
+        let module = null;
+        switch (module_name) {
+            case "admin":
+                module = require('./services/admin_service');
+                break;
+            case "product":
+                module = require('./services/products_service');
+                break;
+            case "sale":
+                module = require('./services/sales_service');
+                break;
+            case "purchase":
+                module = require('./services/purchase_service');
+                break;
+            case "customer":
+                module = require('./services/customer_service');
+                break;
+
+            case "transfer":
+                module = require('./services/transfer_service');
+                break;
+            case "vendor":
+                module = require('./services/vendor_service');
+                break;
+            default:
+                break;
+        }
+        if (module != null) {
+
+            if (module_name == "admin" || module_name == "product") {
+                //place _ before the uppercases, convert to lowercaes and append _function to match the actual 
+                //methods for products and admin.
+                let method = methodname.replace(/([A-Z])/g, '_$1').trim().toLocaleLowerCase();
+                let _function = module[method + "_function"]
+                return await _function(data)
+            }
+            else {
+                //in the other modules _ was simply prepended to the method names
+                let _function = module["_" + methodname]
+                return await _function(data)
+            }
+
+        }
+        else {
+            // console.log("module not found")
+            return { status: "-1", data: null }
+
+        }
+        //if a module was found, look through its methods to see which matches the given method name
+        // console.log(module,typeof(module))
+        // console.log(methodname, data)
+    } catch (error) {
+        // console.log(">>>>>>>>>>." + route, error)
+    }
+}
 

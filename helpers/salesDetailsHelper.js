@@ -216,18 +216,25 @@ class SalesDetailsHelper extends dbClass {
 
     
     /**
-     * get the total difference in stockadjustment
+     * get the total amount of products sold in a sale receipt. calculate with tax and discounts
      * @param {String} code 
      * @returns {Number} 
      */
     async getSaleTotal(code){
         let sql = `select sum(quantity * price) as total from ${this.table_name} where code = '${code}' `;
-        
+        let sale_sql = `select tax, discount from sales where code = '${code}'`;
 
         try {
             await this.getConnection();
             let q = await this.connection.get(sql);
-            return q.total == null ? 0 : q.total;
+            let sale_query = await this.connection.get(sale_sql);
+            let tax = sale_query.tax;
+            let discount = sale_query.discount;
+            if(q.total == null){
+                return 0;
+            }
+            let overall_total = q.total + tax/100 * q.total  - discount
+            return overall_total ;
         } catch (error) {
             log.error(error);
             throw new Error(error)

@@ -566,7 +566,7 @@ class Db {
         } catch (err) {
             // console.log(query)
             // log.error(err);
-            // log.error(query);
+            log.error(query);
             //this.connection.close().then(succ => { }, err => { })
             throw new Error(err)
 
@@ -1237,6 +1237,9 @@ const umzug = new Umzug({
         
         return false;
       }
+
+      
+
 
     //insert: data, table
 

@@ -13,8 +13,9 @@ class SalesHelper extends dbClass {
     }
     fields = ["customer", "code", "status", "created_by", "created_on", "date", "amount_paid",
         "payment_method", "insurance_provider", "creditor_name", "insurance_member_id",
-        "insurance_member_name", "momo_reference", "discount", "shift"]
+        "insurance_member_name", "momo_reference", "discount", "shift","tax"]
     table_name = "sales";
+    details_table_name = "sales_details"
 
     not_string_fields = ["id", "amount_paid", "discount"];
     //the fields which are not strings. used in prep_data
@@ -98,6 +99,100 @@ class SalesHelper extends dbClass {
             throw new Error(error)
         }
     }
+
+    /**
+     * get total tax for a period
+     * @param {String} start the start date
+     * @param {String} end the end date
+     */
+     async getTotalTax(start, end) {
+        let sql = `select code, tax from ${this.table_name}  `;
+        if (start != '') {
+            sql += ` where date >= '${start}' and date <= '${end}' `
+        }
+
+        try {
+            await this.getConnection();
+            let objects = await this.connection.all(sql);
+            //foreach, get the total and the tax
+            let total = 0;
+            for (var i = 0; i < objects.length; i++) {
+                let curr = objects[i];
+                let products_total = await this.connection.get(`select sum(quantity * price) as total from ${this.details_table_name} where code = '${curr.code}' `);
+                total += products_total.total == null ? 0 : (curr.tax/100 * products_total.total)
+                //get the total
+
+            }
+            return total;
+        } catch (error) {
+            log.error(error);
+            throw new Error(error)
+        }
+    }
+
+    /**
+    * get total tax by a user for a period
+    * @param {String} start the start date
+    * @param {String} end the end date
+    * @param {String} user the user id
+    */
+    async getUserTax(user, start, end) {
+        let sql = `select code, tax from ${this.table_name} where created_by = ${user} `;
+        if (start != '') {
+            sql += ` and date >= '${start}' and date <= '${end}' `
+        }
+
+        try {
+            await this.getConnection();
+            let objects = await this.connection.all(sql);
+            //foreach, get the total and the tax
+            let total = 0;
+            for (var i = 0; i < objects.length; i++) {
+                let curr = objects[i];
+                let products_total = await this.connection.get(`select sum(quantity * price) as total from ${this.details_table_name} where code = '${curr.code}' `);
+                total += products_total.total == null ? 0 : curr.tax/100 * products_total.total
+                //get the total
+
+            }
+            return total;
+        } catch (error) {
+            log.error(error);
+            throw new Error(error)
+        }
+    }
+
+    /**
+     * get total discount by a shift for a period
+     * @param {String} start the start date
+     * @param {String} end the end date
+     * @param {String} shift the shift
+     */
+    async getShiftTax(shift, start, end) {
+        let sql = `select code, tax from ${this.table_name} where shift = '${shift}' `;
+        if (start != '') {
+            sql += ` and date >= '${start}' and date <= '${end}' `
+        }
+
+        try {
+            await this.getConnection();
+            let objects = await this.connection.all(sql);
+            //foreach, get the total and the tax
+            let total = 0;
+            for (var i = 0; i < objects.length; i++) {
+                let curr = objects[i];
+                let products_total = await this.connection.get(`select sum(quantity * price) as total from ${this.details_table_name} where code = '${curr.code}' `);
+                total += products_total.total == null ? 0 : curr.tax/100 * products_total.total
+                //get the total
+
+            }
+            return total;
+        } catch (error) {
+            log.error(error);
+            throw new Error(error)
+        }
+    }
+
+
     //payment_method = 'Credit' and
     /**
          * get the credit sales for a period

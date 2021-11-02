@@ -48,7 +48,7 @@ router.get('/getList', async (req, res) => {
         res.json({ status: '1', data: objects })
     } catch (error) {
         await helper.closeConnection();
-        log.error(error)
+        log.error(error);
         res.json({ status: '-1', data: null })
     }
 
@@ -122,7 +122,7 @@ router.post('/saveBulk', async (req, res) => {
         res.json({ status: '1', code: code })
     } catch (error) {
         await helper.closeConnection();
-        log.error(error)
+        log.error(error);
         //console.l.log(error)
         res.json({ status: '-1' })
     }
@@ -163,7 +163,7 @@ router.get('/getDetails', async (req, res) => {
     } catch (error) {
         await helper.closeConnection();
         //console.l.log(error)
-        log.error(error)
+        log.error(error);
         res.json({ status: '-1', data: null })
     }
 
@@ -269,7 +269,7 @@ router.post('/deleteItem', async (req, res) => {
     } catch (error) {
         await helper.closeConnection();
         //console.l.log(error)
-        log.error(error)
+        log.error(error);
         res.json({ status: '-1', data: null })
     }
 
@@ -305,7 +305,7 @@ router.post('/deleteReceivedItem', async (req, res) => {
     } catch (error) {
         await helper.closeConnection();
         //console.l.log(error)
-        log.error(error)
+        log.error(error);
         res.json({ status: '-1', data: null })
     }
 
@@ -397,7 +397,7 @@ router.get('/findReceiptsBetweenDates', async (req, res) => {
     } catch (error) {
         await helper.closeConnection();
         //console.l.log(error)
-        log.error(error)
+        log.error(error);
         res.json({ status: '-1', data: null })
     }
 
@@ -423,7 +423,7 @@ router.get('/findSentReceiptsBetweenDates', async (req, res) => {
         for (var i = 0; i < objects.length; i++) {
             var obj = objects[i];
             obj.total_amount = await detailsHelper.getReceiptTotal(obj.code);
-            console.log(obj.code, obj.total_amount)
+            // console.log(obj.code, obj.total_amount)
 
             obj.num_of_items = await detailsHelper.getNumItems(obj.code);
             obj.display_name = await adminHelper.getUserName(obj.created_by)
@@ -441,7 +441,7 @@ router.get('/findSentReceiptsBetweenDates', async (req, res) => {
     } catch (error) {
         await helper.closeConnection();
         //console.l.log(error)
-        log.error(error)
+        log.error(error);
         res.json({ status: '-1', data: null })
     }
 
@@ -475,7 +475,7 @@ router.get('/findReceiptsByBranch', async (req, res) => {
     } catch (error) {
         await helper.closeConnection();
         //console.l.log(error)
-        log.error(error)
+        log.error(error);
         res.json({ status: '-1', data: null })
     }
 
@@ -509,7 +509,7 @@ router.get('/findReceiptsByReceivingBranch', async (req, res) => {
     } catch (error) {
         await helper.closeConnection();
         //console.l.log(error)
-        log.error(error)
+        log.error(error);
         res.json({ status: '-1', data: null })
     }
 

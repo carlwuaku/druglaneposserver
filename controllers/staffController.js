@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const constants = require('../constants');
 
-
+const adminService = require('../services/admin_service')
 
 const ActivitiesHelper = require('../helpers/activitiesHelper');
 
@@ -15,55 +15,19 @@ const CustomerHelper = require('../helpers/customerHelper.js');
 const customerHelper = new CustomerHelper();
 
 
+
 const log = require('electron-log');
 
 
 router.post('/login', async (req, res) => {
 
-	var bcrypt = require('bcryptjs');
-	var username = req.body.username;
-	var password = req.body.password;
 	try {
-		var login = await helper.login(username, password);
-		if (!login) {
-			//wrong combination
-			res.json({ status: 0, user_data: login })
 
-		}
-		else {
-			//create a session
-			const now = new Date();
-			var hash = bcrypt.hashSync(username + now, 10);
-			expires = now.getDate() + 3;
-			var session_obj = { user_id: login.id, token: `'${hash}'`, expires: `'${expires}'` }
-			await helper.insert(session_obj, helper.sessions_table);
-			login.token = hash;
-			login.role = login.role_id;
-			login.permissions = await helper.getRolePermissions(login.role_id, 'strings');
-
-			let settingsHelper = require('../helpers/settingsHelper');
-			let sh = new settingsHelper();
-			login.company_name = await sh.getSetting(`'company_name'`);
-			login.company_phone = await sh.getSetting(`'phone'`);
-			login.company_address = await sh.getSetting(`'address'`);
-			login.digital_address = await sh.getSetting(`'digital_address'`);
-			login.number_of_shifts = await sh.getSetting(`'number_of_shifts'`);
-			login.company = {
-				id: 0, name: login.company_name, address: login.company_address,
-				phone: login.company_phone, digital_address: login.digital_address
-			}
-			login.company_id = 0;
-			login.parent_company = { id: 0, name: 'default' };
-
-
-			login.type = "staff";
-			await activitiesHelper.log(login.id, "'logged in'")
-
-			res.json({ status: 1, user_data: login })
-		}
+		var login = await adminService.login_function(req.body);// helper.login(username, password);
+		res.json(login);
 
 	} catch (error) {
-		await helper.closeConnection();
+		// await helper.closeConnection();
 		//console.log(error)
 		res.json({ status: -1, user_data: null })
 	}
@@ -75,21 +39,21 @@ router.post('/login', async (req, res) => {
 
 router.get('/getBranches', async (req, res) => {
 	try {
-		let query = await helper.getAll(helper.branches_table_name);
-		res.json({ status: '1', data: query })
+		let data = await adminService.get_branches_function();  //helper.getAll(helper.branches_table_name);
+		res.json(data)
 	} catch (error) {
-		await helper.closeConnection();
+		// await helper.closeConnection();
 		//console.log(error);
 		res.json({ status: '-1', data: null })
 	}
 })
 
+
 router.get('/getLogo', async (req, res) => {
+
 	try {
-		let settingsHelper = require('../helpers/settingsHelper');
-    let sh = new settingsHelper();
-		let logo = await sh.getSetting(`'logo'`);
-		res.json({ status: '1', data: 'assets/images/'+logo })
+		let data = await adminService.get_logo_function();
+		res.json(data);
 	} catch (error) {
 		await helper.closeConnection();
 		console.log(error);
@@ -102,12 +66,8 @@ router.get('/getLogo', async (req, res) => {
 
 router.post('/saveBranch', async (req, res) => {
 	try {
-		let data = {
-			name: `'${req.body.name}'`,
-			phone: `'${req.body.phone}'`
-		}
-		let id = await helper.insert(data, helper.branches_table_name)
-		res.json({ status: id })
+		let data = await adminService.save_branch_function(req.body);
+		res.json(data);
 	} catch (error) {
 		await helper.closeConnection();
 		//console.log(error);
@@ -117,8 +77,8 @@ router.post('/saveBranch', async (req, res) => {
 
 router.get('/getInsurers', async (req, res) => {
 	try {
-		let query = await helper.getAll(helper.insurers_table_name);
-		res.json({ status: '1', data: query })
+		let data = await adminService.get_insurers_function();
+		res.json(data);
 	} catch (error) {
 		await helper.closeConnection();
 		//console.log(error);
@@ -128,52 +88,36 @@ router.get('/getInsurers', async (req, res) => {
 
 router.post('/addInsurer', async (req, res) => {
 	try {
-		let data = { name: `'${req.body.name}'` }
-		await helper.insert(data, helper.insurers_table_name);
-		res.json({ status: '1' })
+		let data = await adminService.add_insurer_function(req.body);
+		res.json(data);
 	} catch (error) {
 		await helper.closeConnection();
 		//console.log(error);
-		log.error(error)
+		log.error(error);
 		res.json({ status: '-1', data: null })
 	}
 });
 
 router.post('/deleteInsurer', async (req, res) => {
 	try {
-		await helper.delete(` name = '${req.body.name}'`, helper.insurers_table_name);
-		res.json({ status: '1' })
+		let data = await adminService.delete_insurer_function(req.body);
+		res.json(data);
 	} catch (error) {
 		await helper.closeConnection();
 		//console.log(error);
-		log.error(error)
-		res.json({ status: '-1', data: null })
+		log.error(error);
+		res.json({ status: '-1', data: null });
 	}
 });
 
 router.get('/getAllActivities', async (req, res) => {
-	let offset = req.query.offset == undefined ? 0 : req.query.offset;
-	let limit = req.query.limit == undefined ? null : req.query.limit;
-	let start = req.query.start_date == undefined ? null : req.query.start_date;
-	let end = req.query.end_date == undefined ? null : req.query.end_date;
+
+
+
 
 	try {
-		let objects;
-		if (start == null) {
-			objects = await activitiesHelper.getAll(activitiesHelper.table_name, limit, offset);
-		}
-		else {
-			objects = await activitiesHelper.getMany(`  created_on >= '${start} 00:00:00' and created_on <= '${end} 23:59:59'`, activitiesHelper.table_name, limit, offset);
-
-		}
-
-		for (var i = 0; i < objects.length; i++) {
-			var obj = objects[i];
-			obj.user = await helper.getItem(` id = ${obj.user_id} `, helper.table_name)
-
-		}
-		//console.log(objects)
-		res.json({ status: '1', data: objects })
+		let data = await adminService.get_all_activities_function(req.query);
+		res.json(data);
 	} catch (error) {
 		await helper.closeConnection();
 		res.json({ status: '-1', data: null })
@@ -183,18 +127,9 @@ router.get('/getAllActivities', async (req, res) => {
 
 
 router.get('/getActivities', async (req, res) => {
-	let reg = req.query.r;
-	let offset = req.query.offset == undefined ? 0 : req.query.offset;
-	let limit = req.query.limit == undefined ? null : req.query.limit;
 	try {
-		let objects = await activitiesHelper.getMany(` activity like '%${reg}%'`, activitiesHelper.table_name, limit, offset);
-		for (var i = 0; i < objects.length; i++) {
-			var obj = objects[i];
-			obj.user = await helper.getItem(` id = ${obj.user_id} `, helper.table_name)
-
-		}
-
-		res.json({ status: '1', data: objects })
+		let data = await adminService.get_activities_function(req.query);
+		res.json(data);
 	} catch (error) {
 		await helper.closeConnection();
 		res.json({ status: '-1', data: null })
@@ -203,24 +138,13 @@ router.get('/getActivities', async (req, res) => {
 });
 
 router.get('/getUserActivities/:id', async (req, res) => {
-	let reg = req.params.id;
-	let offset = req.query.offset == undefined ? 0 : req.query.offset;
-	let limit = req.query.limit == undefined ? null : req.query.limit;
-	let user = await helper.getItem(` id  = ${reg} `, helper.table_name);
-	let start = req.query.start_date == undefined ? null : req.query.start_date;
-	let end = req.query.end_date == undefined ? null : req.query.end_date;
+
 
 	try {
-		let where = start == null ? `user_id = ${reg}` : ` user_id = ${reg} and created_on >= '${start} 00:00:00' and created_on <= '${end} 23:59:59'`;
-		let objects = await activitiesHelper.getMany(where, activitiesHelper.table_name, limit, offset);
-		let total = await activitiesHelper.countBy(where, activitiesHelper.table_name)
-		for (var i = 0; i < objects.length; i++) {
-			var obj = objects[i];
-			obj.user = await helper.getItem(` id = ${obj.user_id} `, helper.table_name)
+		req.query.id = req.params.id
+		let data = await adminService.get_user_activities_function(req.query);
+		res.json(data);
 
-		}
-
-		res.json({ status: '1', data: objects, total: total, limit: limit, user: user })
 	} catch (error) {
 		await helper.closeConnection();
 		//console.log(error)
@@ -232,14 +156,9 @@ router.get('/getUserActivities/:id', async (req, res) => {
 router.get('/getUsers', async (req, res) => {
 	try {
 
+		let data = await adminService.get_users_function();
+		res.json(data);
 
-		let objects = await helper.getAll(helper.table_name);
-		for (var i = 0; i < objects.length; i++) {
-			var obj = objects[i];
-			obj.role = await helper.getItem(` role_id = ${obj.role_id} `, helper.roles_table)
-
-		}
-		res.json({ status: '1', data: objects })
 	} catch (error) {
 		await helper.closeConnection();
 		//console.log(error)
@@ -286,36 +205,10 @@ router.get('/userForm', async (req, res) => {
 
 router.post('/saveUser', async (req, res) => {
 	try {
-		let h = helper;
-		let id = req.body.id;
 
-		if (id !== undefined) {
-			let data = h.prep_data(req.body);
-			//update. else insert
-			var password = req.body.password;
-			//console.log(password)
-			if (password !== undefined && password !== null && password != "undefined") {
-				var bcrypt = require('bcryptjs');
-				var hash = bcrypt.hashSync(password, 10);
-				data.password_hash = `'${hash}'`;
-			}
-			else {
-				delete data.password;
-			}
-			//console.log(data)
-			let where = ` id = ${id} `;
-			await h.update(data, where, h.table_name);
-		}
-		else {
-			var bcrypt = require('bcryptjs');
-			var password = req.body.password;
-			var hash = bcrypt.hashSync(password, 10);
-			var data = h.prep_data(req.body);
-			data.password_hash = `'${hash}'`
-			await h.insert(data, h.table_name);
+		let data = await adminService.save_user_function(req.body);
+		res.json(data);
 
-		}
-		res.json({ status: '1', data: null })
 	} catch (error) {
 		await helper.closeConnection();
 		//console.log(error)
@@ -332,17 +225,15 @@ router.post('/saveUser', async (req, res) => {
 
 router.post('/deleteUser', async (req, res) => {
 
-	let id = req.body.id;
-	let user = await helper.getUserName(id)
-	//console.log(id)
+
 	try {
 
-		await helper.delete(`id = ${id}`, helper.table_name);
-		await activitiesHelper.log(req.userid, `'deleted user ${user}'`)
-		res.json({ status: '1' })
+		let data = await adminService.delete_user_function(req.body);
+		res.json(data);
+
 	} catch (error) {
 		await helper.closeConnection();
-		log.error(error)
+		log.error(error);
 		res.json({ status: '-1' })
 	}
 
@@ -350,11 +241,10 @@ router.post('/deleteUser', async (req, res) => {
 
 router.get('/getUser/:id', async (req, res) => {
 	try {
-		let user = req.params.id;
 
-		let object = await helper.getItem(`id = ${user}`, helper.table_name);
-		object.role = await helper.getItem(`role_id = ${object.role_id}`, helper.roles_table)
-		res.json({ status: '1', data: object })
+		let data = await adminService.get_user_function(req.params);
+		res.json(data);
+
 	} catch (error) {
 		await helper.closeConnection();
 		log.error(error)
@@ -365,8 +255,8 @@ router.get('/getUser/:id', async (req, res) => {
 
 router.get('/getRoles', async (req, res) => {
 	try {
-		let objects = await helper.getRoles();
-		res.json({ status: '1', data: objects })
+		let data = await adminService.get_roles_function();
+		res.json(data);
 	} catch (error) {
 		await helper.closeConnection();
 		log.error(error)
@@ -377,8 +267,8 @@ router.get('/getRoles', async (req, res) => {
 
 router.get('/getRolesLimit', async (req, res) => {
 	try {
-		let objects = await helper.getRoles();
-		res.json({ status: '1', data: objects })
+		let data = await adminService.get_roles_limit_function();
+		res.json(data);
 	} catch (error) {
 		await helper.closeConnection();
 		log.error(error)
@@ -391,11 +281,8 @@ router.get('/getRolesLimit', async (req, res) => {
 
 router.get('/getRolePermissions/:id', async (req, res) => {
 	try {
-		let h = helper;
-		let id = req.params.id;
-		var rp = await h.getRolePermissions(id);
-
-		res.json({ status: '1', data: rp })
+		let data = await adminService.get_role_permissions_function(req.params);
+		res.json(data);
 	} catch (error) {
 		await helper.closeConnection();
 		log.error(error)
@@ -406,24 +293,8 @@ router.get('/getRolePermissions/:id', async (req, res) => {
 
 router.get('/getRoleExcludedPermissions/:id', async (req, res) => {
 	try {
-		let h = helper;
-		let id = req.params.id;
-		var rp = await h.getRolePermissions(id);
-		var allpermissions = await h.getPermissions();
-
-		var permission_ids = [];
-		for (var i = 0; i < rp.length; i++) {
-			permission_ids.push(rp[i].permission_id);
-		}
-		//console.log(permission_ids)
-		let objects = [];
-		for (var j = 0; j < allpermissions.length; j++) {
-			//console.log(allpermissions[j].permission_id)
-			if (permission_ids.indexOf(allpermissions[j].permission_id) == -1) {
-				objects.push(allpermissions[j])
-			}
-		}
-		res.json({ status: '1', data: objects })
+		let data = await adminService.get_role_excluded_permissions_function(req.params);
+		res.json(data);
 	} catch (error) {
 		await helper.closeConnection();
 		//console.log(error)
@@ -435,18 +306,10 @@ router.get('/getRoleExcludedPermissions/:id', async (req, res) => {
 
 
 router.post('/activateUser', async (req, res) => {
-	let h = helper
-	let id = req.body.id;
-	let active = req.body.active;
 
-	//console.log(id)
 	try {
-		let user = await helper.getUserName(id)
-		let data = { active: active }
-		await h.update(data, `id = ${id}`, h.table_name);
-
-		await activitiesHelper.log(req.userid, `'updated user status ${user} to ${active}'`)
-		res.json({ status: '1' })
+		let data = await adminService.activate_user_function(req.body);
+		res.json(data);
 	} catch (error) {
 		await helper.closeConnection();
 		//console.log(error)
@@ -505,19 +368,10 @@ router.get('/userRole', async (req, res) => {
 
 
 router.post('/addRole', async (req, res) => {
-	let h = helper;
-	let id = req.body.id;
-	let permissions = req.body.role_permissions
-	//console.log(req.body)
+
 	try {
-		let data = {};
-		data.role_name = `'${req.body.role_name}'`;
-		data.description = `'${req.body.description}'`;
-
-		id = await h.insert(data, h.roles_table);
-
-		res.json({ status: `'${id}'` })
-		// await h.insertMany(['role_id, permission_id', perms, h.role_permissions_table])
+		let data = await adminService.add_role_function(req.body);
+		res.json(data);
 	} catch (error) {
 		await helper.closeConnection();
 		//console.log(error)
@@ -531,19 +385,12 @@ router.post('/addRole', async (req, res) => {
 
 
 router.post('/deleteRole', async (req, res) => {
-	let h = helper;
-	const ah = activitiesHelper;
 
-	let id = req.body.id;
-	let name = req.body.name;
 	try {
-		//delete the role permissions, users
-		await h.delete(`role_id = ${id}`, h.role_permissions_table);
-		await h.delete(`role_id = ${id}`, h.table_name);
-		await h.delete(`role_id = ${id}`, h.roles_table);
-		await ah.log(req.userid, `'deleted a role ${name}'`);
+		let data = await adminService.delete_role_function(req.body);
+		res.json(data);
 
-		res.json({ status: '1' })
+
 	} catch (error) {
 		await helper.closeConnection();
 		log.error(error)
@@ -558,12 +405,11 @@ router.post('/deleteRole', async (req, res) => {
 });
 
 router.get('/getRole/:id', async (req, res) => {
-	let h = helper
-	let id = req.params.id;
 
 	try {
-		let object = await helper.getItem(`role_id = ${id}`, helper.roles_table)
-		res.json({ status: '1', data: object })
+		let data = await adminService.get_role_function(req.params);
+		res.json(data);
+
 	} catch (error) {
 		await helper.closeConnection();
 		log.error(error)
@@ -573,16 +419,10 @@ router.get('/getRole/:id', async (req, res) => {
 });
 
 router.post('/addRolePermission', async (req, res) => {
-	let role_id = req.body.role_id;
-	let permission_id = req.body.permission_id;
-	let data = {
-		role_id: role_id,
-		permission_id: permission_id
-	}
+
 	try {
-		await helper.insert(data, helper.role_permissions_table)
-		await activitiesHelper.log(req.userid, `' added a permission to role: ${role_id}'`)
-		res.json({ status: '1' })
+		let data = await adminService.add_role_rermission_function(req.body);
+		res.json(data);
 	} catch (error) {
 		await helper.closeConnection();
 		log.error(error)
@@ -592,13 +432,10 @@ router.post('/addRolePermission', async (req, res) => {
 });
 
 router.post('/deleteRolePermission', async (req, res) => {
-	let role_id = req.body.role_id;
-	let permission_id = req.body.permission_id;
 
 	try {
-		await helper.delete(`role_id = ${role_id} and permission_id = ${permission_id} `, helper.role_permissions_table)
-		await activitiesHelper.log(req.userid, `' deleted a permission from role: ${role_id}'`)
-		res.json({ status: '1' })
+		let data = await adminService.delete_role_permission_function(req.body);
+		res.json(data);
 	} catch (error) {
 		await helper.closeConnection();
 		//console.log(error)
@@ -609,30 +446,9 @@ router.post('/deleteRolePermission', async (req, res) => {
 
 router.post('/changeStaffPassword', async (req, res) => {
 
-	var bcrypt = require('bcryptjs');
-	var username = req.body.username;
-	var password = req.body.password;
-	var id = req.body.id;
-	var old = req.body.old_password
 	try {
-		var login = await helper.login(username, old);
-		if (!login) {
-			//wrong combination
-			res.json({ status: "-1", message: "The old password is wrong. Try again" })
-
-		}
-		else {
-			//update with the new one
-			var hash = bcrypt.hashSync(password, 10);
-			var data = {
-				password_hash: `'${hash}'`
-			}
-			await helper.update(data, ` id = ${id} `, helper.table_name)
-
-			await activitiesHelper.log(login.id, "'updated own password'")
-
-			res.json({ status: "1" })
-		}
+		let data = await adminService.change_staff_password_function(req.body);
+		res.json(data);
 
 	} catch (error) {
 		await helper.closeConnection();
@@ -646,12 +462,8 @@ router.post('/changeStaffPassword', async (req, res) => {
 
 router.get('/getSetting', async (req, res) => {
 	try {
-		let setting = req.query.setting;
-		let settingsHelper = require('../helpers/settingsHelper');
-		let sh = new settingsHelper();
-		let result = await sh.getSetting(`'${setting}'`);
-
-		res.json({ status: '1', data: result })
+		let data = await adminService.get_setting_function(req.query);
+		res.json(data);
 	} catch (error) {
 		await helper.closeConnection();
 		log.error(error)
@@ -664,20 +476,13 @@ router.get('/getSetting', async (req, res) => {
 
 router.post('/saveOutgoingPayment', async (req, res) => {
 	try {
-		let helperClass = require('../helpers/outgoingPaymentHelper')
-		let h = new helperClass();
-
-		let data = h.prep_data(req.body);
-		data.created_by = req.userid;
-		// //console.log(data)
-		await h.insert(data, h.table_name);
-
-		res.json({ status: '1', data: null })
+		let data = await adminService.save_outgoing_payment_function(req.body);
+		res.json(data);
 	} catch (error) {
 		await helper.closeConnection();
 		//console.log(error)
-		log.error(error)
-		res.json({ status: '-1', data: null })
+		log.error(error);
+		res.json({ status: '-1', data: null });
 	}
 
 
@@ -688,79 +493,22 @@ router.post('/saveOutgoingPayment', async (req, res) => {
 
 router.get('/findOutgoingPaymentsBetweenDates', async (req, res) => {
 	try {
-		let helperClass = require('../helpers/outgoingPaymentHelper')
-		let h = new helperClass();
-		let vendorClass = require('../helpers/vendorHelper');
-		let vendorHelper = new vendorClass();
-
-		let start = req.query.start_date == undefined ? h.getToday() : req.query.start_date;
-		let end = req.query.end_date == undefined ? h.getToday() : req.query.end_date;
-		let code = req.query.code;
-		let type = req.query.type
-
-		let objects = null;
-		if (code != undefined) {
-			objects = await h.search(code)
-		}
-		else if (type != undefined) {
-			objects = await h.getMany(` date >= '${start}' and date <= '${end}' and type ='${type}'`, h.table_name);
-		}
-		else {
-			objects = await h.getMany(` date >= '${start}' and date <= '${end}' `, h.table_name);
-
-		}
-
-		for (var i = 0; i < objects.length; i++) {
-			var obj = objects[i];
-			//if a purchase credit, get the vendor
-			if (obj.type == 'Credit Purchase Payment') {
-				try {
-					let vendor = await vendorHelper.getItem(` id = ${obj.recipient}`, vendorHelper.table_name);
-					obj.recipient = vendor.name;
-				} catch (error) {
-					log.error(error)
-					obj.recipient = 'Unknown Vendor';
-
-				}
-
-			}
-
-
-		}
-
-
-		res.json({
-			status: '1',
-			data: objects
-		})
+		let data = await adminService.find_outgoing_payments_between_dates_function(req.query);
+		res.json(data);
 	} catch (error) {
 		await helper.closeConnection();
 		// //console.log(error)
-		log.error(error)
+		log.error(error);
 		res.json({ status: '-1', data: null })
 	}
 
 });
 
 router.post('/deletePayment', async (req, res) => {
-	let helperClass = require('../helpers/outgoingPaymentHelper')
-	let h = new helperClass();
+
 	try {
-		let codes = req.body.code.split(",");//comma-separated
-		let code_quotes = []
-		for (var i = 0; i < codes.length; i++) {
-			code_quotes.push(`${codes[i]}`)
-		}
-
-
-		await h.delete(` id in (${code_quotes.join(",")}) `, h.table_name);
-		await activitiesHelper.log(req.query.userid, `"deleted  payment receipt: ${code_quotes.join(",")}  "`, `'Accounts'`)
-
-
-
-		res.json({
-			status: '1'
-		})
+		let data = await adminService.delete_payment_function(req.body);
+		res.json(data);
 	} catch (error) {
 		await helper.closeConnection();
 		log.error(error)
@@ -771,46 +519,12 @@ router.post('/deletePayment', async (req, res) => {
 
 router.get('/findVendorOutgoingPaymentsBetweenDates', async (req, res) => {
 	try {
-		let helperClass = require('../helpers/outgoingPaymentHelper')
-		let h = new helperClass();
-		let vendorClass = require('../helpers/vendorHelper');
-		let vendorHelper = new vendorClass();
-
-		let start = req.query.start_date == undefined ? h.getToday() : req.query.start_date;
-		let end = req.query.end_date == undefined ? h.getToday() : req.query.end_date;
-		let vendor = req.query.vendor;
-
-		let objects = null;
-		objects = await h.getMany(` recipient = ${vendor} and date >= '${start}' and date <= '${end}' `, h.table_name);
-
-
-		for (var i = 0; i < objects.length; i++) {
-			var obj = objects[i];
-			//if a purchase credit, get the vendor
-			if (obj.type == 'Credit Purchase Payment') {
-				try {
-					let vendor = await vendorHelper.getItem(` id = ${obj.recipient}`, vendorHelper.table_name);
-					obj.recipient = vendor.name;
-				} catch (error) {
-					log.error(error)
-					obj.recipient = 'Unknown Vendor';
-
-				}
-
-			}
-
-
-		}
-
-
-		res.json({
-			status: '1',
-			data: objects
-		})
+		let data = await adminService.find_vendor_outgoing_payments_between_dates_function(req.query);
+		res.json(data);
 	} catch (error) {
 		await helper.closeConnection();
 		// //console.log(error)
-		log.error(error)
+		log.error(error);
 		res.json({ status: '-1', data: null })
 	}
 
@@ -821,46 +535,12 @@ router.get('/findVendorOutgoingPaymentsBetweenDates', async (req, res) => {
 
 router.get('/getPaymentRecipients', async (req, res) => {
 	try {
-		let helperClass = require('../helpers/outgoingPaymentHelper')
-		let h = new helperClass();
-		let vendorClass = require('../helpers/vendorHelper');
-		let vendorHelper = new vendorClass();
-
-		let start = req.query.start_date == undefined ? h.getToday() : req.query.start_date;
-		let end = req.query.end_date == undefined ? h.getToday() : req.query.end_date;
-		let vendor = req.query.vendor;
-
-		let objects = null;
-		objects = await h.getMany(` recipient = ${vendor} and date >= '${start}' and date <= '${end}' `, h.table_name);
-
-
-		for (var i = 0; i < objects.length; i++) {
-			var obj = objects[i];
-			//if a purchase credit, get the vendor
-			if (obj.type == 'Credit Purchase Payment') {
-				try {
-					let vendor = await vendorHelper.getItem(` id = ${obj.recipient}`, vendorHelper.table_name);
-					obj.recipient = vendor.name;
-				} catch (error) {
-					log.error(error)
-					obj.recipient = 'Unknown Vendor';
-
-				}
-
-			}
-
-
-		}
-
-
-		res.json({
-			status: '1',
-			data: objects
-		})
+		let data = await adminService.get_payment_recipients_function(req.query);
+		res.json(data);
 	} catch (error) {
 		await helper.closeConnection();
 		// //console.log(error)
-		log.error(error)
+		log.error(error);
 		res.json({ status: '-1', data: null })
 	}
 
@@ -869,64 +549,12 @@ router.get('/getPaymentRecipients', async (req, res) => {
 
 router.get('/getAccountingReport', async (req, res) => {
 	try {
-	let defs = helper.setDates('this_month')
-	let start = req.query.start_date == undefined ? defs.start_date : req.query.start_date;
-	let end = req.query.end_date == undefined ? defs.end_date : req.query.end_date;
-	
-
-	const SalesDetailsHelper = require('../helpers/salesDetailsHelper.js');
-	const salesDetailsHelper = new SalesDetailsHelper();
-
-	const purchaseDetailsHelper = require("../helpers/purchaseDetailsHelper")
-	const pDetailsHelper = new purchaseDetailsHelper()
-
-	const tDetailsClass = require('../helpers/transferDetailsHelper.js');
-	const tdetailsHelper = new tDetailsClass();
-
-	const rDetailsClass = require('../helpers/receivedTransferDetailsHelper.js');
-	const rdetailsHelper = new rDetailsClass();
-
-	let stockValueClass = require('../helpers/stockValueHelper')
-	let stockValueHelper = new stockValueClass();
-
-	let paymentClass = require('../helpers/outgoingPaymentHelper')
-	let paymentHelper = new paymentClass();
-
-
-let outgoingHelperClass = require('../helpers/outgoingPaymentHelper')
-	let h = new outgoingHelperClass();
-
-	let sales = await salesDetailsHelper.getTotalSales(start, end);
-	let purchases = await pDetailsHelper.getTotalPurchase(start, end)
-	let transfers_out = await tdetailsHelper.getTotal(start, end)
-	let transfers = await rdetailsHelper.getTotal(start, end)
-	let starting_stock = await stockValueHelper.getStockCostValueByDate(start);
-	let closing_stock = await stockValueHelper.getStockCostValueByDate(end);
-	let expenses = await h.getAllTotalPaid('', start, end);
-	let expenses_list = await h.getPaymentsGrouped(start, end);
-
-	let difference = sales+ purchases- ( starting_stock - closing_stock) - expenses
-		let profit = difference > 0
-		let formula = `Total sales made + Total purchases made - ( Starting stock - Closing stock) - Total expenses`
-
-
-		res.json({
-			status: '1',
-			total_purchase: purchases.toLocaleString(),
-			total_sale: sales.toLocaleString(),
-			starting_stock: starting_stock.toLocaleString(),
-			closing_stock: closing_stock.toLocaleString(),
-			expenses: expenses.toLocaleString(),
-			profit: profit,
-			difference: difference.toLocaleString(),
-			expenses_list: expenses_list,
-			formula
-
-		})
+		let data = await adminService.get_accounting_report_function(req.query);
+		res.json(data);
 	} catch (error) {
 		await helper.closeConnection();
 		// //console.log(error)
-		log.error(error)
+		log.error(error);
 		res.json({ status: '-1', data: null })
 	}
 
@@ -936,39 +564,12 @@ let outgoingHelperClass = require('../helpers/outgoingPaymentHelper')
 ////////////////INCOMING PAYMENTS//////////////////////
 router.post('/saveIncomingPayment', async (req, res) => {
 	try {
-		let helperClass = require('../helpers/incomingPaymentHelper')
-		let h = new helperClass();
-
-		let data = h.prep_data(req.body);
-		data.created_by = req.userid;
-
-		try {
-			let customer_phone = req.body.customer_phone;
-			//get the customer who matches the name
-			let cust_details = await customerHelper.getItem(` phone = "${customer_phone}" `, customerHelper.table_name);
-			if (cust_details == null) {
-				//save the person
-				data.payer =
-				 await customerHelper.insert({
-					name: `"${req.body.customer_name}"`,
-					phone: `"${req.body.customer_phone}"`
-				}, customerHelper.table_name)
-			}
-			// sales_data.customer = `"${req.body.customer_name} - ${req.body.customer_phone}"`;
-			 
-		} catch (error) {
-			console.log(error)
-		}
-
-
-		// //console.log(data)
-		await h.insert(data, h.table_name);
-
-		res.json({ status: '1', data: null })
+		let data = await adminService.save_incoming_payment_function(req.body);
+		res.json(data);
 	} catch (error) {
 		await helper.closeConnection();
 		//console.log(error)
-		log.error(error)
+		log.error(error);
 		res.json({ status: '-1', data: null })
 	}
 
@@ -980,50 +581,12 @@ router.post('/saveIncomingPayment', async (req, res) => {
 
 router.get('/findIncomingPaymentsBetweenDates', async (req, res) => {
 	try {
-		let helperClass = require('../helpers/incomingPaymentHelper')
-		let h = new helperClass();
-		
-		let start = req.query.start_date == undefined ? h.getToday() : req.query.start_date;
-		let end = req.query.end_date == undefined ? h.getToday() : req.query.end_date;
-		let code = req.query.code;
-		let type = req.query.type
-
-		let objects = null;
-		if (code != undefined) {
-			objects = await h.search(code)
-		}
-		else if (type != undefined) {
-			objects = await h.getMany(` date >= '${start}' and date <= '${end}' and type ='${type}'`, h.table_name);
-		}
-		else {
-			objects = await h.getMany(` date >= '${start}' and date <= '${end}' `, h.table_name);
-
-		}
-
-		for(var i = 0; i < objects.length; i++){
-			try {
-				let customer = await customerHelper.getItem(`id = ${objects[i].payer}`, customerHelper.table_name);
-				objects[i].customer_name = customer.name;
-				objects[i].phone = customer.phone;
-			} catch (error) {
-				console.log(error)
-				objects[i].customer_name = "N/A";
-				objects[i].phone = "N/A";
-			}
-
-		}
-
-		
-
-
-		res.json({
-			status: '1',
-			data: objects
-		})
+		let data = await adminService.find_incoming_payments_between_dates_function(req.query);
+		res.json(data);
 	} catch (error) {
 		await helper.closeConnection();
 		// //console.log(error)
-		log.error(error)
+		log.error(error);
 		res.json({ status: '-1', data: null })
 	}
 
@@ -1033,21 +596,8 @@ router.post('/deleteIncomingPayment', async (req, res) => {
 	let helperClass = require('../helpers/incomingPaymentHelper')
 	let h = new helperClass();
 	try {
-		let codes = req.body.id.split(",");//comma-separated
-		let code_quotes = []
-		for (var i = 0; i < codes.length; i++) {
-			code_quotes.push(`${codes[i]}`)
-		}
-
-
-		await h.delete(` id in (${code_quotes.join(",")}) `, h.table_name);
-		await activitiesHelper.log(req.query.userid, `"deleted credit payment receipt: ${code_quotes.join(",")}  "`, `'Accounts'`)
-
-
-
-		res.json({
-			status: '1'
-		})
+		let data = await adminService.delete_incoming_payment_function(req.body);
+		res.json(data);
 	} catch (error) {
 		await helper.closeConnection();
 		log.error(error)
@@ -1058,158 +608,161 @@ router.post('/deleteIncomingPayment', async (req, res) => {
 
 
 router.get('/getCustomerPayments', async (req, res) => {
-   
+
 	let helperClass = require('../helpers/incomingPaymentHelper')
 	let h = new helperClass();
-    try {
-        let id = req.query.customer;
+	try {
+		let id = req.query.customer;
 		let objects = await h.getMany(` payer = ${id}  `, h.table_name);
-		
 
-        // objects.map(obj => {
-        //     obj.stock = obj.current_stock
-        // })
-        res.json({ status: '1', data: objects })
-    } catch (error) {
-        await helper.closeConnection();
-        log.error(error)
-        res.json({ status: '-1', data: null })
-    }
+
+		// objects.map(obj => {
+		//     obj.stock = obj.current_stock
+		// })
+		res.json({ status: '1', data: objects })
+	} catch (error) {
+		await helper.closeConnection();
+		log.error(error)
+		res.json({ status: '-1', data: null })
+	}
 
 });
 ///////////////////END INCOMING PAYMENTS///////////////
 
 
 router.get('/resetUserPassword', async (req, res) => {
-    let Helper = require('../helpers/token');
-    let h = new Helper();
-    try {
+	let Helper = require('../helpers/token');
+	let h = new Helper();
+	try {
 
 
-        //if retry, do not regenerate the token.
-        if (req.query.retry == "1") {
-            message = req.query.message;
+		//if retry, do not regenerate the token.
+		if (req.query.retry == "1") {
+			message = req.query.message;
 
-            let data = { error: true, retry: true, message: message }
-            //render the page
-            res.render("resetPassword", data)
-            return false;
-        }
-        //check the username  or email
-        let user = req.query.user;
-        let AdminHelper = require("../helpers/adminHelper")
-        let adminHelper = new AdminHelper();
-        let user_details = await adminHelper.getItem(`lower(email) = lower('${user}') or lower(username) = lower('${user}')`, adminHelper.table_name);
-        //if found, generate the token and send the mail
-        if (user_details != null) {
-
-
-            //create a token and send it to the url
-            const crypto = require("crypto");
-
-            const token = crypto.randomBytes(5).toString("hex");
-            //insert it into the token table
-            //clear others
-            await h.delete(`name = 'reset_user_password_${user_details.email}'`, h.table_name)
-            await h.insert({ name: `'reset_user_password_${user_details.email}'`, token: `'${token}'` }, h.table_name)
-
-            const axios = require('axios');
+			let data = { error: true, retry: true, message: message }
+			//render the page
+			res.render("resetPassword", data)
+			return false;
+		}
+		//check the username  or email
+		let user = req.query.user;
+		let AdminHelper = require("../helpers/adminHelper")
+		let adminHelper = new AdminHelper();
+		let user_details = await adminHelper.getItem(`lower(email) = lower('${user}') or lower(username) = lower('${user}')`, adminHelper.table_name);
+		//if found, generate the token and send the mail
+		if (user_details != null) {
 
 
-            let email = user_details.email;
+			//create a token and send it to the url
+			const crypto = require("crypto");
 
-            message = `You have requested to reset your Druglane password. Please use this code as token in the reset page: ${token}.`;
-            // console.log(message)
+			const token = crypto.randomBytes(5).toString("hex");
+			//insert it into the token table
+			//clear others
+			await h.delete(`name = 'reset_user_password_${user_details.email}'`, h.table_name)
+			await h.insert({ name: `'reset_user_password_${user_details.email}'`, token: `'${token}'` }, h.table_name)
+
+			const axios = require('axios');
+
+
+			let email = user_details.email;
+
+			message = `You have requested to reset your Druglane password. Please use this code as token in the reset page: ${token}.`;
+			// console.log(message)
 			const FormData = require('form-data');
- 
-const form = new FormData();
-form.append('mails', email);
-form.append('message',message);
-form.append('subject', "Reset Druglane Password");
 
-        axios.post(constants.server_url + `/api_admin/sendBulkMail`, form,{ headers: form.getHeaders() })
+			const form = new FormData();
+			form.append('mails', email);
+			form.append('message', message);
+			form.append('subject', "Reset Druglane Password");
 
-            
-                .then(function (response) {
-                    console.log(response.data);
-                    let data = {
-                        error: false, retry: false, message: `Email sent to your email. Please 
+			axios.post(constants.server_url + `/api_admin/sendBulkMail`, form, { headers: form.getHeaders() })
+
+
+				.then(function (response) {
+					// console.log(response.data);
+					let data = {
+						error: false, retry: false, message: `Email sent to your email. Please 
             check your inbox to retrieve the token`}
-                    //render the page
-                    res.json(data);
-                })
-                .catch(function (error) {
-                    let data = {
-                        error: true, retry: false, message: `Unable to communicate with cloud server. Please 
+					//render the page
+					res.json(data);
+				})
+				.catch(function (error) {
+					let data = {
+						error: true, retry: false, message: `Unable to communicate with cloud server. Please 
             check your internet connection and try again`}
-                    res.json(data);
-                });
-        }
-        else{
-            let data = {
-                error: true, retry: false, message: `No username or email found. Please check and try 
+					res.json(data);
+				});
+		}
+		else {
+			let data = {
+				error: true, retry: false, message: `No username or email found. Please check and try 
                 again.`}
-            res.json(data);
-        }
+			res.json(data);
+		}
 
-    } catch (error) {
-        console.log(error);
-        let data = {
-            error: true, retry: false, message: `Server error. Please try again`}
-        res.json(data);
-    }
+	} catch (error) {
+		console.log(error);
+		let data = {
+			error: true, retry: false, message: `Server error. Please try again`
+		}
+		res.json(data);
+	}
 
 });
 
 
 router.post('/doResetUserPassword', async (req, res) => {
-    try {
-	let Helper = require('../helpers/token');
-    let h = new Helper();
-    const activityHelper = require('../helpers/activitiesHelper')
-    const ah = new activityHelper();
+	try {
+		let Helper = require('../helpers/token');
+		let h = new Helper();
+		const activityHelper = require('../helpers/activitiesHelper')
+		const ah = new activityHelper();
 
-    let token = req.body.token;
-    let password = req.body.password;
-    let email = req.body.username;
-    
-        var bcrypt = require('bcryptjs');
+		let token = req.body.token;
+		let password = req.body.password;
+		let email = req.body.username;
+
+		var bcrypt = require('bcryptjs');
 
 		let AdminHelper = require("../helpers/adminHelper")
-        let adminHelper = new AdminHelper();
-        let user_details = await adminHelper.getItem(`lower(email) = lower('${email}') or lower(username) = lower('${email}')`, adminHelper.table_name);
-        
-		if(user_details == null){
-			res.json({status: "-1",message: "Username or email not found"})
+		let adminHelper = new AdminHelper();
+		let user_details = await adminHelper.getItem(`lower(email) = lower('${email}') or lower(username) = lower('${email}')`, adminHelper.table_name);
+
+		if (user_details == null) {
+			res.json({ status: "-1", message: "Username or email not found" })
 			return false;
 		}
-        //get the setting admin_password
-        var old_token = await h.getField("token", h.table_name, `name = 'reset_user_password_${user_details.email}'`);
-        // console.log(old_token.token, token)
-        if (token == old_token.token) {
-            var hash = bcrypt.hashSync(password, 10);
+		//get the setting admin_password
+		var old_token = await h.getField("token", h.table_name, `name = 'reset_user_password_${user_details.email}'`);
+		// console.log(old_token.token, token)
+		if (token == old_token.token) {
+			var hash = bcrypt.hashSync(password, 10);
 
-                //set the new password
-                await adminHelper.updateField("password_hash", `'${hash}'`, `id = ${user_details.id}`, adminHelper.table_name)
-                res.json({status: "1",message: "Password reset successfully"})
+			//set the new password
+			await adminHelper.updateField("password_hash", `'${hash}'`, `id = ${user_details.id}`, adminHelper.table_name)
+			res.json({ status: "1", message: "Password reset successfully" })
 
-        } else {
-            // Passwords don't match
-			res.json({status: "-1",message: "Wrong token entered. Try again"})
+		} else {
+			// Passwords don't match
+			res.json({ status: "-1", message: "Wrong token entered. Try again" })
 
-        }
+		}
 
-    } catch (error) {
-        log.error(error)
-        console.log(error)
-		res.json({status: "-1",message: "Server error. Try again"})
+	} catch (error) {
+		log.error(error);
+		console.log(error);
+		res.json({ status: "-1", message: "Server error. Try again" })
 
-    }
+	}
 
 
 
 
 });
+
+
 
 
 //export the whole thingy

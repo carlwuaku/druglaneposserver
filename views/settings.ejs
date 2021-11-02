@@ -87,7 +87,18 @@
                                         <option <%= receipt_logo == 'no' ? 'selected' : '' %> value="no">No</option>
                                     </select>
                                     
-                                  
+                                </div>
+                                <div class="form-group">
+                                    <label class="control-label">Activate Batch Mode?</label>
+                                    <br>
+                                    <em class="text-muted">Setting this to yes will require users to enter 
+                                        batch number of each item being sold or received </em>
+                                    <br>
+                                    <select name="activate_batch_mode">
+                                        <option <%= activate_batch_mode == 'yes' ? 'selected' : '' %> value="yes">Yes</option>
+                                        <option <%= activate_batch_mode == 'no' ? 'selected' : '' %> value="no">No</option>
+                                    </select>
+                                    
                                 </div>
 
                                 
