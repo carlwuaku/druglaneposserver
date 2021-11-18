@@ -1,32 +1,14 @@
+
 const express = require('express');
 const router = express.Router();
 const log = require('electron-log');
-let constants = require('../constants')
 const service = require('../services/products_service')
 
 
 
 const Helper = require('../helpers/productHelper.js');
 const helper = new Helper();
-const ActivitiesHelper = require('../helpers/activitiesHelper');
-const activities = new ActivitiesHelper();
-let stockValueClass = require('../helpers/stockValueHelper')
-let stockValueHelper = new stockValueClass();
 
-let productBatchClass = require('../helpers/productBatchesHelper')
-let productBatchHelper = new productBatchClass();
-
-const DetailsHelper = require('../helpers/purchaseDetailsHelper.js');
-const purchaseDetailsHelper = new DetailsHelper();
-
-const SalesDetailsHelper = require('../helpers/salesDetailsHelper.js');
-const salesDetailsHelper = new SalesDetailsHelper();
-
-let vendorClass = require('../helpers/vendorHelper');
-let vendorHelper = new vendorClass();
-
-let adminClass = require('../helpers/adminHelper');
-let adminHelper = new adminClass();
 
 router.get('/getList', async (req, res) => {
     try {
@@ -213,7 +195,6 @@ router.get('/findById', async (req, res) => {
 		res.json(data);
 
 
-        res.json({ status: '1', data: item })
     } catch (error) {
         await helper.closeConnection();
         console.log(error)

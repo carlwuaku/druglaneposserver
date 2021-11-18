@@ -3,6 +3,7 @@ const router = express.Router();
 
 const Helper = require('../helpers/saleHelper.js');
 const helper = new Helper();
+const log = require('electron-log');
 
 
 const service = require('../services/sales_service');

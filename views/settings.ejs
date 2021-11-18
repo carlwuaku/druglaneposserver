@@ -21,7 +21,7 @@
                             <form action="saveSettings" method="POST">
                                 <div class="form-group">
                                     <label class="control-label">Company Name</label>
-                                    <input name="name" value="<%= name %>" required type="text" class="form-control">
+                                    <input name="name" value="<%= company_name %>" required type="text" class="form-control">
                                 </div>
 
                                 <div class="form-group">
@@ -101,6 +101,15 @@
                                     
                                 </div>
 
+                                <div class="form-group">
+                                    <label class="control-label">Sales Tax</label>
+                                    <br>
+                                    <em class="text-muted">Set the % to add to each sale as tax </em>
+                                    <br>
+                                    <input name="tax" value="<%= tax %>" required type="text"
+                                        class="form-control">
+                                    
+                                </div>
                                 
 
 

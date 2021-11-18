@@ -4,8 +4,17 @@
   "description": "Druglane POS local server. Client Version 0.1. last update 2021-07-07",
   "productName": "DruglaneServer",
   "main": "main.js",
+  "build": {
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "carlwuaku",
+        "repo": "druglaneposserver"
+      }
+    ]
+  },
   "scripts": {
-    "rebuild-sqlite": ".node_modules/.bin/electron-rebuild -w sqlite3 -p",
+    "rebuild-sqlite": "electron-rebuild -w sqlite3 -p",
     "start": "electron .",
     "dev": "nodemon --exec electron .",
     "package-mac": "electron-packager . --overwrite --platform=darwin --arch=x64 --icon=app/assets/icons/mac/icon.icns --prune=true --out=release-builds",
@@ -26,6 +35,7 @@
     "electron": "^9.0.0",
     "electron-builder": "^22.9.1",
     "electron-packager": "^14.2.1",
+    "electron-rebuild": "^3.2.5",
     "nodemon": "^2.0.4",
     "sequelize-cli": "^6.2.0"
   },
@@ -45,6 +55,7 @@
     "firebase-admin": "^9.7.0",
     "form-data": "^3.0.0",
     "formidable": "^1.2.2",
+    "image-to-base64": "^2.2.0",
     "ip": "^1.1.5",
     "md5": "^2.2.1",
     "moment": "^2.27.0",
@@ -59,5 +70,8 @@
     "sqlite3": "^5.0.0",
     "umzug": "^2.3.0",
     "xlsx": "^0.16.5"
-  }
+  },
+  "bundledDependencies": [
+    "express"
+  ]
 }

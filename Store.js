@@ -27,12 +27,19 @@ class Store{
 
 function parseDataFile(){
     try {
+        if(fs.existsSync(constants.settings_path)){
+            log.info('system-settings file found');
             return JSON.parse(fs.readFileSync(constants.settings_path))
-        
-       
-    } catch (error) {
+        }
+        else{
+            log.info('system-settings not file found');
+            return constants.default_config;
+
+        }
+            
+   } catch (error) {
         log.error(error)
-        console.log(error)
+        console.log(error);
         return constants.default_config;
     }
 }

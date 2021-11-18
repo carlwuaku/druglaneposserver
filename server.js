@@ -465,28 +465,59 @@ app.get('/settings', checkSignIn, async (req, res) => {
     let settingsHelper = require('./helpers/settingsHelper');
     let sh = new settingsHelper();
     let q = await sh.getAll(sh.table_name);
-    // console.log(q)
+    // console.log(q);
+    q.forEach(el => {
+        data[el.name] = el.value;
+    })
     // array.forEach(element => {
     //     data
     // });
-    data.name = await sh.getSetting(`'company_name'`);
-    data.phone = await sh.getSetting(`'phone'`);
-    data.email = await sh.getSetting(`'email'`);
-    data.address = await sh.getSetting(`'address'`);
-    data.digital_address = await sh.getSetting(`'digital_address'`);
-    data.number_of_shifts = await sh.getSetting(`'number_of_shifts'`);
-    data.restrict_zero_stock_sales = await sh.getSetting(`'restrict_zero_stock_sales'`);
-    data.logo = await sh.getSetting(`'logo'`);
-    data.receipt_logo = await sh.getSetting(`'receipt_logo'`);
-    data.activate_batch_mode = await sh.getSetting(`'activate_batch_mode'`);
+
+    // data.name = await sh.getSetting(`'company_name'`);
+    // data.phone = await sh.getSetting(`'phone'`);
+    // data.email = await sh.getSetting(`'email'`);
+    // data.address = await sh.getSetting(`'address'`);
+    // data.digital_address = await sh.getSetting(`'digital_address'`);
+    // data.number_of_shifts = await sh.getSetting(`'number_of_shifts'`);
+    // data.restrict_zero_stock_sales = await sh.getSetting(`'restrict_zero_stock_sales'`);
+    // data.logo = await sh.getSetting(`'logo'`);
+    // data.receipt_logo = await sh.getSetting(`'receipt_logo'`);
+    // data.activate_batch_mode = await sh.getSetting(`'activate_batch_mode'`);
+    // data.tax = await sh.getSetting(`'tax'`);
+    // console.log(data)
     res.render('settings', data);
     // res.sendFile(__dirname + '/app/index.html');
 });
 
 app.post('/saveSettings', checkSignIn, async (req, res) => {
-
+    try {
     let settingsHelper = require('./helpers/settingsHelper');
     let sh = new settingsHelper();
+    console.log(req.body);
+    var file = req.files.uploadfile
+        if (file != undefined && file != null) {
+
+            let filepath = path.join(constants.settings_location, file.name);
+
+            file.mv(filepath, async function (err) {
+                if (err) {
+                    log.error(err);
+
+                }
+                else {
+                    req.body.logo = `"${file.name}"`;
+                    
+                }
+            });
+        }
+
+    for (let key in req.body) {
+        //remove the " character as itcreates problems for the server
+  
+        let val = req.body[key]
+        sh.updateField('value', `"${val}"`,`name = '${key}'`,sh.table_name);
+        
+      }
     // var data = [
     //     {
     //         name: `'company_name'`,
@@ -526,136 +557,105 @@ app.post('/saveSettings', checkSignIn, async (req, res) => {
     //         module: `'System'`
     //     }
     // ]
-    try {
-        await sh.update({
+    
+        // await sh.update({
 
-            value: `'${req.body.name}'`,
+        //     value: `'${req.body.name}'`,
 
-        }, "name = 'company_name'", sh.table_name);
+        // }, "name = 'company_name'", sh.table_name);
 
-        await sh.update({
+        // await sh.update({
 
-            value: `'${req.body.phone}'`,
+        //     value: `'${req.body.phone}'`,
 
-        }, "name = 'phone'", sh.table_name);
+        // }, "name = 'phone'", sh.table_name);
 
-        await sh.update({
+        // await sh.update({
 
-            value: `'${req.body.email}'`,
+        //     value: `'${req.body.email}'`,
 
-        }, "name = 'email'", sh.table_name);
+        // }, "name = 'email'", sh.table_name);
 
-        await sh.update({
+        // await sh.update({
 
-            value: `'${req.body.address}'`,
+        //     value: `'${req.body.address}'`,
 
-        }, "name = 'address'", sh.table_name);
-
-
-        await sh.update({
-
-            value: `'${req.body.digital_address}'`,
-
-        }, "name = 'digital_address'", sh.table_name);
-
-        let q6_exists = await sh.getSetting(`'number_of_shifts'`);
-
-        if (q6_exists == null) {
-            var data = [
-
-                {
-                    name: `'number_of_shifts'`,
-                    value: req.body.number_of_shifts == null || req.body.number_of_shifts == undefined || req.body.number_of_shifts == '' ? 'Full Day' : `'${req.body.number_of_shifts}'`,
-
-                    module: `'System'`
-                }
-            ]
-            await sh.insertMany(sh.insert_fields, data, sh.table_name);
-        }
-        else {
-            await sh.update({
-
-                value: req.body.number_of_shifts == null || req.body.number_of_shifts == undefined || req.body.number_of_shifts == '' ? 'Full Day' : `'${req.body.number_of_shifts}'`,
-
-            }, "name = 'number_of_shifts'", sh.table_name);
-        }
+        // }, "name = 'address'", sh.table_name);
 
 
-        let logo_exists = await sh.getSetting(`'logo'`);
-        //upload the file here
-        var file = req.files.uploadfile
-        if (file != undefined && file != null) {
-            let filepath = path.join(constants.settings_location, file.name);
+        // await sh.update({
 
-            file.mv(filepath, async function (err) {
-                if (err) {
-                    log.error(err);
+        //     value: `'${req.body.digital_address}'`,
 
-                }
-                else {
-                    // console.log(logo_exists)
-                    if (logo_exists == null) {
+        // }, "name = 'digital_address'", sh.table_name);
 
-                        var data = [
+        // let q6_exists = await sh.getSetting(`'number_of_shifts'`);
 
-                            {
-                                name: `'logo'`,
-                                value: `"${file.name}"`,
+        // if (q6_exists == null) {
+        //     var data = [
 
-                                module: `'System'`
-                            }
-                        ]
-                        await sh.insertMany(sh.insert_fields, data, sh.table_name);
-                    }
-                    else {
-                        await sh.update({
+        //         {
+        //             name: `'number_of_shifts'`,
+        //             value: req.body.number_of_shifts == null || req.body.number_of_shifts == undefined || req.body.number_of_shifts == '' ? 'Full Day' : `'${req.body.number_of_shifts}'`,
 
-                            value: `"${file.name}"`,
-                        }, "name = 'logo'", sh.table_name);
-                    }
-                }
-            });
-        }
+        //             module: `'System'`
+        //         }
+        //     ]
+        //     await sh.insertMany(sh.insert_fields, data, sh.table_name);
+        // }
+        // else {
+        //     await sh.update({
+
+        //         value: req.body.number_of_shifts == null || req.body.number_of_shifts == undefined || req.body.number_of_shifts == '' ? 'Full Day' : `'${req.body.number_of_shifts}'`,
+
+        //     }, "name = 'number_of_shifts'", sh.table_name);
+        // }
 
 
-        let receipt_logo_exists = await sh.getSetting(`'receipt_logo'`);
+        // let logo_exists = await sh.getSetting(`'logo'`);
+        // //upload the file here
+        
 
-        if (receipt_logo_exists == null) {
-            var data = [
 
-                {
-                    name: `'receipt_logo'`,
-                    value: req.body.receipt_logo == null || req.body.receipt_logo == undefined || req.body.receipt_logo == '' ? `'no'` : `'${req.body.receipt_logo}'`,
+        // let receipt_logo_exists = await sh.getSetting(`'receipt_logo'`);
 
-                    module: `'System'`
-                }
-            ]
-            await sh.insertMany(sh.insert_fields, data, sh.table_name);
-        }
-        else {
-            await sh.update({
+        // if (receipt_logo_exists == null) {
+        //     var data = [
 
-                value: req.body.receipt_logo == null || req.body.receipt_logo == undefined || req.body.receipt_logo == '' ? `'no'` : `'${req.body.receipt_logo}'`,
+        //         {
+        //             name: `'receipt_logo'`,
+        //             value: req.body.receipt_logo == null || req.body.receipt_logo == undefined || req.body.receipt_logo == '' ? `'no'` : `'${req.body.receipt_logo}'`,
 
-            }, "name = 'receipt_logo'", sh.table_name);
-        }
+        //             module: `'System'`
+        //         }
+        //     ]
+        //     await sh.insertMany(sh.insert_fields, data, sh.table_name);
+        // }
+        // else {
+        //     await sh.update({
+
+        //         value: req.body.receipt_logo == null || req.body.receipt_logo == undefined || req.body.receipt_logo == '' ? `'no'` : `'${req.body.receipt_logo}'`,
+
+        //     }, "name = 'receipt_logo'", sh.table_name);
+        // }
 
 
 
-        await sh.update({
+        // await sh.update({
 
-            value: `"${req.body.restrict_zero_stock_sales}"`,
+        //     value: `"${req.body.restrict_zero_stock_sales}"`,
 
-        }, "name = 'restrict_zero_stock_sales'", sh.table_name);
+        // }, "name = 'restrict_zero_stock_sales'", sh.table_name);
 
-        await sh.update({
+        // await sh.update({
 
-            value: `"${req.body.activate_batch_mode}"`,
+        //     value: `"${req.body.activate_batch_mode}"`,
 
-        }, "name = 'activate_batch_mode'", sh.table_name);
+        // }, "name = 'activate_batch_mode'", sh.table_name);
 
         res.redirect('settings?m=Settings set successfully');
     } catch (error) {
+        console.log(error)
         res.redirect('settings?m=Error. Please try again')
 
     }

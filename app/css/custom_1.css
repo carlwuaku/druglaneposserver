@@ -1,5 +1,20 @@
 /* You can add global styles to this file, and also import other style files */
-
+@font-face {
+  font-family: 'Lobster';
+  src: url('Lobster-Regular.ttf')  format('truetype'), /* Safari, Android, iOS */
+}
+.styled-logo{
+  font-size: 50px;
+  color: #65106e;
+} 
+.flex-center{
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-content: center;
+  align-items: center;
+  background-color: #dddddd;
+}
 .col-pink {
   color: #E91E63 !important;
 }

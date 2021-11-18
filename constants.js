@@ -27,7 +27,6 @@ exports.settings_filename = 'system-settings.json';
 exports.db_filename = 'druglane.db';
 exports.internal_backups_path =path.join( this.settings_location,'backups');
 exports.company_id = ''
-exports
 exports.default_functional_groups = [
   "Adult Analgesics Tablets",
   "Adult Analgesics Suppositories",

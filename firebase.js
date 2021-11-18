@@ -80,7 +80,7 @@ async function getIncomingRequests() {
     console.log("staring firebase")
     try {
 
-        const query = firestoredb.collection('requests').where("status", '==', 'Pending');
+        const query = firestoredb.collection('requests').where("status", '==', 'Pending').where("company_id", "==", constants.company_id);
         let dbref;
         const observer = query.onSnapshot(querySnapshot => {
             try {
@@ -92,11 +92,16 @@ async function getIncomingRequests() {
                     let data = doc.data();
 
                     dbref = firestoredb.collection('requests').doc(doc.id);
-
-                    let response_data = await runQuery(data.route);
-                    // console.log(doc.id, response_data)
-                    response_data['request_status'] = "Complete"
-                    const res = await dbref.update(response_data);
+                    try {
+                        let response_data = await runQuery(data.route);
+                        // console.log(doc.id, response_data)
+    
+                        response_data['request_status'] = "Complete"
+                        const res = await dbref.update(response_data);  
+                    } catch (error) {
+                        
+                    }
+                    
                     // console.log(res)
                     // received_requests.push(doc.id)
                 }

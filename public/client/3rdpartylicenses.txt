@@ -852,6 +852,9 @@ ISC
 ngx-barcode
 MIT
 
+ngx-barcode6
+MIT
+
 ngx-localforage
 MIT
 

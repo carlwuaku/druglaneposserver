@@ -748,7 +748,6 @@ class Db {
 
         let query = `update  ${table} set ${field} = ${value} where ${conditions}  `;
         // log.error(query)
-        // console.log(query)
         try {
             await this.getConnection();
             let res = await this.connection.run(query);
@@ -1230,7 +1229,7 @@ const umzug = new Umzug({
           return true;
         }
         if(typeof(str) == "string"){
-          if( str.trim() == ""){
+          if( str.trim() == "" || str.trim() == "undefined" || str.trim() == "null"){
             return true;
           }
         }

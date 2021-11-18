@@ -250,8 +250,8 @@ exports._saveBulk= async(_data) => {
     } catch (error) {
         await helper.closeConnection();
 
-        log.error(error)
-        console.log(error)
+        log.error(error);
+        // console.log(error);
         return { status: '-1' }
     }
 };

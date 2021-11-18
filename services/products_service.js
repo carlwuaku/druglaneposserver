@@ -24,7 +24,8 @@ let vendorHelper = new vendorClass();
 
 let adminClass = require('../helpers/adminHelper');
 let adminHelper = new adminClass();
-
+let last_six_months = helper.addMonthsToDate(-6);
+let today = helper.getToday();
 exports.get_list_function = async (_data) => {
     let offset = _data.offset == undefined ? 0 : _data.offset;
     let limit = _data.limit == undefined ? null : _data.limit;
@@ -35,7 +36,7 @@ exports.get_list_function = async (_data) => {
         // let objects = await helper.getAll(helper.table_name, limit, offset);
         // let this_month = helper.setDates("this_month")
         // let last_month = helper.setDates("last_month")
-        let last_six_months = helper.addMonthsToDate(-6);
+
         let today = helper.getToday()
         // console.log(last_six_months)
         // let q1 = helper.setDates("first_quarter")
@@ -444,28 +445,37 @@ exports.get_product_batches_function = async (_data) => {
 
 exports.save_branch_details_function = async (_data) => {
     try {
-   
 
-    let stockClass = require('../helpers/stockAdjustmentHelper');
-    let stockHelper = new stockClass();
 
-    //                $parent_company_id = $this->getUserParentCompany($auth);
-    //this is to edit the price and stuff for an individual branch
-    let id = _data.id;
-    //extract all the values for the necessary fields from the input
-    let data = helper.prep_data(_data);
-    //console.l.log(_data)
-    data.last_modified = `'${helper.getToday('timestamp')}'`
-    let name = _data.name;
-    let change_stock = _data.change_stock;
-    let change_unit = _data.change_unit;
-    let new_unit = _data.new_unit;
+        let stockClass = require('../helpers/stockAdjustmentHelper');
+        let stockHelper = new stockClass();
 
-   
+        //                $parent_company_id = $this->getUserParentCompany($auth);
+        //this is to edit the price and stuff for an individual branch
+        let id = _data.id;
+        //extract all the values for the necessary fields from the input
+        let data = helper.prep_data(_data);
+        //console.l.log(_data)
+        data.last_modified = `'${helper.getToday('timestamp')}'`
+        let name = _data.name;
+        let change_stock = _data.change_stock;
+        let change_unit = _data.change_unit;
+        let new_unit = _data.new_unit;
+        let barcode = _data.barcode;
+        //if no barcode was set, autocreate one
+        
+
         if (id == undefined) {
 
 
             let productid = await helper.insert(data, helper.table_name);
+            if(helper.isEmpty(barcode)){
+                let padded = productid.toString().padStart(7, "0");
+                let barcode = `"${padded}-${_data.name}"`;
+                await helper.updateField('barcode',barcode,`id = ${productid}`, helper.table_name);
+                console.log(barcode);
+            }
+
             let date = helper.getToday()
             let stock_data = {
                 created_by: `'${_data.userid}'`, date: `'${date}'`, product: productid,
@@ -497,6 +507,12 @@ exports.save_branch_details_function = async (_data) => {
             }
             if (change_unit == 'yes') {
                 data.unit = `'${new_unit}'`
+            }
+            if(helper.isEmpty(barcode)){
+                let padded = id.toString().padStart(7, "0");
+                let barcode = `"${padded} - ${_data.name} - ${_data.price}"`;
+                data.barcode = barcode;
+                console.log(barcode);
             }
 
             await helper.update(data, ` id = ${id}`, helper.table_name);
@@ -538,18 +554,18 @@ exports.save_branch_details_function = async (_data) => {
 
 exports.mass_edit_function = async (_data) => {
     try {
-    
 
 
-    let id = _data.id;//comma-separated
-    let field = _data.field;
-    let value = _data.field == 'category' ||
-        _data.field == 'description' ||
-        _data.field == 'unit' ||
-        _data.field == 'expiry_date' ? `'${_data.value}'` : _data.value;
+
+        let id = _data.id;//comma-separated
+        let field = _data.field;
+        let value = _data.field == 'category' ||
+            _data.field == 'description' ||
+            _data.field == 'unit' ||
+            _data.field == 'expiry_date' ? `'${_data.value}'` : _data.value;
 
 
-   
+
         let where = ` id in (${id}) `
         await helper.updateField(field, value, where, helper.table_name);
         await activities.log(_data.userid, `"massed edited ${field} to ${value} "`, `'Products'`)
@@ -558,18 +574,18 @@ exports.mass_edit_function = async (_data) => {
     } catch (error) {
         await helper.closeConnection();
         log.error(error);
-        throw new Error(error); 
+        throw new Error(error);
     }
 
 };
 
 
 exports.delete_function = async (_data) => {
-    
+
 
     try {
-        
-       
+
+
         let id = _data.id;//comma-separated
 
         let where = ` id in (${id}) `
@@ -580,20 +596,20 @@ exports.delete_function = async (_data) => {
     } catch (error) {
         await helper.closeConnection();
         log.error(error);
-        throw new Error(error); 
+        throw new Error(error);
     }
 
 };
 
 exports.erase_function = async (_data) => {
-    
+
 
     try {
 
-        
+
         let id = _data.id;//comma-separated
         //this deletes every record of the product. stock, purchase, sale
-    
+
 
         //lazy shortcut taken to avoid creating objects for each table
         await helper.delete(` product in (${id})`, 'sales_details')
@@ -611,7 +627,7 @@ exports.erase_function = async (_data) => {
     } catch (error) {
         await helper.closeConnection();
         log.error(error)
-        throw new Error(error); 
+        throw new Error(error);
     }
 
 };
@@ -620,7 +636,7 @@ exports.soft_delete_function = async (_data) => {
 
 
     try {
-        
+
         let id = _data.id;//comma-separated
 
         let where = ` id in (${id}) `;
@@ -632,7 +648,7 @@ exports.soft_delete_function = async (_data) => {
     } catch (error) {
         await helper.closeConnection();
         log.error(error);
-        throw new Error(error); 
+        throw new Error(error);
     }
 
 };
@@ -641,7 +657,7 @@ exports.restore_function = async (_data) => {
 
 
     try {
-        
+
 
         let id = _data.id;//comma-separated
 
@@ -654,7 +670,7 @@ exports.restore_function = async (_data) => {
     } catch (error) {
         await helper.closeConnection();
         log.error(error);
-        throw new Error(error); 
+        throw new Error(error);
     }
 
 };
@@ -733,7 +749,7 @@ exports.find_by_id_function = async (_data) => {
     } catch (error) {
         await helper.closeConnection();
         console.log(error)
-        throw new Error(error); 
+        throw new Error(error);
     }
 };
 
@@ -746,7 +762,7 @@ exports.get_stock_function = async (_data) => {
     } catch (error) {
         await helper.closeConnection();
         log.error(error)
-        throw new Error(error); 
+        throw new Error(error);
     }
 };
 
@@ -778,7 +794,7 @@ exports.get_active_ingredients_function = async (_data) => {
     } catch (error) {
         await helper.closeConnection();
         log.error(error)
-        throw new Error(error); 
+        throw new Error(error);
     }
 };
 
@@ -791,7 +807,7 @@ exports.get_category_counts_function = async (_data) => {
     } catch (error) {
         await helper.closeConnection();
         log.error(error)
-        throw new Error(error); 
+        throw new Error(error);
     }
 };
 
@@ -814,7 +830,7 @@ exports.create_stock_adjustmentSession_function = async (_data) => {
     } catch (error) {
         await helper.closeConnection();
         log.error(error)
-        throw new Error(error); 
+        throw new Error(error);
     }
 };
 
@@ -822,7 +838,7 @@ exports.create_stock_adjustmentSession_function = async (_data) => {
 ///get the code that's still open. if there's none, create one
 exports.get_latest_session_function = async (_data) => {
     try {
-        
+
 
         let stockClass = require('../helpers/stockAdjustmentHelper');
 
@@ -849,7 +865,7 @@ exports.get_latest_session_function = async (_data) => {
     } catch (error) {
         await helper.closeConnection();
         log.error(error)
-        throw new Error(error); 
+        throw new Error(error);
     }
 };
 
@@ -860,7 +876,7 @@ exports.save_stock_adjustment_function = async (_data) => {
     let stockPendingClass = require('../helpers/stockAdjustmentPendingHelper');
     let stockPendingHelper = new stockPendingClass();
     try {
-        
+
         let date = _data.date == undefined ? helper.getToday() : _data.date;
         let created_on = _data.created_on == undefined ? helper.getToday('timestamp') : _data.created_on;
 
@@ -984,7 +1000,7 @@ exports.save_stock_adjustment_function = async (_data) => {
 
 
         console.log(error)
-        throw new Error(error); 
+        throw new Error(error);
     }
 };
 
@@ -992,7 +1008,7 @@ exports.save_stock_adjustment_to_pending_function = async (_data) => {
     let stockClass = require('../helpers/stockAdjustmentPendingHelper');
     let stockHelper = new stockClass();
     try {
-       
+
 
         let date = _data.date == undefined ? helper.getToday() : _data.date;
         let created_on = _data.created_on == undefined ? helper.getToday('timestamp') : _data.created_on;
@@ -1110,7 +1126,7 @@ exports.save_stock_adjustment_to_pending_function = async (_data) => {
 
 
         log.error(error);
-        throw new Error(error); 
+        throw new Error(error);
     }
 };
 
@@ -1118,7 +1134,7 @@ exports.save_stock_adjustment_to_pending_function = async (_data) => {
 
 exports.save_single_stock_adjustment_function = async (_data) => {
     try {
-        
+
 
         let stockClass = require('../helpers/stockAdjustmentHelper');
         let stockHelper = new stockClass();
@@ -1147,14 +1163,14 @@ exports.save_single_stock_adjustment_function = async (_data) => {
         await helper.closeConnection();
         // stockHelper.connection.run("ROLL BACK");
         console.log(error)
-        throw new Error(error); 
+        throw new Error(error);
     }
 
 };
 
 exports.save_pending_single_stock_adjustment_function = async (_data) => {
     try {
-        
+
         let stockClass = require('../helpers/stockAdjustmentPendingHelper');
         let stockHelper = new stockClass();
 
@@ -1162,7 +1178,7 @@ exports.save_pending_single_stock_adjustment_function = async (_data) => {
         let created_on = _data.created_on == undefined ? helper.getToday('timestamp') : _data.created_on;
         let product_id = _data.product;
         let qtt = _data.quantity_counted;
-        let name = _data.product_name; 
+        let name = _data.product_name;
         let code = _data.code;
         let data = stockHelper.prep_data(_data);
         data.created_on = `"${created_on}"`;
@@ -1183,7 +1199,7 @@ exports.save_pending_single_stock_adjustment_function = async (_data) => {
         await helper.closeConnection();
         // stockHelper.connection.run("ROLL BACK");
         log.error(error);
-        throw new Error(error); 
+        throw new Error(error);
     }
 
 };
@@ -1208,7 +1224,7 @@ exports.get_pending_stock_quantity_function = async (_data) => {
     } catch (error) {
         await helper.closeConnection();
         log.error(error);
-        throw new Error(error); 
+        throw new Error(error);
     }
 };
 
@@ -1266,8 +1282,8 @@ exports.get_pending_stock_adjustment_sessions = async (_data) => {
 
 exports.get_stock_adjustments_between_dates_function = async (_data) => {
     try {
-       
-        
+
+
         let start = _data.start_date == undefined ? helper.getToday : _data.start_date;
         let end = _data.end_date == undefined ? helper.getToday : _data.end_date;
 
@@ -1317,7 +1333,7 @@ exports.get_stock_adjustments_between_dates_function = async (_data) => {
 exports.get_stock_adjustments_by_code_function = async (_data) => {
     try {
 
-        
+
         let code = _data.code
 
         let stockClass = require('../helpers/stockAdjustmentHelper');
@@ -1374,7 +1390,7 @@ exports.get_stock_adjustments_by_code_function = async (_data) => {
 
 exports.get_pending_stock_adjustments_by_code_function = async (_data) => {
     try {
-       
+
 
         let code = _data.code
 
@@ -1928,6 +1944,7 @@ exports.get_expiry_list_function = async (_data) => {
                 let totals = await salesDetailsHelper.getTotalQuantityAndAmount(obj.id);
                 obj.total_amount_sold = totals.amount;
                 obj.total_quantity_sold = totals.total;
+
                 let last_six_months_totals = await salesDetailsHelper.getTotalQuantityAndAmount(obj.id, last_six_months, today);
                 obj.six_months_amount_sold = last_six_months_totals.amount;
                 obj.six_months_quantity_sold = last_six_months_totals.total;
@@ -1960,7 +1977,7 @@ exports.get_expiry_list_function = async (_data) => {
 
 exports.get_stock_value_list_function = async (_data) => {
     try {
-       
+
 
         let defs = helper.setDates('this_month')
         let start = _data.start_date == undefined ? defs.start_date : _data.start_date;
@@ -2200,7 +2217,7 @@ exports.get_stock_values_function = async (_data) => {
 exports.merge_function = async (_data) => {
     try {
 
-       
+
 
         let master = _data.master; //the id of item to maintain
         let ids = _data.id.split(",");//comma-separated items to be 
@@ -2208,25 +2225,25 @@ exports.merge_function = async (_data) => {
         let item = await helper.getItem(`id = ${master}`, helper.table_name);
         let queries = []
         for (var i = 0; i < ids.length; i++) {
-            
-                queries.push(helper.generateUpdateFieldQuery("product", `${master}`, ` product in (${ids[i]})`, 'sales_details'));
-                 
-                queries.push(helper.generateUpdateFieldQuery("product", `${master}`, ` product in (${ids[i]})`, 'stock_adjustment'))
-                queries.push(helper.generateUpdateFieldQuery("product", `${master}`, ` product  in ( ${ids[i]})`, 'purchase_details'))
-                queries.push(helper.generateUpdateFieldQuery("product", `${master}`, ` product  in ( ${ids[i]})`, 'received_transfer_details'))
-                queries.push(helper.generateUpdateFieldQuery("product", `${master}`, ` product  in ( ${ids[i]})`, 'transfer_details'))
-                queries.push(helper.generateUpdateFieldQuery("product", `${master}`, ` product  in ( ${ids[i]})`, 'refills'))
-                queries.push(helper.generateUpdateFieldQuery("product", `${master}`, ` product  in ( ${ids[i]})`, 'stock_adjustment_pending'));
-                let where = ` id = ${ids[i]} `
-                queries.push( helper.generateDeleteQuery(where, helper.table_name));
-                await helper.runTransaction(queries)
+
+            queries.push(helper.generateUpdateFieldQuery("product", `${master}`, ` product in (${ids[i]})`, 'sales_details'));
+
+            queries.push(helper.generateUpdateFieldQuery("product", `${master}`, ` product in (${ids[i]})`, 'stock_adjustment'))
+            queries.push(helper.generateUpdateFieldQuery("product", `${master}`, ` product  in ( ${ids[i]})`, 'purchase_details'))
+            queries.push(helper.generateUpdateFieldQuery("product", `${master}`, ` product  in ( ${ids[i]})`, 'received_transfer_details'))
+            queries.push(helper.generateUpdateFieldQuery("product", `${master}`, ` product  in ( ${ids[i]})`, 'transfer_details'))
+            queries.push(helper.generateUpdateFieldQuery("product", `${master}`, ` product  in ( ${ids[i]})`, 'refills'))
+            queries.push(helper.generateUpdateFieldQuery("product", `${master}`, ` product  in ( ${ids[i]})`, 'stock_adjustment_pending'));
+            let where = ` id = ${ids[i]} `
+            queries.push(helper.generateDeleteQuery(where, helper.table_name));
+            await helper.runTransaction(queries)
 
 
-            
+
 
         }
-    
-        
+
+
         await helper.refreshCurrentStock(master)
         await stockValueHelper.updateStockValue();
         await activities.log(_data.userid, `"merged items into  ${item.name} "`, `'Products'`);
@@ -2348,7 +2365,7 @@ exports.add_item_active_ingredient_function = async (_data) => {
         await helper.closeConnection();
         log.error(error);
         log.error(error)
-        throw new Error(error); 
+        throw new Error(error);
     }
 
 };
@@ -2442,7 +2459,7 @@ exports.get_changed_stock_function = async (_data) => {
         await helper.closeConnection();
         log.error(error);
         log.error(error)
-        throw new Error(error); 
+        throw new Error(error);
     }
 
 };
@@ -2532,13 +2549,13 @@ exports.save_stock_adjustment_updated_quantities_function = async (_data) => {
 
 
         log.error(error);
-        throw new Error(error); 
+        throw new Error(error);
     }
 };
 
 
 exports.get_product_consumption_function = async (_data) => {
-    
+
     const SalesDetailsHelper = require('../helpers/salesDetailsHelper.js');
     const salesDetailsHelper = new SalesDetailsHelper();
 
@@ -2660,7 +2677,7 @@ exports.get_duplicate_count_function = async (_data) => {
 
 exports.get_duplicate_list_function = async (_data) => {
     try {
-        
+
         let objects = await helper.getDuplicates();
         return { status: '1', data: objects }
     } catch (error) {
@@ -2673,7 +2690,7 @@ exports.get_duplicate_list_function = async (_data) => {
 
 exports.merge_duplicates_function = async (_data) => {
     try {
-        
+
         let ids = _data.ids.split("|||");//comma-separated
 
         for (var i = 0; i < ids.length; i++) {

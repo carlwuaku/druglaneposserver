@@ -9,10 +9,6 @@ const ActivitiesHelper = require('../helpers/activitiesHelper');
 const AdminHelper = require('../helpers/adminHelper');
 // const { default: rebuild } = require('electron-rebuild');
 const helper = new AdminHelper();
-const activitiesHelper = new ActivitiesHelper()
-
-const CustomerHelper = require('../helpers/customerHelper.js');
-const customerHelper = new CustomerHelper();
 
 
 

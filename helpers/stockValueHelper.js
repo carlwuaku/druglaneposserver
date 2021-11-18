@@ -48,7 +48,7 @@ class StockValueHelper extends dbClass {
 
     async getStockValueByDate(date) {
         let sql = `select 
-        selling_value from stock_values where date = '${date}'`;
+        selling_value from stock_values where date <= '${date}'`;
         
 
         try {

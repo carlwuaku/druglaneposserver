@@ -68,7 +68,7 @@ class ProductHelper extends dbClass {
             let quantity = last_quantity + amt_purchased + amt_received - amt_sold - amt_transferred;
             return quantity;
         } catch (error) {
-            console.log(error)
+            console.log(error);
             throw new Error(error)
         }
 

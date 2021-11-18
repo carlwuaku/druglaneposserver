@@ -1,6 +1,6 @@
 
 //JQUERY
-const server_url = "http://druglanepms.calgadsoftwares.com/";
+const server_url = "https://druglanepms.calgadsoftwares.com/";
 
 function showNotification(msg, type, delay) {
     if (type === "fail") {
@@ -115,7 +115,8 @@ $(document).ready(function () {
                 alert('Invalid key entered. Please try again')
             }
             
-        }).error(function () {
+        }).error(function (error) {
+          alert(error);
             alert('Network error. Please check your internet connection and try again')
             
         });
