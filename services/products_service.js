@@ -473,7 +473,7 @@ exports.save_branch_details_function = async (_data) => {
                 let padded = productid.toString().padStart(7, "0");
                 let barcode = `"${padded}-${_data.name}"`;
                 await helper.updateField('barcode',barcode,`id = ${productid}`, helper.table_name);
-                console.log(barcode);
+                // console.log(barcode);
             }
 
             let date = helper.getToday()
@@ -512,7 +512,7 @@ exports.save_branch_details_function = async (_data) => {
                 let padded = id.toString().padStart(7, "0");
                 let barcode = `"${padded} - ${_data.name} - ${_data.price}"`;
                 data.barcode = barcode;
-                console.log(barcode);
+                // console.log(barcode);
             }
 
             await helper.update(data, ` id = ${id}`, helper.table_name);

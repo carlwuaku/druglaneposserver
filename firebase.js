@@ -77,15 +77,15 @@ let received_requests = []
  * receive it's own requests
  */
 async function getIncomingRequests() {
-    console.log("staring firebase")
+    // console.log("staring firebase")
     try {
 
-        const query = firestoredb.collection('requests').where("status", '==', 'Pending').where("company_id", "==", constants.company_id);
+        const query = firestoredb.collection('requests').where("request_status", '==', 'Pending').where("company_id", "==", constants.company_id);
         let dbref;
         const observer = query.onSnapshot(querySnapshot => {
-            try {
-              // console.log(`Received query snapshot of size ${querySnapshot.docChanges().length}`);
-            querySnapshot.docChanges().forEach(async (change) => {
+            try { 
+            //   console.log(`Received query snapshot of size ${querySnapshot.docChanges().length}`);
+            querySnapshot.docChanges().forEach(async (change) => { 
                 // console.log(change.doc.id, change.type);
                 if (change.type === 'added') {
                     let doc = change.doc;
@@ -99,7 +99,10 @@ async function getIncomingRequests() {
                         response_data['request_status'] = "Complete"
                         const res = await dbref.update(response_data);  
                     } catch (error) {
-                        
+
+                        console.log(data.route,error);
+                        response_data['request_status'] = "Complete"
+                        const res = await dbref.update({status: "-1", request_status: "Complete"});
                     }
                     
                     // console.log(res)
@@ -167,7 +170,7 @@ async function runQuery(route) {
         let path_name = route_parts[0];//e.g. sales/getbetweendates or sales/findbyid/3
         if (route_parts.length > 1) {
             let query = route_parts[1];//e.g. param=gigngig&v=02&pr=3vvno
-            let query_params = query.split("&");
+            let query_params = query.split("&"); 
             query_params.forEach(element => {
                 let parts = element.split("=");
                 //assign the keys to the values if there was a value

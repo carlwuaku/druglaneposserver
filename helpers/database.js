@@ -537,7 +537,7 @@ class Db {
 
         } catch (error) {
             log.error(error)
-            console.error(error)
+            // console.error(error)
         }
     }
 
@@ -614,7 +614,7 @@ class Db {
 
         } catch (err) {
             log.error(query);
-            console.log(query)
+            // console.log(query)
             log.error(err);
             //this.connection.close().then(succ => { }, err => { })
             throw new Error(err)
@@ -755,7 +755,7 @@ class Db {
             return true;
 
         } catch (err) {
-            console.log(query)
+            // console.log(query)
             log.error(query);
             log.error(err);
             //this.connection.close().then(succ => { }, err => { })
