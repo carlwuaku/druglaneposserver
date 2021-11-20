@@ -10,7 +10,8 @@
     "dev": "nodemon --exec electron .",
     "postinstall": "electron-builder install-app-deps",
     "pack": "electron-builder --dir",
-    "dist": "electron-builder"
+    "dist": "electron-builder",
+    "publish": "electron-builder -p always"
   },
   "author": "Calron Softwares Ltd",
   "license": "ISC",
