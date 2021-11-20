@@ -56,7 +56,11 @@
     "mac": {
       "category": "your.app.category.type"
     },
-    "productName": "Druglane Pharmacy Management System 1.5"
+    "productName": "Druglane Pharmacy Management System 1.5",
+    "copyright": "Copyright © 2021 ${author}",
+    "win": {
+      "publish":["github"]
+    }
   },
   "bundledDependencies": [
     "express"

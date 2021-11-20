@@ -41,7 +41,9 @@ const mainOpts = {
     width: 1000,
     title: `${appName}`,
     webPreferences: {
-      nodeIntegration: true
+      nodeIntegration: true,
+      contextIsolation: false,
+enableRemoteModule: true,
     },
     icon: `${__dirname}/app/assets/icon2.png`,
 

@@ -1903,11 +1903,9 @@ exports.get_expiry_list_function = async (_data) => {
         let objects = null;
         if (start == 'all') {
             objects = await helper.getMany(`   expiry <= '${end}'  and current_stock > 0  `, helper.table_name)
-
         }
         else {
             objects = await helper.getMany(`  expiry >= '${start}' and expiry <= '${end}'  and current_stock > 0  `, helper.table_name)
-
         }
         for (var i = 0; i < objects.length; i++) {
             var obj = objects[i];
