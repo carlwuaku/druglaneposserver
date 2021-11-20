@@ -1,5 +1,5 @@
 //npx sequelize-cli migration:generate --name migration-skeleton
-
+require('dotenv').config()
 const path = require('path');
 // const os = require('os');
 const { app, BrowserWindow, Menu, ipcMain, ClientRequest, dialog } = require('electron');
