@@ -1,10 +1,10 @@
 const express = require('express');
+require('dotenv').config();
 //const userController = require('./controllers/userController')
 const constants = require('./constants');
 let appName = constants.appname
 let PORT = constants.port;
 const log = require('electron-log');
-
 // async function useGetPort() {
 
 //    await getPort({port: [5000, 5001, 5002]});
