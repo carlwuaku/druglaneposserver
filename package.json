@@ -59,11 +59,11 @@
     },
     "productName": "Druglane Pharmacy Management System 1.5",
     "copyright": "Copyright © 2021 ${author}",
-    "win": {
-      "publish": [
-        "github"
-      ]
-    }
+    "publish": [{
+      "provider": "github",
+      "owner": "carlwuaku",
+      "repo": "druglaneposserver"
+  }]
   },
   "bundledDependencies": [
     "express"

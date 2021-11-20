@@ -7,7 +7,7 @@ const gotTheLock = app.requestSingleInstanceLock()
 
 const fs = require('fs');
 const log = require('electron-log');
-// const { autoUpdater } = require('electron-updater');
+const { autoUpdater } = require('electron-updater');
 const schedule = require('node-schedule');
 // const MainWindow = require('./MainWindow')
 // const AppTray = require('./AppTray')
@@ -136,9 +136,9 @@ if (!gotTheLock) {
 
     mainWindow.loadURL(`http://localhost:${constants.port}/`);
 
-    // mainWindow.once('ready-to-show', () => {
-    //   autoUpdater.checkForUpdatesAndNotify();
-    // });
+    mainWindow.once('ready-to-show', () => {
+      autoUpdater.checkForUpdatesAndNotify();
+    });
 
     // mainWindow.loadURL(`file://${__dirname}/app/index.html`);
     // mainWindow.loadFile('./app/index.html')
@@ -342,9 +342,9 @@ if (!gotTheLock) {
     event.sender.send('app_version', { version: app.getVersion() });
   });
 
-  // ipcMain.on('restart_app', () => {
-  //   autoUpdater.quitAndInstall();
-  // });
+  ipcMain.on('restart_app', () => {
+    autoUpdater.quitAndInstall();
+  });
 
   // Quit when all windows are closed.
   app.on('window-all-closed', () => {
@@ -715,12 +715,12 @@ if (!gotTheLock) {
 
   }
 
-  // autoUpdater.on('update-available', () => {
-  //   mainWindow.webContents.send('update_available');
-  // });
-  // autoUpdater.on('update-downloaded', () => {
-  //   mainWindow.webContents.send('update_downloaded');
-  // });
+  autoUpdater.on('update-available', () => {
+    mainWindow.webContents.send('update_available');
+  });
+  autoUpdater.on('update-downloaded', () => {
+    mainWindow.webContents.send('update_downloaded');
+  });
 
   //synchronization with database
   // setInterval(async() => {
