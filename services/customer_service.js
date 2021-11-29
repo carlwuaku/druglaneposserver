@@ -17,7 +17,7 @@ exports._getList= async (_data) => {
     let offset = _data.offset == undefined ? 0 : _data.offset;
     let limit = _data.limit == undefined ? null : _data.limit;
     try {
-        let objects = await helper.getAll(helper.table_name, limit, offset);
+        let objects = await helper.getAll(helper.table_name, limit, offset,"name");
         const IncomingPaymentClass = require('../helpers/incomingPaymentHelper');
         const incomingHelper = new IncomingPaymentClass();
         for(var i = 0; i < objects.length; i++){

@@ -1,8 +1,4 @@
-/**
- * public $table_name = "users";
-    public $fields = array("id", "role_id", "email", "type", "picture","phone",
-        "position", "qualification", "display_name","username","active","company_id");
- */
+
 const dbClass = require('./database');
 const log = require('electron-log');
 

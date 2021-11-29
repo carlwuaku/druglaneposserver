@@ -20,7 +20,7 @@ exports._getList= async(_data) => {
     let offset = _data.offset == undefined ? 0 : _data.offset;
     let limit = _data.limit == undefined ? null : _data.limit;
     try {
-        let objects = await helper.getAll(helper.table_name, limit, offset);
+        let objects = await helper.getAll(helper.table_name, limit, offset,"name");
         let today = helper.getToday()
         for(var i = 0; i < objects.length; i++){
             let curr = objects[i]
@@ -40,7 +40,7 @@ exports._getList= async(_data) => {
         console.log(error)
         log.error(error)
         throw new Error(error);
-    }
+    } 
 
 };
 
@@ -59,7 +59,7 @@ exports._search= async(_data) => {
         curr.total_bought = total_bought.toLocaleString();
         curr.balance = balance.toLocaleString()
         }
-        
+         
 
         return { status: '1', data: objects }
     } catch (error) {

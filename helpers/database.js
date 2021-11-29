@@ -711,7 +711,7 @@ class Db {
             return true;
 
         } catch (err) {
-            log.error(query);
+            // log.error(query);
             // console.log(err)
             log.error(err);
             //this.connection.close().then(succ => { }, err => { })
@@ -812,9 +812,11 @@ class Db {
      * @param {Number} offset
      * @returns {Array}
      */
-    async getMany(conditions, table, limit = null, offset = 0) {
-        //use placeholders for the variables
+    async getMany(conditions, table, limit = null, offset = 0, sort_by="id", sort_dxn="asc") {
+        //use placeholders for the variables,""
         let sql = `select * from ${table} where ${conditions}`;
+        sql +=` order by ${sort_by} ${sort_dxn}`;
+
         if (limit != null) {
             sql += ` limit ${limit} offset ${offset}`
         }
@@ -841,12 +843,15 @@ class Db {
      * @param {Number} offset
      * @returns {Array}
      */
-    async getAll(table, limit = null, offset = 0) {
+    async getAll(table, limit = null, offset = 0, sort_by = "id",sort_dxn="asc") {
         //use placeholders for the variables
         let sql = `select * from ${table}`;
+        sql +=` order by ${sort_by} ${sort_dxn}`;
+
         if (limit != null) {
             sql += ` limit ${limit} offset ${offset}`
         }
+
         try {
             await this.getConnection();
             let query = await this.connection.all(sql);
@@ -1098,7 +1103,8 @@ const umzug = new Umzug({
         path: path.join(__dirname, '../migrations'),
         // inject sequelize's QueryInterface in the migrations
         params: [
-            sequelize.getQueryInterface()
+            sequelize.getQueryInterface(),
+            Sequelize
         ]
     },
     // indicates that the migration data should be store in the database

@@ -29,6 +29,9 @@ let today = helper.getToday();
 exports.get_list_function = async (_data) => {
     let offset = _data.offset == undefined ? 0 : _data.offset;
     let limit = _data.limit == undefined ? null : _data.limit;
+    let advanced = _data.advanced == undefined ? 'no' : _data.advanced;
+    //if advanced, calculate all the various queries. for not advanced, get only the 
+    //basic details
     try {
 
 
@@ -47,16 +50,15 @@ exports.get_list_function = async (_data) => {
         let objects = null;
         let total = null;
         if (Object.keys(conditions).length === 0 && conditions.constructor === Object) {
-            objects = await helper.getAll(helper.table_name, limit, offset);
+            objects = await helper.getAll(helper.table_name, limit, offset,"name");
             total = await helper.count('id', helper.table_name);
         }
         else {
             let where = [];
             for (let key in conditions) {
                 where.push(` ${key} = ${conditions[key]} `)
-
             }
-            objects = await helper.getMany(where.join(" and "), helper.table_name, limit, offset);
+            objects = await helper.getMany(where.join(" and "), helper.table_name, limit, offset,"name");
             total = await helper.countBy(where.join(" and "), helper.table_name);
         }
 
@@ -74,7 +76,8 @@ exports.get_list_function = async (_data) => {
             obj.out_of_stock = stock < 1;
             obj.near_min = stock > 0 && stock <= min;
             obj.near_max = stock >= max;
-            obj.active_ingredients = [];
+            if(advanced == 'yes'){
+                obj.active_ingredients = [];
 
             //get preferred vendor
             try {
@@ -119,13 +122,9 @@ exports.get_list_function = async (_data) => {
                 log.error(error);
                 obj.average_monthly = 0;
             }
-            // obj.this_month_quantity = await salesDetailsHelper.getTotalQuantity(obj.id, this_month.start_date, this_month.end_date)
-            // obj.last_month_quantity = await salesDetailsHelper.getTotalQuantity(obj.id, last_month.start_date, last_month.end_date)
-            // obj.q1_quantity = await salesDetailsHelper.getTotalQuantity(obj.id, q1.start_date, q1.end_date)
-            // obj.q2_quantity = await salesDetailsHelper.getTotalQuantity(obj.id, q2.start_date, q2.end_date)
-            // obj.q3_quantity = await salesDetailsHelper.getTotalQuantity(obj.id, q3.start_date, q3.end_date)
-            // obj.q4_quantity = await salesDetailsHelper.getTotalQuantity(obj.id, q4.start_date, q4.end_date)
-
+            }
+            
+           
         }
         return { status: '1', data: objects, total: total }
     } catch (error) {
@@ -510,7 +509,7 @@ exports.save_branch_details_function = async (_data) => {
             }
             if(helper.isEmpty(barcode)){
                 let padded = id.toString().padStart(7, "0");
-                let barcode = `"${padded} - ${_data.name} - ${_data.price}"`;
+                let barcode = `"${padded}"`;
                 data.barcode = barcode;
                 // console.log(barcode);
             }

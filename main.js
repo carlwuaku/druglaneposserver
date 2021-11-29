@@ -10,8 +10,8 @@ const log = require('electron-log');
 const { autoUpdater } = require('electron-updater');
 const schedule = require('node-schedule');
 // const MainWindow = require('./MainWindow')
-// const AppTray = require('./AppTray')
-process.env.NODE_ENV = 'production';
+// const AppTray = require('./AppTray') 
+process.env.NODE_ENV = 'development';
 let constants = require('./constants')
 let appName = constants.appname;
 const isDev =  process.env.NODE_ENV !== 'production' ? true : false;
