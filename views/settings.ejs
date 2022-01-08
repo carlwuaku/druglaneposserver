@@ -110,8 +110,53 @@
                                         class="form-control">
                                     
                                 </div>
-                                
-
+                                <div class="form-group">
+                                    <label class="control-label">Show Tax On Receipts?</label>
+                                    <br>
+                                    <select name="show_tax_on_receipt">
+                                        <option <%= show_tax_on_receipt == 'yes' ? 'selected' : '' %> value="yes">Yes</option>
+                                        <option <%= show_tax_on_receipt == 'no' ? 'selected' : '' %> value="no">No</option>
+                                    </select>
+                                    
+                                </div>
+                                <div class="form-group">
+                                    <label class="control-label">Sales Tax Title</label>
+                                    <br>
+                                    <em class="text-muted">This is how the tax will be labelled on the receipt </em>
+                                    <br>
+                                    <input name="tax_title" value="<%= tax_title %>" required type="text"
+                                        class="form-control">
+                                    
+                                </div>
+                                <div class="form-group">
+                                    <label class="control-label">Receipt Extra Info</label>
+                                    <br>
+                                    <em class="text-muted">Any extra information to display at the top of the receipt just below the company 
+                                        info </em>
+                                    <br>
+                                    <textarea name="receipt_extra_info"   type="text"
+                                        class="form-control"><%= receipt_extra_info %></textarea>
+                                    
+                                </div>
+                                <div class="form-group">
+                                    <label class="control-label">Receipt Footer</label>
+                                    <br>
+                                    <em class="text-muted">Any extra information to display at the bottom of the 
+                                        receipt </em>
+                                    <br>
+                                    <textarea name="receipt_footer"  type="text"
+                                        class="form-control"><%= receipt_footer %></textarea>
+                                    
+                                </div>
+                                <div class="form-group">
+                                    <label class="control-label">Display Software Credits On Receipts?</label>
+                                    <br>
+                                    <select name="receipt_show_credits">
+                                        <option <%= receipt_show_credits == 'yes' ? 'selected' : '' %> value="yes">Yes</option>
+                                        <option <%= receipt_show_credits == 'no' ? 'selected' : '' %> value="no">No</option>
+                                    </select>
+                                    
+                                </div>
 
                                 <button type="submit" class="btn btn-primary btn-block">Submit</button>
                             </form>

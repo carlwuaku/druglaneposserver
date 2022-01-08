@@ -391,7 +391,7 @@ exports.get_related_products = async (_data) => {
     let limit = 5;
     let description = item.description.toLowerCase();
     try {
-        let objects = await helper.getMany(`lower(description) like '${description}' and current_stock > 0 order by expiry`, helper.table_name, limit, offset);
+        let objects = await helper.getMany(`lower(description) like '${description}' and current_stock > 0 `, helper.table_name, limit, offset,"expiy");
         let selected = []
         for (var i = 0; i < objects.length; i++) {
             var obj = objects[i];
@@ -414,7 +414,6 @@ exports.get_related_products = async (_data) => {
     } catch (error) {
         await helper.closeConnection();
         log.error(error);
-        log.error(error)
         throw new Error(error);
     }
 
@@ -469,9 +468,14 @@ exports.save_branch_details_function = async (_data) => {
 
             let productid = await helper.insert(data, helper.table_name);
             if(helper.isEmpty(barcode)){
-                let padded = productid.toString().padStart(7, "0");
-                let barcode = `"${padded}-${_data.name}"`;
-                await helper.updateField('barcode',barcode,`id = ${productid}`, helper.table_name);
+                try {
+                    let padded = productid.toString().padStart(7, "0");
+                    let barcode = `"${padded}-${_data.name}"`;
+                    await helper.updateField('barcode',barcode,`id = ${productid}`, helper.table_name);
+                   
+                } catch (error) {
+                    
+                }
                 // console.log(barcode);
             }
 
@@ -975,8 +979,9 @@ exports.save_stock_adjustment_function = async (_data) => {
         sql += stockHelper.generateInsertManyQuery(stockHelper.fields, objects, stockHelper.table_name);
         sql += "COMMIT;"
         // //console.l.log(sql)
+        log.info(sql)
         await stockHelper.connection.exec(sql);
-
+       
         // for (var x = 0; x < products.length; x++) {
 
         //     let pid = products[x];
@@ -996,9 +1001,9 @@ exports.save_stock_adjustment_function = async (_data) => {
         //       log.error(error);
         //   }
 
+        log.error(error);
 
-
-        console.log(error)
+        // console.log(error)
         throw new Error(error);
     }
 };

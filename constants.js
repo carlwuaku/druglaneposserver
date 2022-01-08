@@ -1,6 +1,15 @@
 
 const PORT = process.env.PORT || 5000;
+// const appName = "Shoplane";
+// const appLongName = "Shoplane POS & Inventory Management System";
+// const databaseName = "shoplane.db";
+
 const appName = "Druglane";
+const appLongName = "Druglane Pharmacy Management System";
+const databaseName = "druglane.db";
+
+
+exports.appLongName = appLongName;
 exports.appname = appName;
 //exports.base_url = "http://localhost:"+PORT+"/";
 exports.base_url = "https://revolfoods.herokuapp.com/";
@@ -20,11 +29,11 @@ exports.firebase_requests_collection = "requests";
 exports.firebase_responses_collection = "responses";
 
 exports.settings_path =path.join( this.settings_location,'system-settings.json');
-exports.db_path = path.join( this.settings_location,'druglane.db');
+exports.db_path = path.join( this.settings_location, databaseName);
 exports.sequelize_db = path.join( this.settings_location,'sequelize_druglane.db');
 exports.backup_folder = path.join((electron.app || electron.remote.app).getPath('documents'), `${appName}Backups`);
 exports.settings_filename = 'system-settings.json';
-exports.db_filename = 'druglane.db';
+exports.db_filename = databaseName;
 exports.internal_backups_path =path.join( this.settings_location,'backups');
 exports.company_id = ''
 exports.default_functional_groups = [
@@ -1647,9 +1656,9 @@ const migrations = [
   {
     query: `INSERT INTO role_permissions (role_id, permission_id) values 
     (1, 87);`,
-    version: 104
+    version: 104 
   }
- //
+ // 
 ];
 exports.migrations = migrations;
 

@@ -207,6 +207,8 @@ app.get('/', async (req, res) => {
 
 
         let data = {}
+        data.app_name = constants.appname
+
         var msg = req.query.message;
 
         if (msg != undefined) {
@@ -253,14 +255,17 @@ app.get('/', async (req, res) => {
 
 
 app.get('/activate', (req, res) => {
+    let data = {};
+    data.app_name = constants.appname
 
-    res.render('activate');
+    res.render('activate',data);
     // res.sendFile(__dirname + '/app/index.html');
 });
 
 app.get('/welcome', (req, res) => {
-
-    res.render('welcome');
+    let data = {};
+    data.app_name = constants.appname
+    res.render('welcome',data);
     // res.sendFile(__dirname + '/app/index.html');
 });
 
@@ -286,6 +291,17 @@ app.get('/firstrun', async (req, res) => {
     // res.sendFile(__dirname + '/app/index.html');
 });
 
+app.get('/getAppName', async (req, res) => {
+	try {
+		let data = {name: constants.appname, long_name: constants.appLongName};  //helper.getAll(helper.branches_table_name);
+		res.json(data)
+	} catch (error) {
+		// await helper.closeConnection();
+		//console.log(error);
+		res.json({ status: '-1', data: null })
+	}
+})
+
 
 app.get('/setup', async (req, res) => {
     let data = {};
@@ -293,6 +309,8 @@ app.get('/setup', async (req, res) => {
     let settingsHelper = require('./helpers/settingsHelper');
     let sh = new settingsHelper();
     data.name = await sh.getSetting(`'company_name'`)
+    data.app_name = constants.appname
+
     res.render('setup', data);
     // res.sendFile(__dirname + '/app/index.html'); 
 });
@@ -308,6 +326,8 @@ app.get('/restoreBackup', checkSignIn, async (req, res) => {
 
     let Helper = require('./helpers/backupsHelper');
     let h = new Helper();
+    data.app_name = constants.appname
+
     data.objects = await h.getAll(h.table_name);
 
     res.render('restoreBackup', data);
@@ -405,13 +425,17 @@ app.post('/saveSetup', async (req, res) => {
 });
 
 app.get('/activationFailed', (req, res) => {
+    let data ={}
+    data.app_name = constants.appname
 
-    res.render('activationFailed');
+    res.render('activationFailed', data);
     // res.sendFile(__dirname + '/app/index.html');
 });
 
 app.get('/setupFailed', async (req, res) => {
     let data = {};
+    data.app_name = constants.appname
+
     data.message = "Setup failed. Please make sure the passwords are the same";
     let settingsHelper = require('./helpers/settingsHelper');
     let sh = new settingsHelper();
@@ -423,6 +447,8 @@ app.get('/setupFailed', async (req, res) => {
 app.get('/login', (req, res) => {
     var err = req.query.err;
     data = {}
+    data.app_name = constants.appname
+
     if (err != undefined) {
         data.error = "Wrong combination. Try again"
     }
@@ -455,12 +481,15 @@ app.post('/dologin', async (req, res) => {
 
 app.get('/settings', checkSignIn, async (req, res) => {
     let data = {};
+    data.app_name = constants.appname
+
     if (req.query.m != undefined) {
         data.message = req.query.m;
     }
     else {
         data.message = "";
     }
+     
 
     let settingsHelper = require('./helpers/settingsHelper');
     let sh = new settingsHelper();
@@ -682,6 +711,7 @@ app.get('/users', checkSignIn, async (req, res) => {
     let Helper = require('./helpers/adminHelper');
     let h = new Helper();
     data.objects = await h.getUsers();
+    data.app_name = constants.appname
 
     res.render('users', data);
     // res.sendFile(__dirname + '/app/index.html');
@@ -718,6 +748,7 @@ app.get('/userForm', checkSignIn, async (req, res) => {
     }
 
     data.roles = await h.getRoles();
+    data.app_name = constants.appname
 
     res.render('userForm', data);
     // res.sendFile(__dirname + '/app/index.html');
@@ -812,6 +843,7 @@ app.get('/roles', checkSignIn, async (req, res) => {
     let Helper = require('./helpers/adminHelper');
     let h = new Helper();
     data.objects = await h.getRoles();
+    data.app_name = constants.appname
 
     res.render('roles', data);
     // res.sendFile(__dirname + '/app/index.html');
@@ -860,6 +892,7 @@ app.get('/userRole', checkSignIn, async (req, res) => {
         data.users = []
     }
     data.rp_ids = rp_ids
+    data.app_name = constants.appname
 
     res.render('userRole', data);
     // res.sendFile(__dirname + '/app/index.html');
@@ -1139,6 +1172,8 @@ app.get('/update_password', checkSignIn, async (req, res) => {
     else {
         data.message = ""
     }
+    data.app_name = constants.appname
+
     res.render("updatePassword", data)
 })
 
@@ -1198,6 +1233,8 @@ app.get('/resetAdminPassword', async (req, res) => {
 
             let data = { error: true, retry: true, message: message }
             //render the page
+            data.app_name = constants.appname
+
             res.render("resetPassword", data)
             return false;
         }
@@ -1232,6 +1269,8 @@ Please use this code as token in the reset page: ${token}.`;
                 let data = {
                     error: false, retry: false, message: `Email sent to your administrator email. Please 
             check your inbox to retrieve the token`}
+            data.app_name = constants.appname
+
                 //render the page
                 res.render("resetPassword", data)
             })
@@ -1239,6 +1278,8 @@ Please use this code as token in the reset page: ${token}.`;
                 let data = {
                     error: true, retry: false, message: `Unable to communicate with cloud server. Please 
             check your internet connection and try again`}
+            data.app_name = constants.appname
+
                 res.render("resetPassword", data)
             });
 

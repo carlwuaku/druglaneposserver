@@ -796,7 +796,7 @@ class Db {
             return query;//may be undefined or an object
         } catch (err) {
             log.error(sql);
-            console.log(sql)
+            // console.log(sql)
             log.error(err);
             //this.connection.close().then(succ => { }, err => { })
             throw new Error(err)
@@ -827,7 +827,6 @@ class Db {
             return query;//an array of objects
         } catch (err) {
             log.error(sql);
-            console.log(sql)
             log.error(err);
             //this.connection.close().then(succ => { }, err => { })
             throw new Error(err)
@@ -859,7 +858,7 @@ class Db {
             return query;//an array of objects
         } catch (err) {
             log.error(sql);
-            console.log(sql)
+            // console.log(sql)
             log.error(err);
             //this.connection.close().then(succ => { }, err => { })
             throw new Error(err)
@@ -890,7 +889,7 @@ class Db {
             return query;//an array of objects
         } catch (err) {
             log.error(sql);
-            console.log(sql)
+            // console.log(sql)
             log.error(err);
             //this.connection.close().then(succ => { }, err => { })
             throw new Error(err)
@@ -960,7 +959,7 @@ class Db {
             return query;//an array of objects
         } catch (error) {
             log.error(sql);
-            console.log(sql)
+            // console.log(sql)
             log.error(err);
             //this.connection.close().then(succ => { }, err => { })
             throw new Error(err)
@@ -982,7 +981,7 @@ class Db {
             return query;//an array of objects
         } catch (error) {
             log.error(sql);
-            console.log(sql)
+            // console.log(sql)
             log.error(err);
             //this.connection.close().then(succ => { }, err => { })
             throw new Error(err)
@@ -1001,7 +1000,7 @@ class Db {
             return query;//may be undefined or an object
         } catch (err) {
             log.error(sql);
-            console.log(sql)
+            // console.log(sql)
             log.error(err);
             //this.connection.close().then(succ => { }, err => { })
             throw new Error(err)
@@ -1022,7 +1021,7 @@ class Db {
             return query;//an array of objects
         } catch (err) {
             log.error(sql);
-            console.log(sql)
+            // console.log(sql)
             log.error(err);
             //this.connection.close().then(succ => { }, err => { })
             throw new Error(err)
@@ -1049,7 +1048,7 @@ class Db {
             return query;//may be undefined or an object
         } catch (err) {
             log.error(sql);
-            console.log(sql)
+            // console.log(sql)
             log.error(err);
             //this.connection.close().then(succ => { }, err => { })
             throw new Error(err)
@@ -1062,7 +1061,7 @@ class Db {
         //run the migrations
 
         let dbversion = filestore.get('dbversion');
-        console.log("dbversion: " + dbversion);
+        // console.log("dbversion: " + dbversion);
         let has_error = false;
         for (var i = 0; i < constants.migrations.length; i++) {
             let curr = constants.migrations[i];
@@ -1083,7 +1082,7 @@ class Db {
                         has_error = true;
                         log.error(`error at # ${version}`)
                         log.error(error)
-                        console.log(`error at # ${version}` + error)
+                        // console.log(`error at # ${version}` + error)
                         break;
                     }
                 }
@@ -1120,10 +1119,10 @@ const umzug = new Umzug({
         // checks migrations and run them if they are not already applied
         try {
             await umzug.up()
-            console.log('All migrations performed successfully')
+            // console.log('All migrations performed successfully')
 
         } catch (error) {
-            console.log(error)
+            // console.log(error)
         }
     })()
         }
@@ -1224,7 +1223,7 @@ const umzug = new Umzug({
             sql += q;
         })
         sql += "COMMIT;"
-        console.log(sql)
+        // console.log(sql)
         await this.connection.exec(sql);
     }
 

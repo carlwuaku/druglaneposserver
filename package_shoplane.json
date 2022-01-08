@@ -1,0 +1,77 @@
+{
+    "name": "shoplane",
+    "version": "1.5.4",
+    "description": "Shoplane POS local server.",
+    "productName": "ShoplaneServer",
+    "main": "main.js",
+    "scripts": {
+      "test": "echo \"Error: no test specified\" && exit 1",
+      "start": "electron .",
+      "dev": "nodemon --exec electron .",
+      "postinstall": "electron-builder install-app-deps",
+      "pack": "electron-builder --dir",
+      "dist": "electron-builder",
+      "publish": "electron-builder -p always",
+      "migration-skeleton": "npx sequelize-cli migration:generate --name migration-skeleton"
+  
+    },
+    "author": "Calron Softwares Ltd",
+    "license": "ISC",
+    "dependencies": {
+      "@trodi/electron-splashscreen": "^1.0.2",
+      "archiver": "^4.0.1",
+      "axios": "^0.21.0",
+      "bcryptjs": "^2.0.1",
+      "body-parser": "^1.18.2",
+      "decompress-zip": "^0.2.2",
+      "dotenv": "^10.0.0",
+      "ejs": "^3.1.3",
+      "electron-log": "^4.2.1",
+      "electron-updater": "^4.3.5",
+      "express": "^4.16.3",
+      "express-fileupload": "^0.4.0",
+      "express-session": "^1.17.1",
+      "firebase-admin": "^9.7.0",
+      "form-data": "^3.0.0",
+      "formidable": "^1.2.2",
+      "image-to-base64": "^2.2.0",
+      "ip": "^1.1.5",
+      "md5": "^2.2.1",
+      "multiparty": "^4.2.2",
+      "node-fetch": "^2.6.1",
+      "node-os-utils": "^1.2.2",
+      "node-schedule": "^1.3.2",
+      "request": "^2.88.2",
+      "sequelize": "^6.3.4",
+      "socket.io": "^2.1.1",
+      "sqlite-async": "^1.1.0",
+      "sqlite3": "^5.0.0",
+      "umzug": "^2.3.0",
+      "xlsx": "^0.16.5"
+    },
+    "devDependencies": {
+      "electron": "^15.3.1",
+      "electron-builder": "^22.10.5",
+      "nodemon": "^2.0.15",
+      "sequelize-cli": "^6.2.0"
+    },
+    "build": {
+      "appId": "CalronSoftwares.DruglanePMS",
+      "mac": {
+        "category": "your.app.category.type"
+      },
+      "productName": "Shoplane Inventory Management System 1.5",
+      "copyright": "Copyright © 2021 ${author}",
+      "publish": [{
+        "provider": "github",
+        "owner": "carlwuaku",
+        "repo": "druglaneposserver",
+        "releaseType": "release" 
+    }]
+    
+    },
+    "bundledDependencies": [
+      "express"
+    ]
+  }
+  

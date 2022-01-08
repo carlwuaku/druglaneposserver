@@ -11,7 +11,7 @@ const { autoUpdater } = require('electron-updater');
 const schedule = require('node-schedule');
 // const MainWindow = require('./MainWindow')
 // const AppTray = require('./AppTray') 
-process.env.NODE_ENV = 'development';
+process.env.NODE_ENV = 'production';
 let constants = require('./constants')
 let appName = constants.appname;
 const isDev =  process.env.NODE_ENV !== 'production' ? true : false;
