@@ -522,7 +522,7 @@ app.post('/saveSettings', checkSignIn, async (req, res) => {
     try {
     let settingsHelper = require('./helpers/settingsHelper');
     let sh = new settingsHelper();
-    console.log(req.body);
+    // console.log(req.body);
     var file = req.files.uploadfile
         if (file != undefined && file != null) {
 
@@ -684,7 +684,8 @@ app.post('/saveSettings', checkSignIn, async (req, res) => {
 
         res.redirect('settings?m=Settings set successfully');
     } catch (error) {
-        console.log(error)
+        // console.log(error)
+        log.error(error);
         res.redirect('settings?m=Error. Please try again')
 
     }
@@ -1285,6 +1286,7 @@ Please use this code as token in the reset page: ${token}.`;
 
     } catch (error) {
         // console.log(error)
+        log.error(error)
     }
 
 });
