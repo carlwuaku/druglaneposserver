@@ -1266,7 +1266,7 @@ exports.get_pending_stock_adjustment_sessions = async (_data) => {
     let adminClass = require('../helpers/adminHelper');
     let adminHelper = new adminClass();
     try {
-        let objects = await stockHelper.getMany(`status = 'in_progress' and strftime('%Y', date) = '${year}' `, stockHelper.sessions_table_name);
+        let objects = await stockHelper.getMany(`status = 'in_progress'`, stockHelper.sessions_table_name);
         for (var i = 0; i < objects.length; i++) {
             var obj = objects[i];
             obj.created_by = await adminHelper.getUserName(obj.created_by);
