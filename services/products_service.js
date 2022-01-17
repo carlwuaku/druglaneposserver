@@ -2254,7 +2254,7 @@ exports.merge_function = async (_data) => {
         return { status: '1' }
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        // console.log(error)
         throw new Error(error);
     }
 };
@@ -2575,7 +2575,7 @@ exports.get_product_consumption_function = async (_data) => {
     let end_month = _data.end_month;
     let start_year = _data.start_year;
     let end_year = _data.end_year;
-    console.log(end_month)
+    // console.log(end_month)
     let start_date = start_year + "-" + salesDetailsHelper.padZero(start_month) + "-01";
     let end_day = salesDetailsHelper.getLastDayOfMonth(end_month)
     let end_date = end_year + "-" + salesDetailsHelper.padZero(end_month) + "-" + end_day;
@@ -2720,7 +2720,7 @@ exports.merge_duplicates_function = async (_data) => {
                 await helper.refreshCurrentStock(ids[i])
                 await stockValueHelper.updateStockValue();
             } catch (error) {
-                console.log(error)
+                log.error(error)
             }
 
         }

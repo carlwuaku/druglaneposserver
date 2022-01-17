@@ -63,7 +63,7 @@ class AdminHelper extends dbClass {
 
         } catch (error) {
             log.error(error)
-            console.log(error)
+            // console.log(error)
             // this.connection.close().then(val => {
             //     console.log('db closed')
             // })
@@ -247,7 +247,7 @@ class AdminHelper extends dbClass {
             let user = await this.getItem(`id = ${userid}`, this.table_name);
             //get all permissions for the role
             let role_permissions = await this.getRolePermissions(user.role_id);
-            console.log(role_permissions)
+            // console.log(role_permissions)
             for (let index = 0; index < role_permissions.length; index++) {
                 const p = role_permissions[index];
                 if(p.name == permission){

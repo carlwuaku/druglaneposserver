@@ -908,7 +908,7 @@ exports.save_incoming_payment_function = async (_data) => {
             // sales_data.customer = `"${_data.customer_name} - ${_data.customer_phone}"`;
 
         } catch (error) {
-            console.log(error)
+            log.error(error)
         }
 
 
@@ -957,7 +957,7 @@ exports.find_incoming_payments_between_dates_function = async (_data) => {
                 objects[i].customer_name = customer.name;
                 objects[i].phone = customer.phone;
             } catch (error) {
-                console.log(error)
+                log.error(error)
                 objects[i].customer_name = "N/A";
                 objects[i].phone = "N/A";
             }
@@ -1082,7 +1082,7 @@ exports.reset_user_password = async (_data) => {
 
 
                 .then(function (response) {
-                    console.log(response.data);
+                    // console.log(response.data);
                     let data = {
                         error: false, retry: false, message: `Email sent to your email. Please 
             check your inbox to retrieve the token`}
@@ -1104,7 +1104,7 @@ exports.reset_user_password = async (_data) => {
         }
 
     } catch (error) {
-        console.log(error);
+        // console.log(error);
         let data = {
             error: true, retry: false, message: `Server error. Please try again`
         }

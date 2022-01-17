@@ -588,7 +588,7 @@ exports._findUserSummaryBetweenDates= async(_data) => {
         }
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        // console.log(error)
         log.error(error)
         throw new Error(error);
     }
@@ -650,7 +650,7 @@ exports._findShiftSummaryBetweenDates= async(_data) => {
         }
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        // console.log(error)
         log.error(error)
         throw new Error(error);
     }
@@ -702,7 +702,7 @@ exports._findPaymentMethodSummaryBetweenDates= async(_data) => {
         }
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        // console.log(error)
         log.error(error)
         throw new Error(error);
     }
@@ -760,7 +760,7 @@ exports._getDailySales= async(_data) => {
         }
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        // console.log(error)
         log.error(error)
         throw new Error(error);
     }
@@ -845,7 +845,7 @@ exports._getBranchDailySalesSummary= async(_data) => {
         }
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        // console.log(error)
         log.error(error)
         throw new Error(error);
     }
@@ -895,7 +895,7 @@ exports._getBranchDailyRecords= async(_data) => {
         }
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        // console.log(error)
         log.error(error)
         throw new Error(error);
     }
@@ -916,7 +916,7 @@ exports._getCategorySales= async(_data) => {
         }
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        // console.log(error)
         log.error(error)
         throw new Error(error);
     }
@@ -938,7 +938,7 @@ exports._getBestSellers= async(_data) => {
         }
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        // console.log(error)
         log.error(error)
         throw new Error(error);
     }
@@ -997,7 +997,7 @@ exports._getArrears= async(_data) => {
         }
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        // console.log(error)
         log.error(error)
         throw new Error(error);
     }
@@ -1022,7 +1022,7 @@ exports._getArrearsCount= async(_data) => {
         }
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        // console.log(error)
         log.error(error)
         throw new Error(error);
     }

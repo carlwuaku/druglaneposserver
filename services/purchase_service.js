@@ -266,7 +266,7 @@ exports._edit= async(_data) => {
     } catch (error) {
         await helper.closeConnection();
         log.error(error)
-        console.log(error)
+        // console.log(error)
         throw new Error(error);
     }
 };

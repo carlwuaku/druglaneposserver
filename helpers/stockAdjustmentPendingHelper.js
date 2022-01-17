@@ -266,7 +266,6 @@ class StockAdjustmentPendingHelper extends dbClass {
         try {
             await this.getConnection();
             let q = await this.connection.get(sql);
-            console.log(q)
             return q == undefined ? 0 : q.total;
         } catch (error) {
             log.error(error);
@@ -305,7 +304,7 @@ class StockAdjustmentPendingHelper extends dbClass {
         try {
             await this.getConnection();
             let q = await this.connection.get(sql);
-            console.log(q)
+            // console.log(q)
             return q == undefined ? 0 : q.total;
         } catch (error) {
             log.error(error);
@@ -325,7 +324,7 @@ class StockAdjustmentPendingHelper extends dbClass {
         try {
             await this.getConnection();
             let q = await this.connection.get(sql);
-            console.log(q)
+            // console.log(q)
             return q == undefined ? 0 : q.total;
         } catch (error) {
             log.error(error);

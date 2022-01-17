@@ -37,7 +37,7 @@ exports._getList= async(_data) => {
         return { status: '1', data: objects }
     } catch (error) {
         await helper.closeConnection();
-        console.log(error)
+        // console.log(error)
         log.error(error)
         throw new Error(error);
     } 

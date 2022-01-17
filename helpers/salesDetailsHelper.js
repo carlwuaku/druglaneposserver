@@ -443,7 +443,7 @@ class SalesDetailsHelper extends dbClass {
             let q = await this.connection.get(sql);
             return q.total == null ? 0 : q.total;
         } catch (error) {
-            console.log(error)
+            // console.log(error)
             log.error(error);
             throw new Error(error)
         }
@@ -461,7 +461,7 @@ class SalesDetailsHelper extends dbClass {
             let q = await this.connection.get(sql);
             return q == undefined ? 0 : q.total;
         } catch (error) {
-            console.log(sql)
+            // console.log(sql)
             log.error(error);
             throw new Error(error)
         }
@@ -479,7 +479,7 @@ class SalesDetailsHelper extends dbClass {
             let q = await this.connection.all(sql);
             return q;
         } catch (error) {
-            console.log(sql)
+            // console.log(sql)
             log.error(error);
             throw new Error(error)
         }
@@ -498,7 +498,7 @@ class SalesDetailsHelper extends dbClass {
             let q = await this.connection.all(sql);
             return q;
         } catch (error) {
-            console.log(sql)
+            // console.log(sql)
             log.error(error);
             throw new Error(error)
         }
@@ -522,7 +522,7 @@ class SalesDetailsHelper extends dbClass {
             let q = await this.connection.all(sql);
             return q;
         } catch (error) {
-            console.log(sql)
+            // console.log(sql)
             log.error(error);
             throw new Error(error)
         }

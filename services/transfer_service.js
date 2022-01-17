@@ -421,7 +421,7 @@ exports._findSentReceiptsBetweenDates= async(_data) => {
         for (var i = 0; i < objects.length; i++) {
             var obj = objects[i];
             obj.total_amount = await detailsHelper.getReceiptTotal(obj.code);
-            console.log(obj.code, obj.total_amount)
+            // console.log(obj.code, obj.total_amount)
 
             obj.num_of_items = await detailsHelper.getNumItems(obj.code);
             obj.display_name = await adminHelper.getUserName(obj.created_by)
