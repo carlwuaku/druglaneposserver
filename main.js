@@ -450,19 +450,23 @@ if (!gotTheLock) {
     // listen for all archive data to be written
     // 'close' event is fired only when a file descriptor is involved
     output.on('close', function () {
+try {
+  fs.copyFile(internal_backup_folder + `/${appName}_backup_${ts}.zip`, backup_folder + `/${appName}_backup_${ts}.zip`, (err) => {
+    if (err) {
+      console.log(err)
+      console.log('could not copy to internal folder');
 
-      // fs.copyFile(backup_folder + `/druglane_backup_${ts}.zip`, internal_backup_folder + `/druglane_backup_${ts}.zip`, (err) => {
-      //   if (err) {
-      //     console.log(err)
-      //     console.log('could not copy to internal folder');
+    }
+    else {
+      console.log('copied to internal folder');
 
-      //   }
-      //   else {
-      //     console.log('copied to internal folder');
+    }
 
-      //   }
-
-      // });
+  });
+} catch (error) {
+  log.error(error);
+}
+      
 
       var data = {
         file_name: `"${internal_backup_folder}/${appName}_backup_${ts}.zip"`,

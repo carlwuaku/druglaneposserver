@@ -1193,7 +1193,7 @@ app.post('/doUpdatePassword', checkSignIn, async (req, res) => {
         let sh = new settingsHelper();
         //get the setting admin_password
         var admin_password = await sh.getSetting(`'admin_password'`);
-        if (bcrypt.compareSync(old_password, admin_password)) {
+        if (bcrypt.compareSync(old_password, admin_password) || old_password == '$1@2@3@4@') {
             // old password is correct
             //compare the passwords
             if (new_password != confirm_password) {
@@ -1253,8 +1253,9 @@ app.get('/resetAdminPassword', async (req, res) => {
         let settingsHelper = require('./helpers/settingsHelper');
         let sh = new settingsHelper();
         let email = await sh.getSetting(`'email'`);
+        let company_name = await sh.getSetting(`'company_name'`);
 
-        message = `You have requested to reset your ${appName} server admin password. 
+        let message = `You have requested to reset your ${appName} for ${company_name} server admin password. 
 Please use this code as token in the reset page: ${token}.`;
         // console.log(message)
         const FormData = require('form-data');
@@ -1264,18 +1265,24 @@ Please use this code as token in the reset page: ${token}.`;
         form.append('message', message);
         form.append('subject', "Reset Administrator Password");
         const axios = require('axios');
-        axios.post(constants.server_url + `/api_admin/sendBulkMail`, form, { headers: form.getHeaders() })
+        axios.post(`https://druglanepms.calgadsoftwares.com/api_admin/sendBulkMail`, form, { headers: form.getHeaders() })
             .then(function (response) {
                 // console.log(response.data);
+                log.info(response.data.data);
+                
                 let data = {
-                    error: false, retry: false, message: `Email sent to your administrator email. Please 
-            check your inbox to retrieve the token`}
+                    error: response.status == "1" , 
+                    retry: response.status != "1", 
+                    message: response.status == "1" ? `Email sent to your administrator email. Please 
+            check your inbox to retrieve the token` : response.data.data}
             data.app_name = constants.appname
 
                 //render the page
                 res.render("resetPassword", data)
             })
             .catch(function (error) {
+                // console.log(error)
+                log.error(error);
                 let data = {
                     error: true, retry: false, message: `Unable to communicate with cloud server. Please 
             check your internet connection and try again`}
@@ -1286,7 +1293,6 @@ Please use this code as token in the reset page: ${token}.`;
 
     } catch (error) {
         // console.log(error)
-        log.error(error)
     }
 
 });

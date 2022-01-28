@@ -1,6 +1,6 @@
 {
   "name": "druglaneserver",
-  "version": "1.5.8",
+  "version": "1.5.9",
   "description": "Druglane Pharmacy Management Software Version 1",
   "main": "main.js",
   "productName": "DruglaneServer",
