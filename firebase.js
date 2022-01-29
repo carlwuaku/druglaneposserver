@@ -237,6 +237,7 @@ async function runQuery(route) {
         // console.log(module,typeof(module))
         // console.log(methodname, data)
     } catch (error) {
+        return { status: "-1", data: null }
         // console.log(">>>>>>>>>>." + route, error)
     }
 }

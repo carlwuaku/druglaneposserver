@@ -1,12 +1,12 @@
 
 const PORT = process.env.PORT || 5000;
-// const appName = "Shoplane";
-// const appLongName = "Shoplane POS & Inventory Management System";
-// const databaseName = "shoplane.db";
+const appName = "Shoplane";
+const appLongName = "Shoplane POS & Inventory Management System";
+const databaseName = "shoplane.db";
 
-const appName = "Druglane";
-const appLongName = "Druglane Pharmacy Management System";
-const databaseName = "druglane.db";
+// const appName = "Druglane";
+// const appLongName = "Druglane Pharmacy Management System";
+// const databaseName = "druglane.db";
 
 
 exports.appLongName = appLongName;

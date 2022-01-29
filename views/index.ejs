@@ -114,6 +114,9 @@
                                                                 <br>
                                                                 <i class="fa fa-lock"></i> Login Required
                                                                 <%  }     %>
+                                                                <div>
+                                                                        <a id="view_backups" class="link">Open Backups Folder</a>        
+                                                                </div>
 
 
                                                         </div>
@@ -280,6 +283,10 @@
         $(document).ready(function () {
                 $(document).on("click", "#start_backup", function () {
                         ipcRenderer.send('startBackup')
+                })
+
+                $(document).on("click", "#view_backups", function () {
+                        ipcRenderer.send('viewBackups')
                 })
 
                 $(document).on("click", "#start_sync", function () {

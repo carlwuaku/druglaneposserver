@@ -11,10 +11,10 @@ const { autoUpdater } = require('electron-updater');
 const schedule = require('node-schedule');
 // const MainWindow = require('./MainWindow')
 // const AppTray = require('./AppTray') 
-process.env.NODE_ENV = 'production';
+process.env.NODE_ENV = 'development';
 let constants = require('./constants')
 let appName = constants.appname;
-const isDev =  process.env.NODE_ENV !== 'production' ? true : false;
+const isDev = process.env.NODE_ENV !== 'production' ? true : false;
 const isMac = process.platform === 'darwin' ? true : false;
 let PORT = constants.port;
 const FileStore = require('./Store');
@@ -37,41 +37,41 @@ const firestoredb = firebase.db;
 
 const Splashscreen = require("@trodi/electron-splashscreen");
 const mainOpts = {
-    height: 800,
-    width: 1000,
-    title: `${appName}`,
-    webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false,
-enableRemoteModule: true,
-    },
-    icon: `${__dirname}/app/assets/icon2.png`,
+  height: 800,
+  width: 1000,
+  title: `${appName}`,
+  webPreferences: {
+    nodeIntegration: true,
+    contextIsolation: false,
+    enableRemoteModule: true,
+  },
+  icon: `${__dirname}/app/assets/icon2.png`,
 
-  } 
-  
+}
+
 // { width: 800, height: 600, frame: false };
 // configure the splashscreen
 const config = {
-    windowOpts: mainOpts,
-    templateUrl: `${__dirname}/app/splashScreen.html`,
-    splashScreenOpts: {
-        width: 425,
-        height: 425,
-    },
-    icon: `${__dirname}/app/assets/icon2.png`, 
+  windowOpts: mainOpts,
+  templateUrl: `${__dirname}/app/splashScreen.html`,
+  splashScreenOpts: {
+    width: 425,
+    height: 425,
+  },
+  icon: `${__dirname}/app/assets/icon2.png`,
 };
 
 //the first instance of the app will have gotTheLock = true. else it will be fls
 if (!gotTheLock) {
   // console.log("lock false")
   app.quit()
- 
-  
+
+
 } else {
   app.on('second-instance', (event, commandLine, workingDirectory) => {
     // Someone tried to run a second instance, we should focus our window.
     if (mainWindow != null && mainWindow != undefined) {
-      if (mainWindow.isMinimized()) {mainWindow.restore()}
+      if (mainWindow.isMinimized()) { mainWindow.restore() }
       mainWindow.focus()
     }
   })
@@ -132,7 +132,7 @@ if (!gotTheLock) {
     //   icon: `${__dirname}/app/assets/icon2.png`,
 
     // });
-    mainWindow =   Splashscreen.initSplashScreen(config);
+    mainWindow = Splashscreen.initSplashScreen(config);
 
     mainWindow.loadURL(`http://localhost:${constants.port}/`);
 
@@ -247,14 +247,14 @@ if (!gotTheLock) {
     var time = filestore.get("auto_backup_time") == undefined ? 19 : filestore.get("auto_backup_time");
     // console.log(time)
     var sync = filestore.get("last_sync") == undefined ? "unset" : filestore.get("last_sync");
-    
+
     //auto backup at selected time each day or turn off
-    if(time !== 'off'){
+    if (time !== 'off') {
       var j = schedule.scheduleJob('auto_backup', `0 ${time} * * *`, function () {
         autoCreateBackup();
       });
     }
-    
+
 
 
 
@@ -299,9 +299,15 @@ if (!gotTheLock) {
   ]
 
 
-  
+
   ipcMain.on('startBackup', (event, data) => {
     createBackup()
+  })
+
+  ipcMain.on('viewBackups', (event, data) => {
+    const { shell } = require('electron') // deconstructing assignment
+ 
+    shell.showItemInFolder(internal_backup_folder)
   })
 
   ipcMain.on('startSync', (event, data) => {
@@ -309,31 +315,33 @@ if (!gotTheLock) {
   })
 
   ipcMain.on('get_sync_file', (event) => {
-    fs.readFile(global.file_to_sync,(err,data)=>{
+    fs.readFile(global.file_to_sync, (err, data) => {
 
-      if(err) throw err;
-    
-      event.sender.send('sync_file_ready',{filedata: data,
-         file_location:global.file_to_sync,
-          company_id: global.company_id,
-        server_url: constants.server_url})
-    
+      if (err) throw err;
+
+      event.sender.send('sync_file_ready', {
+        filedata: data,
+        file_location: global.file_to_sync,
+        company_id: global.company_id,
+        server_url: constants.server_url
+      })
+
     })
     // console.log( global.file_to_sync)
     // event.sender.send('sync_file_ready', { file_location:  global.file_to_sync, company_id: global.company_id });
   })
 
   ipcMain.on('get_backup_file', (event) => {
-    
 
-        event.sender.send('backup_file_ready',{
-          filedata: global.backup_file_blob,
-           company_id: global.company_id,
-         server_url: constants.server_url,
-          address: global.address,
-        email: global.email,
+
+    event.sender.send('backup_file_ready', {
+      filedata: global.backup_file_blob,
+      company_id: global.company_id,
+      server_url: constants.server_url,
+      address: global.address,
+      email: global.email,
       phone: global.phone
-      })
+    })
     // console.log( global.file_to_sync)
     // event.sender.send('sync_file_ready', { file_location:  global.file_to_sync, company_id: global.company_id });
   })
@@ -434,105 +442,105 @@ if (!gotTheLock) {
   }
 
   //the function to create a backup
-  function doBackup(description){
+  function doBackup(description) {
     try {
-      
-    
-    var archiver = require('archiver');
-    // var docs_folder = path.join(app.getPath('documents'), "druglaneBackups");
-    // create a file to stream archive data to.
-    var ts = getToday('timestamp_string')
-    var output = fs.createWriteStream(internal_backup_folder + `/${appName}_backup_${ts}.zip`);
-    var archive = archiver('zip', {
-      zlib: { level: 9 } // Sets the compression level.
-    });
 
-    // listen for all archive data to be written
-    // 'close' event is fired only when a file descriptor is involved
-    output.on('close', function () {
-try {
-  fs.copyFile(internal_backup_folder + `/${appName}_backup_${ts}.zip`, backup_folder + `/${appName}_backup_${ts}.zip`, (err) => {
-    if (err) {
-      console.log(err)
-      console.log('could not copy to internal folder');
 
-    }
-    else {
-      console.log('copied to internal folder');
+      var archiver = require('archiver');
+      // var docs_folder = path.join(app.getPath('documents'), "druglaneBackups");
+      // create a file to stream archive data to.
+      var ts = getToday('timestamp_string')
+      var output = fs.createWriteStream(internal_backup_folder + `/${appName}_backup_${ts}.zip`);
+      var archive = archiver('zip', {
+        zlib: { level: 9 } // Sets the compression level.
+      });
 
-    }
+      // listen for all archive data to be written
+      // 'close' event is fired only when a file descriptor is involved
+      output.on('close', function () {
+        // try {
+        //   fs.copyFile(internal_backup_folder + `/${appName}_backup_${ts}.zip`, backup_folder + `/${appName}_backup_${ts}.zip`, (err) => {
+        //     if (err) {
+        //       console.log(err)
+        //       console.log('could not copy to internal folder');
 
-  });
-} catch (error) {
-  log.error(error);
-}
-      
+        //     }
+        //     else {
+        //       console.log('copied to internal folder');
 
-      var data = {
-        file_name: `"${internal_backup_folder}/${appName}_backup_${ts}.zip"`,
-        description: `'${description} backup'`,
-        created_by: `'system'`,
-        uploaded: `'no'`,
-        db_version: filestore.get('dbversion')
-      }
-      saveBackup(data)
-      switch (description) {
-        case "automatic":
-          log.info('backup  created.');
+        //     }
 
-          break;
-          case "manual":
-            mainWindow.webContents.send('backup_done', { directory: backup_folder + `/${appName}_backup_${ts}.zip` })
+        //   });
+        // } catch (error) {
+        //   log.error(error);
+        // }
+
+
+        var data = {
+          file_name: `"${internal_backup_folder}/${appName}_backup_${ts}.zip"`,
+          description: `'${description} backup'`,
+          created_by: `'system'`,
+          uploaded: `'no'`,
+          db_version: filestore.get('dbversion')
+        }
+        saveBackup(data)
+        switch (description) {
+          case "automatic":
+            log.info('backup  created.');
+
             break;
-              case "manual_shutdown":
-          app.quit();
-        break;
-        default:
-          break;
-      }
+          case "manual":
+            mainWindow.webContents.send('backup_done', { directory: internal_backup_folder + `/${appName}_backup_${ts}.zip` })
+            break;
+          case "manual_shutdown":
+            app.quit();
+            break;
+          default:
+            break;
+        }
 
-    });
+      });
 
-    // This event is fired when the data source is drained no matter what was the data source.
-    // It is not part of this library but rather from the NodeJS Stream API.
-    // @see: https://nodejs.org/api/stream.html#stream_event_end
-    output.on('end', function () {
-      console.log('Data has been drained');
-    });
+      // This event is fired when the data source is drained no matter what was the data source.
+      // It is not part of this library but rather from the NodeJS Stream API.
+      // @see: https://nodejs.org/api/stream.html#stream_event_end
+      output.on('end', function () {
+        console.log('Data has been drained');
+      });
 
-    // good practice to catch warnings (ie stat failures and other non-blocking errors)
-    archive.on('warning', function (err) {
-      if (err.code === 'ENOENT') {
-        // log warning
-        log.error('Warning creating  backup: ' + err)
-      } else {
-        log.error('Warning creating  backup: ' + err)
-        // throw error
+      // good practice to catch warnings (ie stat failures and other non-blocking errors)
+      archive.on('warning', function (err) {
+        if (err.code === 'ENOENT') {
+          // log warning
+          log.error('Warning creating  backup: ' + err)
+        } else {
+          log.error('Warning creating  backup: ' + err)
+          // throw error
+          throw err;
+        }
+      });
+
+      // good practice to catch this error explicitly
+      archive.on('error', function (err) {
+        log.error('Warning creating auto backup: ' + err)
         throw err;
-      }
-    });
+      });
 
-    // good practice to catch this error explicitly
-    archive.on('error', function (err) {
-      log.error('Warning creating auto backup: ' + err)
-      throw err; 
-    });
-
-    // pipe archive data to the file
-    archive.pipe(output);
-
-    
-    archive.file(constants.settings_path, { name: constants.settings_filename });
-    archive.file(constants.db_path, { name: constants.db_filename });
+      // pipe archive data to the file
+      archive.pipe(output);
 
 
-    // finalize the archive (ie we are done appending files but streams have to finish yet)
-    // 'close', 'end' or 'finish' may be fired right after calling this method so register to them beforehand
-    archive.finalize();
-  } catch (error) {
-    console.log(error);
-    log.error(error);
-  }
+      archive.file(constants.settings_path, { name: constants.settings_filename });
+      archive.file(constants.db_path, { name: constants.db_filename });
+
+
+      // finalize the archive (ie we are done appending files but streams have to finish yet)
+      // 'close', 'end' or 'finish' may be fired right after calling this method so register to them beforehand
+      archive.finalize();
+    } catch (error) {
+      console.log(error);
+      log.error(error);
+    }
   }
 
   ipcMain.on('restore', (event, option) => {
@@ -559,7 +567,7 @@ try {
   }
 
   function restoreBackup(filename) {
-    let DecompressZip = require('decompress-zip'); 
+    let DecompressZip = require('decompress-zip');
     var unzipper = new DecompressZip(filename);
     console.log(filename);
     // Add the error event listener
@@ -631,7 +639,7 @@ try {
         let filename = splitfilename.pop();
         const FormData = require('form-data');
         let formdata = new FormData()
-       
+
 
 
 
@@ -643,7 +651,7 @@ try {
         let file_location = path.join(constants.internal_backups_path, filename);
         let settingsHelper = require('./helpers/settingsHelper');
         let sh = new settingsHelper();
- 
+
         let name = await sh.getSetting(`'company_name'`);
         let address = await sh.getSetting(`'address'`);
         let email = await sh.getSetting(`'email'`);
@@ -664,44 +672,45 @@ try {
           width: 300,
           title: `${appName}Server`,
           webPreferences: {
-            nodeIntegration: true
+            nodeIntegration: true,
+            contextIsolation: false
           },
           icon: `${__dirname}/app/assets/icon2.png`,
           x: 0,
-          y:0
-        });  
-    
+          y: 0
+        });
+
         mwindow.loadURL(`file://${__dirname}/app/backup.html`);
         // mwindow.webContents.openDevTools()
 
 
 
 
-         
-
-          // var file = new File([file_data],'dlbackup.zip',{type:'application/x-zip'})
-        
-          // formdata.append('file', file);
-          // formdata.append('email', email);
-          // formdata.append('phone', phone)
-          // formdata.append('name', name)
-          // formdata.append('company_id', company_id)
-          
-          // const postUrl = constants.server_url + "/api_admin/receive_file" //replace your upload url here     req.post({url: postUrl,formData: formData }, function(err, httpResponse, body) {        
-          
-          //   const axios = require('axios')
-  
-          //  let resp =  await axios
-          //     .post(postUrl, formdata, {
-          //       headers: formdata.getHeaders()
-          //     });
-          //     console.log(resp)
-         
-        
-      
 
 
-           
+        // var file = new File([file_data],'dlbackup.zip',{type:'application/x-zip'})
+
+        // formdata.append('file', file);
+        // formdata.append('email', email);
+        // formdata.append('phone', phone)
+        // formdata.append('name', name)
+        // formdata.append('company_id', company_id)
+
+        // const postUrl = constants.server_url + "/api_admin/receive_file" //replace your upload url here     req.post({url: postUrl,formData: formData }, function(err, httpResponse, body) {        
+
+        //   const axios = require('axios')
+
+        //  let resp =  await axios
+        //     .post(postUrl, formdata, {
+        //       headers: formdata.getHeaders()
+        //     });
+        //     console.log(resp)
+
+
+
+
+
+
 
 
       }
@@ -731,7 +740,7 @@ try {
   //   sync.start_sync();
   // }, 3600000);
 
-  
+
 }
 
 
