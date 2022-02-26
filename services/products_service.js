@@ -391,7 +391,7 @@ exports.get_related_products = async (_data) => {
     let limit = 5;
     let description = item.description.toLowerCase();
     try {
-        let objects = await helper.getMany(`lower(description) like '${description}' and current_stock > 0 `, helper.table_name, limit, offset,"expiy");
+        let objects = await helper.getMany(`lower(description) like '${description}' and current_stock > 0 `, helper.table_name, limit, offset,"expiry");
         let selected = []
         for (var i = 0; i < objects.length; i++) {
             var obj = objects[i];

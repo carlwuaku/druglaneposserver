@@ -1,6 +1,6 @@
 {
   "name": "druglaneserver",
-  "version": "1.5.11",
+  "version": "1.5.13",
   "description": "Druglane Pharmacy Management Software Version 1",
   "main": "main.js",
   "productName": "DruglaneServer",
@@ -11,7 +11,9 @@
     "postinstall": "electron-builder install-app-deps",
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
+    "dist-32bit": "electron-builder --ia32",
     "publish": "electron-builder -p always",
+    "publish-32bit": "electron-builder --ia32 -p always",
     "migration-skeleton": "npx sequelize-cli migration:generate --name migration-skeleton"
 
   },

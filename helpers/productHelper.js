@@ -10,10 +10,11 @@ class ProductHelper extends dbClass {
     fields = ["price", "unit", "min_stock", "max_stock",
         "expiry", "cost_price",
         "status",
-        "name", "category", "notes", "barcode", "size", "shelf","description","preferred_vendor"]
+        "name", "category", "notes", "barcode", "size", "shelf","description","preferred_vendor",
+    "markup"]
     table_name = "products";
 
-    not_string_fields = ["id", "price", "min_stock", "max_stock", "cost_price"];
+    not_string_fields = ["id", "price", "min_stock", "max_stock", "cost_price","markup"];
     //the fields which are not strings. used in prep_data
 
     prep_data(data) {

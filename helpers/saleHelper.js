@@ -79,6 +79,77 @@ class SalesHelper extends dbClass {
     }
 
     /**
+    * get total discount by a user for a payment method for a period
+    * @param {String} start the start date
+    * @param {String} payment_method the payment method
+    * @param {String} end the end date
+    * @param {String} user the user id
+    */
+     async getUserPaymentMethodDiscount(user,payment_method, start, end) {
+        let sql = `select sum(discount) as total from ${this.table_name} where created_by = ${user}
+         and payment_method = '${payment_method}' `;
+        if (start != '') {
+            sql += ` and date >= '${start}' and date <= '${end}' `
+        }
+
+        try {
+            await this.getConnection();
+            let q = await this.connection.get(sql);
+            return q.total == null ? 0 : q.total;
+        } catch (error) {
+            log.error(error);
+            throw new Error(error)
+        }
+    }
+
+    
+    /**
+    * get total discount by a shift for a payment method for a period
+    * @param {String} start the start date
+    * @param {String} payment_method the payment method
+    * @param {String} end the end date
+    * @param {String} shift the shift
+    *     */
+     async getShiftPaymentMethodDiscount(shift,payment_method, start, end) {
+        let sql = `select sum(discount) as total from ${this.table_name} where shift = '${shift}'
+         and payment_method = '${payment_method}' `;
+        if (start != '') {
+            sql += ` and date >= '${start}' and date <= '${end}' `
+        }
+
+        try {
+            await this.getConnection();
+            let q = await this.connection.get(sql);
+            return q.total == null ? 0 : q.total;
+        } catch (error) {
+            log.error(error);
+            throw new Error(error)
+        }
+    }
+
+    /**
+    * get total discount for a payment method for a period
+    * @param {String} start the start date
+    * @param {String} end the end date
+    * @param {String} payment_method the payment method 
+    */
+     async getPaymentMethodDiscount(payment_method, start, end) {
+        let sql = `select sum(discount) as total from ${this.table_name} where payment_method = '${payment_method}' `;
+        if (start != '') {
+            sql += ` and date >= '${start}' and date <= '${end}' `
+        }
+
+        try {
+            await this.getConnection();
+            let q = await this.connection.get(sql);
+            return q.total == null ? 0 : q.total;
+        } catch (error) {
+            log.error(error);
+            throw new Error(error)
+        }
+    }
+
+    /**
      * get total discount by a shift for a period
      * @param {String} start the start date
      * @param {String} end the end date

@@ -759,6 +759,8 @@ router.post('/upload', (req, res, next) => {
             var counted = obj_array.counted == undefined ? 0 : obj_array.counted;
             var shelf = obj_array.shelf == undefined ? "" : obj_array.shelf;
             var unit = obj_array.unit == undefined ? "" : obj_array.unit;
+            var functional_group = obj_array.functional_group == undefined ? "" : obj_array.functional_group;
+            var markup = obj_array.markup == 1.33 ? "" : obj_array.markup;
             if (name != undefined && name != null && name != "") {
                 mother_array.push({
                     id: id,
@@ -771,7 +773,9 @@ router.post('/upload', (req, res, next) => {
                     stock: expected,
                     difference: counted - expected,
                     shelf: shelf,
-                    unit: unit
+                    unit: unit,
+                    markup: markup,
+                    functional_group: functional_group
                 })
             }
 

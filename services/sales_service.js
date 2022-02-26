@@ -559,18 +559,29 @@ exports._findUserSummaryBetweenDates= async(_data) => {
             let other = await detailsHelper.getUserSalesByPaymentMethod(obj.created_by, 'Other', start, end)
             let discount = await helper.getUserDiscount(obj.created_by, start, end);
             let tax = await helper.getUserTax(obj.created_by, start, end)
+
+            let cash_discount = await helper.getUserPaymentMethodDiscount(obj.created_by,'Cash', start, end);
+        let momo_discount = await helper.getUserPaymentMethodDiscount(obj.created_by,'Mobile Money', start, end)
+        let cheque_discount = await helper.getUserPaymentMethodDiscount(obj.created_by,'Cheque', start, end)
+        let pos_discount = await helper.getUserPaymentMethodDiscount(obj.created_by,'POS', start, end)
+        let credit_discount = await helper.getUserPaymentMethodDiscount(obj.created_by,'Credit', start, end)
+        let insurance_discount = await helper.getUserPaymentMethodDiscount(obj.created_by,'Insurance', start, end)
+        let other_discount = await helper.getUserPaymentMethodDiscount(obj.created_by,'Other', start, end)
+
+
             obj.total_amount += tax;
             total_sales += obj.total_amount;
             num_sales += obj.num_of_items;
 
 
-            obj.cash = cash.toLocaleString()
-            obj.momo = momo.toLocaleString()
-            obj.cheque = cheque.toLocaleString()
-            obj.pos = pos.toLocaleString()
-            obj.credit = credit.toLocaleString()
-            obj.insurance = insurance.toLocaleString()
-            obj.other = other.toLocaleString()
+            obj.cash = (cash - cash_discount).toLocaleString()
+            obj.momo = (momo - momo_discount).toLocaleString()
+            obj.cheque = (cheque - cheque_discount).toLocaleString()
+            obj.pos = (pos - pos_discount).toLocaleString()
+            obj.credit = (credit - credit_discount).toLocaleString()
+            obj.insurance = (insurance - insurance_discount).toLocaleString()
+            obj.other = (other - other_discount).toLocaleString();
+
             obj.discount = discount.toLocaleString()
             obj.tax = tax.toLocaleString()
             let discounted_total = obj.total_amount - discount;
@@ -622,18 +633,31 @@ exports._findShiftSummaryBetweenDates= async(_data) => {
             let other = await detailsHelper.getShiftSalesByPaymentMethod(obj.shift, 'Other', start, end)
             let discount = await helper.getShiftDiscount(obj.shift, start, end);
             let tax = await helper.getShiftTax(obj.shift, start, end)
+
+            
+            let cash_discount = await helper.getShiftPaymentMethodDiscount(obj.shift,'Cash', start, end);
+            let momo_discount = await helper.getShiftPaymentMethodDiscount(obj.shift,'Mobile Money', start, end)
+            let cheque_discount = await helper.getShiftPaymentMethodDiscount(obj.shift,'Cheque', start, end)
+            let pos_discount = await helper.getShiftPaymentMethodDiscount(obj.shift,'POS', start, end)
+            let credit_discount = await helper.getShiftPaymentMethodDiscount(obj.shift,'Credit', start, end)
+            let insurance_discount = await helper.getShiftPaymentMethodDiscount(obj.shift,'Insurance', start, end)
+            let other_discount = await helper.getShiftPaymentMethodDiscount(obj.shift,'Other', start, end)
+    
+    
+
             obj.total_amount += tax;
 
             total_sales += obj.total_amount;
             num_sales += obj.num_of_items;
 
-            obj.cash = cash.toLocaleString()
-            obj.momo = momo.toLocaleString()
-            obj.cheque = cheque.toLocaleString()
-            obj.pos = pos.toLocaleString()
-            obj.credit = credit.toLocaleString()
-            obj.insurance = insurance.toLocaleString()
-            obj.other = other.toLocaleString()
+            obj.cash = (cash - cash_discount).toLocaleString()
+            obj.momo = (momo - momo_discount).toLocaleString()
+            obj.cheque = (cheque - cheque_discount).toLocaleString()
+            obj.pos = (pos - pos_discount).toLocaleString()
+            obj.credit = (credit - credit_discount).toLocaleString()
+            obj.insurance = (insurance - insurance_discount).toLocaleString()
+            obj.other = (other - other_discount).toLocaleString();
+
             obj.discount = discount.toLocaleString()
             let discounted_total = obj.total_amount - discount;
             obj.total_amount = obj.total_amount.toLocaleString()
@@ -729,13 +753,23 @@ exports._getDailySales= async(_data) => {
         // }
         let total = await detailsHelper.getTotalSales(start, end);
         let avg = await detailsHelper.getAverageSales(start, end);
-        let cash = await detailsHelper.getSalesByPaymentMethod('Cash', start, end)
+        let cash = await detailsHelper.getSalesByPaymentMethod('Cash', start, end);
         let momo = await detailsHelper.getSalesByPaymentMethod('Mobile Money', start, end)
         let cheque = await detailsHelper.getSalesByPaymentMethod('Cheque', start, end)
         let pos = await detailsHelper.getSalesByPaymentMethod('POS', start, end)
         let credit = await detailsHelper.getSalesByPaymentMethod('Credit', start, end)
         let insurance = await detailsHelper.getSalesByPaymentMethod('Insurance', start, end)
         let other = await detailsHelper.getSalesByPaymentMethod('Other', start, end)
+
+        let cash_discount = await helper.getPaymentMethodDiscount('Cash', start, end);
+        let momo_discount = await helper.getPaymentMethodDiscount('Mobile Money', start, end)
+        let cheque_discount = await helper.getPaymentMethodDiscount('Cheque', start, end)
+        let pos_discount = await helper.getPaymentMethodDiscount('POS', start, end)
+        let credit_discount = await helper.getPaymentMethodDiscount('Credit', start, end)
+        let insurance_discount = await helper.getPaymentMethodDiscount('Insurance', start, end)
+        let other_discount = await helper.getPaymentMethodDiscount('Other', start, end)
+
+
         let discount = await helper.getTotalDiscount(start, end);
         let tax = await helper.getTotalTax(start, end);
         total += tax;
@@ -746,13 +780,13 @@ exports._getDailySales= async(_data) => {
             status: '1',
             total_sales: total.toLocaleString(),
             average_sale: avg.toLocaleString(),
-            momo: momo.toLocaleString(),
-            cash: cash.toLocaleString(),
-            pos: pos.toLocaleString(),
-            cheque: cheque.toLocaleString(),
-            credit: credit.toLocaleString(),
-            insurance: insurance.toLocaleString(),
-            other: other.toLocaleString(),
+            momo: (momo - momo_discount).toLocaleString(),
+            cash: (cash - cash_discount).toLocaleString(),
+            pos: (pos - pos_discount).toLocaleString(),
+            cheque: (cheque - cheque_discount).toLocaleString(),
+            credit: (credit - credit_discount).toLocaleString(),
+            insurance: (insurance - insurance_discount).toLocaleString(),
+            other: (other - other_discount).toLocaleString(),
             discount: discount.toLocaleString(),
             discounted_total: discounted_total.toLocaleString(),
             tax: tax.toLocaleString(),
