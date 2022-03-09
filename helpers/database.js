@@ -805,12 +805,12 @@ class Db {
     }
 
     /**
-     * 
+     * get all records meeting the condition from the specified table
      * @param {string} conditions 
      * @param {string} table 
      * @param {Number} limit 
      * @param {Number} offset
-     * @returns {Array}
+     * @returns {Array} 
      */
     async getMany(conditions, table, limit = null, offset = 0, sort_by="id", sort_dxn="asc") {
         //use placeholders for the variables,""
@@ -823,7 +823,6 @@ class Db {
         try {
             await this.getConnection();
             let query = await this.connection.all(sql);
-
             return query;//an array of objects
         } catch (err) {
             log.error(sql);

@@ -373,18 +373,33 @@ exports._getSaleDetails= async(_data) => {
 exports._deleteByCode= async(_data) => {
     try {
         let codes = _data.code.split(",");//comma-separated
-        let code_quotes = []
-        for (var i = 0; i < codes.length; i++) {
-            code_quotes.push(`'${codes[i]}'`)
-        }
+        let code_quotes = [];
         let products = []
         let product_query = await detailsHelper.getDistinct('product', detailsHelper.table_name, ` code in (${code_quotes.join(",")}) `);
         product_query.map(p => {
             products.push(p.product);
-        })
+        });
+        for (var i = 0; i < codes.length; i++) {
+            let current_code = codes[i];
+            code_quotes.push(`'${codes[i]}'`);
+            //get the details of the receipt and log it
+            let details = await detailsHelper.getMany(`code = '${current_code}'`,detailsHelper.table_name);
+            let contents = [];
+            
+            for(var x = 0; x < details.length; x++){
+                let obj = details[x];
+                let product = await productHelper.getItem(` id = ${obj.product} `, productHelper.table_name);
+                contents.push(`(${product.name}, price: ${obj.price}, qtt: ${obj.quantity}) || `);
+            
+            }
+            
+            await helper.delete(` code = '${current_code}'  `, helper.table_name);
 
-        await helper.delete(` code in (${code_quotes.join(",")}) `, helper.table_name);
-        await activities.log(_data.userid, `"deleted  sales receipt: ${code_quotes.join(",")}  "`, `'Products'`)
+            await activities.log(_data.userid, `"deleted  sales receipt: ${current_code}: ${contents.join(" ")}  "`, `'Products'`)
+
+        }
+        
+
 
 
         for (var x = 0; x < products.length; x++) {

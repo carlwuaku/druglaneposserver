@@ -190,7 +190,7 @@ exports.get_all_activities_function = async (_data) => {
     try {
         let objects;
         if (start == null) {
-            objects = await activitiesHelper.getAll(activitiesHelper.table_name, limit, offset);
+            objects = await activitiesHelper.getAll(activitiesHelper.table_name, limit, offset,"activity_id","desc");
         }
         else {
             objects = await activitiesHelper.getMany(`  created_on >= '${start} 00:00:00' and created_on <= '${end} 23:59:59'`, activitiesHelper.table_name, limit, offset);

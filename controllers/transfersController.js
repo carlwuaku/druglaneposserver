@@ -201,7 +201,7 @@ router.get('/findReceiptsByReceivingBranch', async (req, res) => {
 
 router.post('/saveBulkReceive', async (req, res) => {
     try {
-        let data = await service._saveBulkReceive(req.query);
+        let data = await service._saveBulkReceive(req.body);
 		res.json(data);
         
     } catch (error) {

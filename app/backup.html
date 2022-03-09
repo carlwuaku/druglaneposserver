@@ -91,11 +91,11 @@
                             $("#loading_icon").fadeOut("fast")
                             $("#error_icon").fadeIn("fast")
                             $("#success_icon").fadeOut("fast")
-                            log.error('backup failed. '+err)
+                            log.error('backup failed. '+JSON.stringify(err))
 
                             setTimeout(() => {
                                 window.close();  
-                            }, 5000);
+                            }, 15000);
                         }
                     });
           
