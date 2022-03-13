@@ -689,23 +689,23 @@ exports.find_by_id_function = async (_data) => {
         item.stock = item.current_stock;
         item.out_of_stock = item.stock < 1;
         item.stock_value = (item.stock * item.price).toLocaleString()
-        let ItemAiHelperClass = require("../helpers/ProductIngredientHelper");
-        let itemAiHelper = new ItemAiHelperClass();
+        // let ItemAiHelperClass = require("../helpers/ProductIngredientHelper");
+        // let itemAiHelper = new ItemAiHelperClass();
 
-        let aiHelperClass = require("../helpers/activeIngredientHelper");
-        let aiHelper = new aiHelperClass()
+        // let aiHelperClass = require("../helpers/activeIngredientHelper");
+        // let aiHelper = new aiHelperClass()
 
-        let ais = await itemAiHelper.getMany(` product = ${id}`, itemAiHelper.table_name);
-        if (ais != null) {
-            for (var i = 0; i < ais.length; i++) {
-                let det = await aiHelper.getItem(` id = ${ais[i].ingredient}`, aiHelper.table_name);
-                ais[i].name = det == null ? "N/A" : det.name;
-                ais[i].side_effect = det == null ? "N/A" : det.side_effect;
-                ais[i].caution = det == null ? "N/A" : det.caution;
-                ais[i].pregnancy = det == null ? "N/A" : det.pregnancy;
-                ais[i].indication = det == null ? "N/A" : det.indication;
-            }
-        }
+        // let ais = await itemAiHelper.getMany(` product = ${id}`, itemAiHelper.table_name);
+        // if (ais != null) {
+        //     for (var i = 0; i < ais.length; i++) {
+        //         let det = await aiHelper.getItem(` id = ${ais[i].ingredient}`, aiHelper.table_name);
+        //         ais[i].name = det == null ? "N/A" : det.name;
+        //         ais[i].side_effect = det == null ? "N/A" : det.side_effect;
+        //         ais[i].caution = det == null ? "N/A" : det.caution;
+        //         ais[i].pregnancy = det == null ? "N/A" : det.pregnancy;
+        //         ais[i].indication = det == null ? "N/A" : det.indication;
+        //     }
+        // }
         let this_month = helper.setDates("this_month")
         let last_month = helper.setDates("last_month")
         // let q1 = helper.setDates("first_quarter")
@@ -713,7 +713,7 @@ exports.find_by_id_function = async (_data) => {
         // let q3 = helper.setDates("third_quarter")
         // let q4 = helper.setDates("fourth_quarter")
 
-        item.active_ingredients = ais == null ? [] : ais;
+        // item.active_ingredients = ais == null ? [] : ais;
         let this_month_quantity = await salesDetailsHelper.getTotalQuantityAndAmount(id, this_month.start_date, this_month.end_date)
         let last_month_quantity = await salesDetailsHelper.getTotalQuantityAndAmount(id, last_month.start_date, last_month.end_date)
         item.this_month_quantity = this_month_quantity.total;
@@ -2731,5 +2731,28 @@ exports.merge_duplicates_function = async (_data) => {
         log.error(error);
         throw new Error(error);
     }
+
+};
+
+exports.refresh_current_stock_function = async (_data) => {
+    try {
+
+
+
+        let ids = _data.id.split(",");//comma-separated
+        for(let i = 0; i < ids.length; i++){
+            let id = ids[i];
+            // let product = await helper.getItem(`id = ${id}`, helper.table_name);
+            await helper.refreshCurrentStock(id);
+
+        }
+        
+        return { status: '1' }
+    } catch (error) {
+        await helper.closeConnection();
+        log.error(error);
+        throw new Error(error);
+    }
+
 
 };

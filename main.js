@@ -11,18 +11,23 @@ const { autoUpdater } = require('electron-updater');
 const schedule = require('node-schedule');
 // const MainWindow = require('./MainWindow')
 // const AppTray = require('./AppTray') 
-process.env.NODE_ENV = 'development';
+
 let constants = require('./constants')
 let appName = constants.appname;
-const isDev = process.env.NODE_ENV !== 'production' ? true : false;
 const isMac = process.platform === 'darwin' ? true : false;
 let PORT = constants.port;
 const FileStore = require('./Store');
 const filestore = new FileStore({
   configName: 'system-settings',
-  defaults: constants.default_config
+  defaults: constants.default_config 
 });
-log.info('starting')
+const environment =filestore.get("environment") == undefined ? "production" : filestore.get("environment");
+process.env.NODE_ENV = environment;
+const isDev = process.env.NODE_ENV !== 'production' ? true : false;
+console.log("envionment",filestore.get("environment"))
+// = process.env.NODE_ENV !== 'production' ? true : false;
+
+// log.info('starting')
 const sync = require("./sync")
 // let tray = null;
 let mainWindow;

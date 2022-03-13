@@ -388,6 +388,8 @@ exports._deleteByCode= async(_data) => {
             
             for(var x = 0; x < details.length; x++){
                 let obj = details[x];
+                await productHelper.refreshCurrentStock(obj.product)
+
                 let product = await productHelper.getItem(` id = ${obj.product} `, productHelper.table_name);
                 contents.push(`(${product.name}, price: ${obj.price}, qtt: ${obj.quantity}) || `);
             
@@ -402,11 +404,11 @@ exports._deleteByCode= async(_data) => {
 
 
 
-        for (var x = 0; x < products.length; x++) {
+        // for (var x = 0; x < products.length; x++) {
 
-            let pid = products[x];
-            await productHelper.refreshCurrentStock(pid)
-        }
+        //     let pid = products[x];
+        //     await productHelper.refreshCurrentStock(pid)
+        // }
         await stockValueHelper.updateStockValue();
         return {
             status: '1'

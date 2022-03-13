@@ -339,7 +339,7 @@ router.get('/getPendingStockQuantity', async (req, res) => {
 router.get('/getStockAdjustmentSessions', async (req, res) => {
     
     try {
-        let data = await service.save_branch_details_function(req.query);
+        let data = await service.get_stock_adjustment_sessions_function(req.query);
 		res.json(data);
 
     } catch (error) {
@@ -909,6 +909,20 @@ router.post('/mergeDuplicates', async (req, res) => {
         await helper.closeConnection();
         //console.l.log(error)
         res.json({ status: '-1', data: null })
+    }
+
+});
+
+router.post('/refreshCurrentStock', async (req, res) => {
+    try {
+    
+        let data = await service.refresh_current_stock_function(req.body);
+		res.json(data);
+
+    } catch (error) {
+        await helper.closeConnection();
+        //console.l.log(error)
+        res.json({ status: '-1' })
     }
 
 });

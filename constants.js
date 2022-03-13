@@ -66,7 +66,8 @@ exports.default_config = {
   admin_set: 'no',
   company_set: 'no',
   auto_backup_time: 19,
-  last_sync: 0
+  last_sync: 0,
+  env: "production"
 }
 
 exports.PERMISSION_VIEW_USER_ACTIVITIES = "View Sales History";

@@ -10,7 +10,6 @@ class Store{
         const userDataPath = (electron.app || electron.remote.app).getPath('userData');
         this.path = constants.settings_path
         this.data = parseDataFile();
-        
     } 
 
   
@@ -29,7 +28,8 @@ function parseDataFile(){
     try {
         if(fs.existsSync(constants.settings_path)){
             log.info('system-settings file found');
-            return JSON.parse(fs.readFileSync(constants.settings_path))
+            return JSON.parse(fs.readFileSync(constants.settings_path));
+
         }
         else{
             log.info('system-settings not file found');
