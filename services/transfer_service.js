@@ -248,12 +248,27 @@ exports._deleteItem= async(_data) => {
 
         let products = []
         let product_query = await detailsHelper.getDistinct('product', detailsHelper.table_name, ` code in (${codes})`);
-        product_query.map(p => {
+        let details = "";
+        product_query.map(async p => {
+            try {
+                let product_details = await productHelper.getItem(`id = ${p.product}`,productHelper.table_name)
+                details += `${product_details.name} qtt: ${p.quantity}, price: ${p.price} |||`
+            } catch (error) {
+                
+            }
             products.push(p.product);
         })
 
         await helper.delete(` id in (${id})`, helper.table_name);
-        await activities.log(_data.userid, `"deleted transfers with invoices: ${invoices}"`, "'Vendors'")
+        try {
+            await activities.log(_data.userid, `"deleted transfers with invoices: ${codes}. details:${details} "`, "'Vendors'")
+
+        } catch (error) {
+            log.error(error);
+            console.log(error)
+            await activities.log(_data.userid, `"deleted transfers with invoices: ${codes}.  "`, "'Vendors'")
+
+        }
 
 
 
@@ -284,12 +299,28 @@ exports._deleteReceivedItem= async(_data) => {
 
         let products = []
         let product_query = await receivedDetailsHelper.getDistinct('product', receivedDetailsHelper.table_name, ` code in (${codes})`);
-        product_query.map(p => {
+        
+        let details = "";
+        product_query.map(async p => {
+            try {
+                let product_details = await productHelper.getItem(`id = ${p.product}`,productHelper.table_name)
+                details += `${product_details.name} qtt: ${p.quantity}, price: ${p.price} |||`
+            } catch (error) {
+                
+            }
             products.push(p.product);
         })
 
         await receivedHelper.delete(` id in (${id})`, receivedHelper.table_name);
-        await activities.log(_data.userid, `"deleted received transfers with invoices: ${invoices}"`, "'Transfers'")
+        try {
+            await activities.log(_data.userid, `"deleted received transfers with invoices: ${invoices}. details:${details} "`, "'Transfers'")
+
+        } catch (error) {
+            await activities.log(_data.userid, `"deleted received transfers with invoices: ${invoices}. details: "`, "'Transfers'")
+
+        }
+        
+       
 
 
 

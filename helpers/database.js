@@ -35,10 +35,10 @@ class Db {
                 }
                 else {
                     //its a string
-                    if(data[key] != 'null'){
+                    if (data[key] != 'null') {
                         returner[key] = `"${data[key]}"`;
                     }
-                    
+
 
                 }
 
@@ -101,10 +101,10 @@ class Db {
         // mm_string+'/'+dd_string+'/'+yyyy;
     }
 
-    padZero(m){
-        let str= m.toString();
-        return str.padStart(2,"0");
-        
+    padZero(m) {
+        let str = m.toString();
+        return str.padStart(2, "0");
+
     }
 
     getMonthName(m) {
@@ -322,21 +322,21 @@ class Db {
         return yyyy + '-' + mm_string + '-' + dd_string;
     }
 
-    getYesterday(date){
+    getYesterday(date) {
         let start_date = this.formatDate(new Date(date));
-      return  this.formatDate(this.addDaystoDate(-1, start_date));
+        return this.formatDate(this.addDaystoDate(-1, start_date));
     }
 
     addDaystoDate(days, date) {
         var dat = new Date(date);
         dat.setDate(dat.getDate() + days);
         return dat;
-      }
+    }
 
-      getWeekNumber(date) {
+    getWeekNumber(date) {
         let myMoment = moment(date);
         return myMoment.week()
-      }
+    }
 
     /**
      *   get the start and end dates
@@ -344,88 +344,88 @@ class Db {
      * @returns {Object} {start_date, end_date}
      */
     setDates(quick_option) {
-    var this_week_number = this.getWeekNumber(this.getToday());
-    var this_year = this.getThisYear();
-    var last_year = this_year - 1;
-    var this_month = this.getToday("month");
-    var last_month = this_month == "1" ? 12 : parseInt(this_month) - 1;
-    var next_month = this_month == "12" ? 1 : parseInt(this_month) + 1;
-    var start_date;
-    var end_date;
-    switch (quick_option) {
-      case "all":
-        start_date = this.formatDate(new Date("2015-" + "01-01"));
-        end_date = this.getToday();
-        break;
-      case "today":
-        start_date = this.getToday();
-        end_date = this.getToday();
-        break;
-      case "yesterday":
-        start_date = this.formatDate(this.addDaystoDate(-1, this.getToday()));
-        end_date = this.formatDate(this.addDaystoDate(-1, this.getToday()));
-        break;
-      case "this_week":
-        start_date = this.formatDate(this.getFirstDayOfWeek(this_week_number, this_year));
-        end_date = this.formatDate(this.addDaystoDate(6, start_date));
-        break;
-      case "last_week":
-        start_date = this.formatDate(this.getFirstDayOfWeek(this_week_number - 1, this_year));
-        end_date = this.formatDate(this.addDaystoDate(6, start_date));
-        break;
-        case "next_week":
-        start_date = this.formatDate(this.getFirstDayOfWeek(this_week_number + 1, this_year));
-        end_date = this.formatDate(this.addDaystoDate(6, start_date));
-        break;
-      case "this_month":
-        var last_day = this.getLastDayOfMonth(this_month);
-        start_date = this.formatDate(new Date(this_year + "-" + this_month + "-01"));
-        end_date = this.formatDate(new Date(this_year + "-" + this_month + "-" + last_day));
-        break;
-      case "last_month":
-        var last_day = this.getLastDayOfMonth(last_month);
-        start_date = this.formatDate(new Date(last_month == 12 ? last_year : this_year + "-" + last_month + "-01"));
-        end_date = this.formatDate(new Date(last_month == 12 ? last_year : this_year + "-" + last_month + "-" + last_day));
-        break;
-        case "next_month":
-        var last_day = this.getLastDayOfMonth(next_month);
-        var year = this_month == "12" ? this_year +1 : this_year
-        start_date = this.formatDate(new Date(year + "-" + next_month + "-01"));
-        end_date = this.formatDate(new Date(year + "-" + next_month + "-" + last_day));
-        break;
-      case "first_quarter":
-        start_date = this.formatDate(new Date(this_year + "-" + "01-01"));
-        end_date = this.formatDate(new Date(this_year + "-" + "03-31"));
-        break;
-      case "second_quarter":
-        start_date = this.formatDate(new Date(this_year + "-" + "04-01"));
-        end_date = this.formatDate(new Date(this_year + "-" + "06-30"));
-        break;
-      case "third_quarter":
-        start_date = this.formatDate(new Date(this_year + "-" + "07-01"));
-        end_date = this.formatDate(new Date(this_year + "-" + "09-30"));
-        break;
-      case "last_quarter":
-        start_date = this.formatDate(new Date(this_year + "-" + "10-01"));
-        end_date = this.formatDate(new Date(this_year + "-" + "12-31"));
-        break;
-      case "this_year":
-        start_date = this.formatDate(new Date(this_year + "-" + "01-01"));
-        end_date = this.formatDate(new Date(this_year + "-" + "12-31"));
-        break;
-      case "last_year":
-        start_date = this.formatDate(new Date(last_year + "-" + "01-01"));
-        end_date = this.formatDate(new Date(last_year + "-" + "12-31"));
-        break;
-      case "today":
-      default:
+        var this_week_number = this.getWeekNumber(this.getToday());
+        var this_year = this.getThisYear();
+        var last_year = this_year - 1;
+        var this_month = this.getToday("month");
+        var last_month = this_month == "1" ? 12 : parseInt(this_month) - 1;
+        var next_month = this_month == "12" ? 1 : parseInt(this_month) + 1;
+        var start_date;
+        var end_date;
+        switch (quick_option) {
+            case "all":
+                start_date = this.formatDate(new Date("2015-" + "01-01"));
+                end_date = this.getToday();
+                break;
+            case "today":
+                start_date = this.getToday();
+                end_date = this.getToday();
+                break;
+            case "yesterday":
+                start_date = this.formatDate(this.addDaystoDate(-1, this.getToday()));
+                end_date = this.formatDate(this.addDaystoDate(-1, this.getToday()));
+                break;
+            case "this_week":
+                start_date = this.formatDate(this.getFirstDayOfWeek(this_week_number, this_year));
+                end_date = this.formatDate(this.addDaystoDate(6, start_date));
+                break;
+            case "last_week":
+                start_date = this.formatDate(this.getFirstDayOfWeek(this_week_number - 1, this_year));
+                end_date = this.formatDate(this.addDaystoDate(6, start_date));
+                break;
+            case "next_week":
+                start_date = this.formatDate(this.getFirstDayOfWeek(this_week_number + 1, this_year));
+                end_date = this.formatDate(this.addDaystoDate(6, start_date));
+                break;
+            case "this_month":
+                var last_day = this.getLastDayOfMonth(this_month);
+                start_date = this.formatDate(new Date(this_year + "-" + this_month + "-01"));
+                end_date = this.formatDate(new Date(this_year + "-" + this_month + "-" + last_day));
+                break;
+            case "last_month":
+                var last_day = this.getLastDayOfMonth(last_month);
+                start_date = this.formatDate(new Date(last_month == 12 ? last_year : this_year + "-" + last_month + "-01"));
+                end_date = this.formatDate(new Date(last_month == 12 ? last_year : this_year + "-" + last_month + "-" + last_day));
+                break;
+            case "next_month":
+                var last_day = this.getLastDayOfMonth(next_month);
+                var year = this_month == "12" ? this_year + 1 : this_year
+                start_date = this.formatDate(new Date(year + "-" + next_month + "-01"));
+                end_date = this.formatDate(new Date(year + "-" + next_month + "-" + last_day));
+                break;
+            case "first_quarter":
+                start_date = this.formatDate(new Date(this_year + "-" + "01-01"));
+                end_date = this.formatDate(new Date(this_year + "-" + "03-31"));
+                break;
+            case "second_quarter":
+                start_date = this.formatDate(new Date(this_year + "-" + "04-01"));
+                end_date = this.formatDate(new Date(this_year + "-" + "06-30"));
+                break;
+            case "third_quarter":
+                start_date = this.formatDate(new Date(this_year + "-" + "07-01"));
+                end_date = this.formatDate(new Date(this_year + "-" + "09-30"));
+                break;
+            case "last_quarter":
+                start_date = this.formatDate(new Date(this_year + "-" + "10-01"));
+                end_date = this.formatDate(new Date(this_year + "-" + "12-31"));
+                break;
+            case "this_year":
+                start_date = this.formatDate(new Date(this_year + "-" + "01-01"));
+                end_date = this.formatDate(new Date(this_year + "-" + "12-31"));
+                break;
+            case "last_year":
+                start_date = this.formatDate(new Date(last_year + "-" + "01-01"));
+                end_date = this.formatDate(new Date(last_year + "-" + "12-31"));
+                break;
+            case "today":
+            default:
 
-        start_date = this.getToday();
-        end_date = this.getToday();
-        break;
-    }
+                start_date = this.getToday();
+                end_date = this.getToday();
+                break;
+        }
 
-    return { "start_date": start_date, "end_date": end_date };
+        return { "start_date": start_date, "end_date": end_date };
 
         // var this_week_number = this.getWeekNumber(this.getToday());
         // var this_year = this.getThisYear();
@@ -511,10 +511,10 @@ class Db {
 
     }
 
-    addMonthsToDate(m){
+    addMonthsToDate(m) {
         return this.formatDate(new Date(
             new Date().getFullYear(),
-            new Date().getMonth() + m, 
+            new Date().getMonth() + m,
             new Date().getDate())
         );
     }
@@ -625,13 +625,13 @@ class Db {
 
     generateDeleteQuery(condition, table) {
 
-       
+
         try {
             let query = `delete from ${table} where ${condition};`;
-        return query;
+            return query;
 
         } catch (err) {
-            
+
             throw new Error(err)
         }
     }
@@ -687,7 +687,7 @@ class Db {
         })
         let query = `insert into ${table} (${fields.join(',')}) values ${vals.join(',')};`;
         return query;
-    } 
+    }
 
     /**
      * Update a field or fields in a table based on the conditions
@@ -762,7 +762,7 @@ class Db {
             throw new Error(err)
         }
 
-    } 
+    }
 
     /**
     * generate the sql query to update a field or fields in a table based on the conditions
@@ -812,10 +812,10 @@ class Db {
      * @param {Number} offset
      * @returns {Array} 
      */
-    async getMany(conditions, table, limit = null, offset = 0, sort_by="id", sort_dxn="asc") {
+    async getMany(conditions, table, limit = null, offset = 0, sort_by = "id", sort_dxn = "asc") {
         //use placeholders for the variables,""
         let sql = `select * from ${table} where ${conditions}`;
-        sql +=` order by ${sort_by} ${sort_dxn}`;
+        sql += ` order by ${sort_by} ${sort_dxn}`;
 
         if (limit != null) {
             sql += ` limit ${limit} offset ${offset}`
@@ -841,10 +841,10 @@ class Db {
      * @param {Number} offset
      * @returns {Array}
      */
-    async getAll(table, limit = null, offset = 0, sort_by = "id",sort_dxn="asc") {
+    async getAll(table, limit = null, offset = 0, sort_by = "id", sort_dxn = "asc") {
         //use placeholders for the variables
         let sql = `select * from ${table}`;
-        sql +=` order by ${sort_by} ${sort_dxn}`;
+        sql += ` order by ${sort_by} ${sort_dxn}`;
 
         if (limit != null) {
             sql += ` limit ${limit} offset ${offset}`
@@ -875,7 +875,7 @@ class Db {
      * @param {Number} offset
      * @returns {Array}
      */
-    async getAllFields(fields,table, limit = null, offset = 0) {
+    async getAllFields(fields, table, limit = null, offset = 0) {
         //use placeholders for the variables
         let sql = `select ${fields} from ${table}`;
         if (limit != null) {
@@ -974,7 +974,7 @@ class Db {
      */
     async runQuery(sql) {
         try {
-            
+
             await this.getConnection();
             let query = await this.connection.all(sql);
             return query;//an array of objects
@@ -1006,7 +1006,7 @@ class Db {
         }
     }
 
-    async getManyFieldGroup(fields,conditions, group_by, table, limit = null, offset = 0) {
+    async getManyFieldGroup(fields, conditions, group_by, table, limit = null, offset = 0) {
         //use placeholders for the variables
         let sql = `select ${fields} from ${table} where ${conditions}`;
         if (limit != null) {
@@ -1053,7 +1053,7 @@ class Db {
             throw new Error(err)
         }
     }
-    
+
 
     async runMigrations() {
         await this.getConnection();
@@ -1089,41 +1089,45 @@ class Db {
 
         }
 
-        if(!has_error){
-            
-///////////////RUN SEQUELIZE MIGRATIONS IF THERE WAS NO ERROR///////////
+        if (!has_error) {
+
+            ///////////////RUN SEQUELIZE MIGRATIONS IF THERE WAS NO ERROR///////////
 
 
 
-const umzug = new Umzug({
-    migrations: {
-        // indicates the folder containing the migration .js files
-        path: path.join(__dirname, '../migrations'),
-        // inject sequelize's QueryInterface in the migrations
-        params: [
-            sequelize.getQueryInterface(),
-            Sequelize
-        ]
-    },
-    // indicates that the migration data should be store in the database
-    // itself through sequelize. The default configuration creates a table
-    // named `SequelizeMeta`.
-    storage: 'sequelize',
-    storageOptions: {
-        sequelize: sequelize
-    }
-})
+            const umzug = new Umzug({
+                migrations: {
+                    // indicates the folder containing the migration .js files
+                    path: path.join(__dirname, '../migrations'),
+                    // inject sequelize's QueryInterface in the migrations
+                    params: [
+                        sequelize.getQueryInterface(),
+                        Sequelize
+                    ]
+                },
+                // indicates that the migration data should be store in the database
+                // itself through sequelize. The default configuration creates a table
+                // named `SequelizeMeta`.
+                storage: 'sequelize',
+                storageOptions: {
+                    sequelize: sequelize
+                }
+            })
 
-    ; (async () => {
-        // checks migrations and run them if they are not already applied
-        try {
-            await umzug.up()
-            // console.log('All migrations performed successfully')
+                ; (async () => {
+                    // checks migrations and run them if they are not already applied
+                    try {
+                        await umzug.up()
+                        // console.log('All migrations performed successfully')
 
-        } catch (error) {
-            // console.log(error)
-        }
-    })()
+                    } catch (error) {
+                        if (process.env.NODE_ENV == 'development') {
+                            console.log(error)
+                        }
+
+                        log.error(error);
+                    }
+                })()
         }
 
         //this.connection.close().then(succ => { }, err => { })
@@ -1158,7 +1162,7 @@ const umzug = new Umzug({
 
         let sql = `select * from ${table} where ${final_where} `;
         // console.log(sql)
-        if(strpos){
+        if (strpos) {
             sql = `select *, INSTR(lower(${strpos_field}), lower("${first_word}")) as pos  from ${table} where ${final_where} `;
             sql += ` order by pos asc `
 
@@ -1168,7 +1172,7 @@ const umzug = new Umzug({
         }
         // console.log(sql)
         try {
-        await this.getConnection();
+            await this.getConnection();
             let query = await this.connection.all(sql);
 
             return query;//an array of objects
@@ -1216,7 +1220,7 @@ const umzug = new Umzug({
      * Runs a sql transaction command based on the list of queries provided
      * @param {Array} queries 
      */
-    async runTransaction(queries){
+    async runTransaction(queries) {
         let sql = "BEGIN TRANSACTION; ";
         queries.map(q => {
             sql += q;
@@ -1228,20 +1232,20 @@ const umzug = new Umzug({
 
 
 
-    isEmpty(str){
-        if(str == null || str == undefined){
-          return true;
-        }
-        if(typeof(str) == "string"){
-          if( str.trim() == "" || str.trim() == "undefined" || str.trim() == "null"){
+    isEmpty(str) {
+        if (str == null || str == undefined) {
             return true;
-          }
         }
-        
-        return false;
-      }
+        if (typeof (str) == "string") {
+            if (str.trim() == "" || str.trim() == "undefined" || str.trim() == "null") {
+                return true;
+            }
+        }
 
-      
+        return false;
+    }
+
+
 
 
     //insert: data, table

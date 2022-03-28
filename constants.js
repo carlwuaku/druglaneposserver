@@ -30,7 +30,7 @@ exports.firebase_responses_collection = "responses";
 
 exports.settings_path =path.join( this.settings_location,'system-settings.json');
 exports.db_path = path.join( this.settings_location, databaseName);
-exports.sequelize_db = path.join( this.settings_location,'sequelize_druglane.db');
+// exports.sequelize_db = path.join( this.settings_location,'sequelize_druglane.db');
 exports.backup_folder = path.join((electron.app || electron.remote.app).getPath('documents'), `${appName}Backups`);
 exports.settings_filename = 'system-settings.json';
 exports.db_filename = databaseName;

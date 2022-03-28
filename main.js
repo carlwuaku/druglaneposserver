@@ -24,7 +24,7 @@ const filestore = new FileStore({
 const environment =filestore.get("environment") == undefined ? "production" : filestore.get("environment");
 process.env.NODE_ENV = environment;
 const isDev = process.env.NODE_ENV !== 'production' ? true : false;
-console.log("envionment",filestore.get("environment"))
+// console.log("envionment",filestore.get("environment"))
 // = process.env.NODE_ENV !== 'production' ? true : false;
 
 // log.info('starting')

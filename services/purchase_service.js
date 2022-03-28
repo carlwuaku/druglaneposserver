@@ -76,7 +76,7 @@ exports._saveBulk= async(_data) => {
         let expiries = _data.expiries.split("||");
         let units = _data.units.split("||");
         let markups = _data.markups.split("||");
-
+        let descriptions = _data.descriptions.split("||")
 
         await helper.getConnection();
         //last id
@@ -98,13 +98,16 @@ exports._saveBulk= async(_data) => {
             data.markup = markups[i];
             data.code = code;
             data.created_by = _data.userid;
+            data.expiry = `'${expiries[i]}'`;
             objects.push(data);
             //generate the update for the product
             let product_data = {
                 price: selling_prices[i],
                 cost_price: prices[i],
                 unit: `'${units[i]}'`,
-                expiry: `'${expiries[i]}'`
+                expiry: `'${expiries[i]}'`,
+                markup: markups[i],
+                description: `'${descriptions[i]}'`,
             }
             let p = productHelper.generateUpdateQuery(product_data, ` id = ${products[i]} `, productHelper.table_name)
             product_updates.push(p);

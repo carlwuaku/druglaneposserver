@@ -6,7 +6,10 @@ module.exports = {
       name: 'activate_batch_mode',
       module: 'System',
       value: 'no'
-    }]);
+    }],
+    {
+      ignoreDuplicates: true
+    });
   },
 
   down: async (queryInterface, Sequelize) => {

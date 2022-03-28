@@ -7,7 +7,10 @@ module.exports = {
       name: 'tax',
       module: 'System',
       value: '0'
-    }]);
+    }],
+    {
+      ignoreDuplicates: true
+    });
     /**
      * Add altering commands here.
      *

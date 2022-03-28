@@ -21,14 +21,17 @@ module.exports = {
       {
         name: 'receipt_extra_info',
         module: 'System',
-        value: 'TIN NUMBER: 1234'
+        value: ''
       },
       {
         name: 'receipt_footer',
         module: 'System',
-        value: 'ALL ITEMS ARE VAT AND COVID-19 LEVY OF 4% INCLUSIVE'
+        value: ''
       },
-    ]);
+    ],
+    {
+      ignoreDuplicates: true
+    });
   },
 
   down: async (queryInterface, Sequelize) => {

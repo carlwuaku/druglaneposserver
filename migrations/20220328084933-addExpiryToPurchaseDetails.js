@@ -2,18 +2,13 @@
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.bulkInsert('settings', [{
-      name: 'logo',
-      module: 'System',
-      value: ''
-    },
+    await queryInterface.addColumn('purchase_details','expiry',
     {
-      name: 'receipt_logo',
-      module: 'System',
-      value: 'no'
-    }], {
-      ignoreDuplicates: true
+      type: Sequelize.STRING,
+      defaultValue: null,
+      allowNull: true
     });
+    
   },
 
   down: async (queryInterface, Sequelize) => {
