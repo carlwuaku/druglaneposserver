@@ -54,7 +54,7 @@ router.get('/getLogo', async (req, res) => {
 		res.json(data);
 	} catch (error) {
 		await helper.closeConnection();
-		console.log(error);
+		// console.log(error);
 		res.json({ status: '-1', data: null })
 	}
 })

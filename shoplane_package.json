@@ -1,6 +1,6 @@
 {
     "name": "shoplane",
-    "version": "1.5.12",
+    "version": "1.5.18",
     "description": "Shoplane POS local server.",
     "productName": "ShoplaneServer",
     "main": "main.js",

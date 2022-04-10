@@ -91,7 +91,7 @@ let route_permissions = [
     { route: "/api_product/saveBranchDetails", permission: "Manage Inventory" },
 
 ]
-//CORS STUFF    
+//CORS STUFF     
 app.use(async (req, res, next) => {
     //allow all clients in development mode
     if (process.env.NODE_ENV != "production") {

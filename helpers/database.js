@@ -1068,7 +1068,7 @@ class Db {
             let version = curr.version;
             //if its an empty query, just set the version and move on. some 
             //of these are intentional
-            if (version > dbversion) {
+            if (version > dbversion) { 
                 if (query.trim().length < 1) {
                     filestore.set('dbversion', version);
                 }
